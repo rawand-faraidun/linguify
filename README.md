@@ -1,0 +1,2 @@
+# linguify
+Translation manager
