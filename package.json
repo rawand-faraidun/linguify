@@ -3,7 +3,10 @@
   "version": "0.0.1",
   "description": "Translation manager",
   "private": false,
-  "main": "src/index.js",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc",
