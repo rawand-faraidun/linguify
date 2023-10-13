@@ -13,5 +13,6 @@
         "module": "ESNext",
         "noEmit": true,
         "lib": ["ESNext", "dom", "dom.iterable"],
-    }
+    },
+    "exclude": ["__test__/**/*"]
 }

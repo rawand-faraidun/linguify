@@ -7,7 +7,8 @@
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ci": "pnpm run lint && pnpm run test && pnpm run build"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
