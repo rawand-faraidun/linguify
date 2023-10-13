@@ -1,0 +1,18 @@
+# source
+src
+lib
+
+# tests
+__test__
+
+# changes and github
+.changeset
+.github
+
+# library files
+pnpm-lock.yaml
+tsconfig.json
+vite.config.ts
+
+# editor settings
+.prettierrc.json
