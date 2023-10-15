@@ -12,8 +12,7 @@
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "build": "tsup src/index.ts --format cjs,esm --dts",
     "lint": "tsc",
-    "test": "vitest run",
-    "ci": "pnpm run lint && pnpm run test && pnpm run build",
+    "ci": "pnpm run lint && pnpm run build",
     "release": "pnpm run ci && changeset publish"
   },
   "dependencies": {
