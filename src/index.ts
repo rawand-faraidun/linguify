@@ -1,4 +1,5 @@
 import { program } from 'commander'
+import { init } from './init'
 
 /**
  * starting linguify
@@ -13,13 +14,11 @@ program
 /**
  * initiate linguify
  *
- * sets up the project and creates a linguify.config.json file
+ * sets up the project and creates a `linguify.config.json` file
  */
 program
   .command('init')
   .description('initiate linguify')
-  .action(props => {
-    console.log('init')
-  })
+  .action(props => init())
 
 program.parse(process.argv)
