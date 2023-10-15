@@ -23,3 +23,8 @@ export const defaultConfigsJs = `
 const configs = ${JSON.stringify(defaultConfigs, null, 2)}
 module.exports = configs
 `
+
+/**
+ * linguify default port
+ */
+export const defaultPort = 5678

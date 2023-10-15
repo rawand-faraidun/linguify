@@ -35,7 +35,7 @@ export const init = async () => {
 
     // saving the configs file
     writeFileSync(configPath, defaultConfigsJs)
-    console.log(chalk.blue(`Linguify configs saved to ${configPath} successfully`))
+    console.log(chalk.blue(`Linguify configs saved to ${chalk.underline(configPath)} successfully`))
 
     console.log(chalk.green('Linguify initiated successfully'))
   } catch (error: any) {

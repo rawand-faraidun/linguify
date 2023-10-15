@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { program } from 'commander'
 import { init } from './init'
+import { start } from './start'
+import { defaultPort } from '@lib/defaults'
 
 export { type Configs } from '@lib/types'
 
@@ -10,16 +12,12 @@ export { type Configs } from '@lib/types'
 program
   .command('start', { isDefault: true })
   .description('start linguify')
-  .action(props => {
-    console.log('start')
-  })
+  .option('-p, --port <port>', 'port', `${defaultPort}`)
+  .action(options => start(options.port || defaultPort))
 
 /**
  * initiate linguify
  */
-program
-  .command('init')
-  .description('initiate linguify')
-  .action(props => init())
+program.command('init').description('initiate linguify').action(init)
 
 program.parse(process.argv)
