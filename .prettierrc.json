@@ -10,6 +10,7 @@
   "importOrder": [
     "<BUILTIN_MODULES>",
     "fs",
+    "express",
     "<THIRD_PARTY_MODULES>",
     "^[.]",
     "^@lib"

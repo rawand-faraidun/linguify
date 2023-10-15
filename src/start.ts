@@ -3,11 +3,12 @@ import { resolve } from 'path'
 import chalk from 'chalk'
 import prompts from 'prompts'
 import init from './init'
+import startServer from './server/server'
 import { configFileName, defaultPort } from '@lib/defaults'
 
 /**
  * start linguify command
- * 
+ *
  * @param port - linguify server port
  */
 const start = async (port: number = defaultPort) => {
@@ -37,6 +38,8 @@ const start = async (port: number = defaultPort) => {
     } else {
       console.log(`Reading linguify configs from ${chalk.cyan(chalk.underline(configPath))}`)
     }
+
+    startServer()
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
