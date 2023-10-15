@@ -3,7 +3,7 @@ import type { Configs } from './types'
 /**
  * configuration file name
  */
-export const configFileName = 'linguify.config.json'
+export const configFileName = 'linguify.config.js'
 
 /**
  * linguify default values
@@ -14,3 +14,12 @@ export const defaultConfigs: Configs = {
   defaultLocale: 'en',
   useGoogleTranslate: true
 }
+
+/**
+ * linguify default configs file
+ */
+export const defaultConfigsJs = `
+/** @type {import('linguify').Config} */
+const configs = ${JSON.stringify(defaultConfigs, null, 2)}
+module.exports = configs
+`

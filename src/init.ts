@@ -2,21 +2,20 @@ import { existsSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import prompts from 'prompts'
-import { configFileName, defaultConfigs } from '../lib/defaults'
+import { configFileName, defaultConfigsJs } from '../lib/defaults'
 
 /**
  * initates linguify
- *
- * creates `linguify.config.json`
  */
 export const init = async () => {
   try {
     const currentDir = process.cwd()
+    const configPath = resolve(currentDir, configFileName)
 
     console.log(chalk.blue('Initiating linguify'))
 
     // checking if the config file excists, if so asking to overwrite it
-    if (existsSync(resolve(currentDir, configFileName))) {
+    if (existsSync(configPath)) {
       let { overwrite } = await prompts.prompt({
         type: 'toggle',
         name: 'overwrite',
@@ -35,8 +34,8 @@ export const init = async () => {
     }
 
     // saving the configs file
-    writeFileSync(resolve(currentDir, configFileName), JSON.stringify(defaultConfigs, null, 2))
-    console.log(chalk.blue(`Linguify configs saved to ${resolve(currentDir, configFileName)} successfully`))
+    writeFileSync(configPath, defaultConfigsJs)
+    console.log(chalk.blue(`Linguify configs saved to ${configPath} successfully`))
 
     console.log(chalk.green('Linguify initiated successfully'))
   } catch (error: any) {

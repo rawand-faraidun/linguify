@@ -2,6 +2,8 @@
 import { program } from 'commander'
 import { init } from './init'
 
+export { type Configs } from '../lib/types'
+
 /**
  * starting linguify
  */
@@ -14,8 +16,6 @@ program
 
 /**
  * initiate linguify
- *
- * sets up the project and creates a `linguify.config.json` file
  */
 program
   .command('init')
