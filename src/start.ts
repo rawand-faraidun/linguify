@@ -2,10 +2,15 @@ import { existsSync } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import prompts from 'prompts'
-import { init } from './init'
+import init from './init'
 import { configFileName, defaultPort } from '@lib/defaults'
 
-export const start = async (port: number = defaultPort) => {
+/**
+ * start linguify command
+ * 
+ * @param port - linguify server port
+ */
+const start = async (port: number = defaultPort) => {
   try {
     const currentDir = process.cwd()
     const configPath = resolve(currentDir, configFileName)
@@ -25,15 +30,17 @@ export const start = async (port: number = defaultPort) => {
 
       if (Boolean(createFile)) {
         await init()
-        console.log(chalk.blue(`Reading linguify configs from ${chalk.underline(configPath)}`))
+        console.log(`Reading linguify configs from ${chalk.cyan(chalk.underline(configPath))}`)
       } else {
         console.log(chalk.yellow('Reading linguify configs from default configs, NOT RECOMMENDED'))
       }
     } else {
-      console.log(chalk.blue(`Reading linguify configs from ${chalk.underline(configPath)}`))
+      console.log(`Reading linguify configs from ${chalk.cyan(chalk.underline(configPath))}`)
     }
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
   }
 }
+
+export default start

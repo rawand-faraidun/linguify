@@ -5,9 +5,9 @@ import prompts from 'prompts'
 import { configFileName, defaultConfigsJs } from '@lib/defaults'
 
 /**
- * initates linguify
+ * init linguify command
  */
-export const init = async () => {
+const init = async () => {
   try {
     const currentDir = process.cwd()
     const configPath = resolve(currentDir, configFileName)
@@ -35,7 +35,7 @@ export const init = async () => {
 
     // saving the configs file
     writeFileSync(configPath, defaultConfigsJs)
-    console.log(chalk.blue(`Linguify configs saved to ${chalk.underline(configPath)} successfully`))
+    console.log(`Linguify configs saved to ${chalk.cyan(chalk.underline(configPath))} successfully`)
 
     console.log(chalk.green('Linguify initiated successfully'))
   } catch (error: any) {
@@ -43,3 +43,5 @@ export const init = async () => {
     process.exit(0)
   }
 }
+
+export default init
