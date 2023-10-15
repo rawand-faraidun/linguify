@@ -2,7 +2,7 @@
 import { program } from 'commander'
 import { init } from './init'
 
-export { type Configs } from '../lib/types'
+export { type Configs } from '@lib/types'
 
 /**
  * starting linguify

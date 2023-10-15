@@ -2,7 +2,7 @@ import { existsSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import prompts from 'prompts'
-import { configFileName, defaultConfigsJs } from '../lib/defaults'
+import { configFileName, defaultConfigsJs } from '@lib/defaults'
 
 /**
  * initates linguify
@@ -27,7 +27,7 @@ export const init = async () => {
 
       if (!Boolean(overwrite)) {
         console.log(chalk.yellow('Exiting linguify initiating'))
-        process.exit(1)
+        process.exit(0)
       }
 
       console.log(chalk.yellow('Overwriting linguify configs'))
