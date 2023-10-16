@@ -8,21 +8,12 @@ export const configFileName = 'linguify.config.json'
 /**
  * linguify default values
  */
-export const defaultConfigs: Configs = {
+export const defaultConfig: Configs = {
   localesPath: './public/locales',
   locales: ['en'],
   defaultLocale: 'en',
-  useGoogleTranslate: true
+  useGoogleTranslate: false
 }
-
-/**
- * linguify default configs file
- */
-export const defaultConfigsJs = `
-/** @type {import('linguify').Config} */
-const configs = ${JSON.stringify(defaultConfigs, null, 2)}
-module.exports = configs
-`
 
 /**
  * linguify default port

@@ -36,7 +36,7 @@ export type Configs = {
    * if any translation failed consider refreshing it
    * @see {@link https://github.com/cjvnjde/google-translate-api-browser}
    *
-   * @default true
+   * @default false
    */
   useGoogleTranslate: boolean
 }
