@@ -1,4 +1,4 @@
-import { existsSync, statSync } from 'fs'
+import { existsSync, statSync, watch } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import startServer from './server/server'
@@ -65,9 +65,16 @@ const start = async (port: number = defaultPort) => {
       )
     }
 
+    // notifying user about configs
     console.log(`Reading linguify configs from ${chalk.cyan(chalk.underline(configPath))}`)
 
+    // starting linguify server
     startServer(port)
+
+    // watching config file for changes
+    watch(configPath, () => {
+      console.log(chalk.yellow('The linguify config file has been changed, please restart linguify to apply changes'))
+    })
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
