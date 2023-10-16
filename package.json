@@ -9,10 +9,15 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
-    "build": "tsup src/index.ts --format cjs,esm --dts",
+    "dev": "concurrently -n LINGUIFY,CLIENT -c magenta,cyan \"pnpm linguifyDev\" \"pnpm clientDev\"",
+    "linguifyDev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "clientDev": "cd src/client && pnpm dev",
+    "build": "pnpm linguifyBuild && pnpm clientBuild",
+    "postbuild": "ncp src/client/dist dist/client",
+    "linguifyBuild": "pnpm run lint && tsup src/index.ts --format cjs,esm --dts",
+    "clientBuild": "cd src/client && pnpm build",
     "lint": "tsc",
-    "ci": "pnpm run lint && pnpm run build",
+    "ci": "pnpm run build",
     "release": "pnpm run ci && changeset publish"
   },
   "dependencies": {
@@ -32,6 +37,8 @@
     "@types/findup-sync": "^4.0.2",
     "@types/node": "^20.8.5",
     "@types/prompts": "^2.4.6",
+    "concurrently": "^8.2.1",
+    "ncp": "^2.0.0",
     "prettier": "^3.0.3",
     "tsup": "^7.2.0",
     "typescript": "^5.2.2",
