@@ -17,5 +17,5 @@
             "@lib/*": ["./lib/*"],
         }
     },
-    "exclude": ["__test__/**/*"]
+    "exclude": ["__test__/**/*", "src/client/**/*"]
 }
