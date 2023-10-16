@@ -3,7 +3,7 @@ import type { Configs } from './types'
 /**
  * configuration file name
  */
-export const configFileName = 'linguify.config.js'
+export const configFileName = 'linguify.config.json'
 
 /**
  * linguify default values
