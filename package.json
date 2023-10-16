@@ -28,6 +28,7 @@
     "@changesets/cli": "^2.26.2",
     "@ianvs/prettier-plugin-sort-imports": "^4.1.1",
     "@types/express": "^4.17.19",
+    "@types/express-serve-static-core": "^4.17.37",
     "@types/findup-sync": "^4.0.2",
     "@types/node": "^20.8.5",
     "@types/prompts": "^2.4.6",
