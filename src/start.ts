@@ -19,6 +19,11 @@ const start = async (port: number = defaultPort) => {
     validating user config values
     */
 
+    // checking if the config file excists
+    if (!existsSync(configPath)) {
+      throw new Error(`Linguify config file is not found, initiate linguify with '${chalk.underline('linguify init')}'`)
+    }
+
     // checking the user configs localesPath
     if (!configs.localesPath) {
       throw new Error(chalk.yellow(`Linguify config file misses 'localesPath' key, please add it before starting`))

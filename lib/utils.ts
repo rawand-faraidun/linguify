@@ -48,8 +48,7 @@ export const configPath = configPathExpected || configPathRoot
  */
 export const getUserConfig = () => {
   try {
-    if (!existsSync(configPath))
-      throw new Error(`Linguify config file is not found, initiate linguify with '${chalk.underline('linguify init')}'`)
+    if (!existsSync(configPath)) return {} as Configs
     return JSON.parse(readFileSync(configPath, 'utf-8')) as Configs
   } catch (error: any) {
     console.error(chalk.red(error.message))
