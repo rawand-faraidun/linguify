@@ -1,16 +1,21 @@
 import { resolve } from 'path'
 import express from 'express'
 import { dirname } from 'dirname-filename-esm'
-
-const __dirname = dirname(import.meta)
+import configRoute from './config.route'
 
 // this directory path is based on `dist` folder after build
+const __dirname = dirname(import.meta)
 const clientDir = resolve(__dirname, 'client')
 
 const router = express.Router()
 
 // static client
 router.use(express.static(clientDir))
+
+/* 
+routes
+*/
+router.use('/config', configRoute)
 
 // client ui
 router.get('*', (req, res) => {
