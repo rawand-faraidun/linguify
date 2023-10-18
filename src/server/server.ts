@@ -1,9 +1,11 @@
 import express from 'express'
 import chalk from 'chalk'
+import cors from 'cors'
 import router from './routes/router'
 import { defaultPort } from '@lib/defaults'
 
 const app = express()
+app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
