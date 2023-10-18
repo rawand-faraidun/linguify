@@ -1,7 +1,11 @@
+import UiProvider from './components/context/UiContext'
+
 function App() {
   return (
     <>
-      <h1>linguify</h1>
+      <UiProvider>
+        <h1>linguify</h1>
+      </UiProvider>
     </>
   )
 }
