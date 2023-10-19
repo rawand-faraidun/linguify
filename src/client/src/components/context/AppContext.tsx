@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@mantine/hooks'
 import { createContext, useEffect } from 'react'
-import { uiContextDefault } from '@lib/utils/uiContext'
+import { appContextDefault } from '@lib/utils/appContext'
 
 /**
  * component props
@@ -10,19 +10,19 @@ interface Props {
 }
 
 /**
- * ui context
+ * app context
  */
-export const UiContext = createContext(uiContextDefault)
+export const AppContext = createContext(appContextDefault)
 
 /**
  * ui context provider
  *
  * @param props - component props
  *
- * @returns ui provider
+ * @returns app provider
  */
-const UiProvider = ({ children }: Props) => {
-  const [theme, setTheme] = useLocalStorage({ key: 'theme', defaultValue: uiContextDefault.theme })
+const AppProvider = ({ children }: Props) => {
+  const [theme, setTheme] = useLocalStorage({ key: 'theme', defaultValue: appContextDefault.theme })
 
   /**
    * listening to theme change
@@ -63,7 +63,7 @@ const UiProvider = ({ children }: Props) => {
     })
   })
 
-  return <UiContext.Provider value={{ theme: theme!, setTheme }}>{children}</UiContext.Provider>
+  return <AppContext.Provider value={{ theme: theme!, setTheme }}>{children}</AppContext.Provider>
 }
 
-export default UiProvider
+export default AppProvider

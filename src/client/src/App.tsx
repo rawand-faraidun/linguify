@@ -1,11 +1,11 @@
-import UiProvider from './components/context/UiContext'
+import AppProvider from './components/context/AppContext'
 
 function App() {
   return (
     <>
-      <UiProvider>
+      <AppProvider>
         <h1>linguify</h1>
-      </UiProvider>
+      </AppProvider>
     </>
   )
 }

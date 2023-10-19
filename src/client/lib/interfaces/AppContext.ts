@@ -1,7 +1,10 @@
 import { Dispatch, SetStateAction } from 'react'
 import { Theme } from '../types/Theme'
 
-export interface UiContext {
+/**
+ * app props
+ */
+export interface AppContext {
   /**
    * theme color
    */
