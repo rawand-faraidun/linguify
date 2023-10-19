@@ -1,4 +1,4 @@
-import { existsSync, statSync, watch } from 'fs'
+import { existsSync, mkdirSync, statSync, watch } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import startServer from './server/server'
@@ -64,7 +64,20 @@ const start = async (port: number = defaultPort) => {
         chalk.yellow(`Provided 'localesPath' is not included in in 'locales', please change it before starting`)
       )
     }
-    
+    // checking or creating locale files
+    config.locales.forEach(locale => {
+      if (!existsSync(resolve(rootPath, config.localesPath, locale))) {
+        mkdirSync(resolve(rootPath, config.localesPath, locale))
+      } else {
+        if (!statSync(resolve(rootPath, config.localesPath, locale)).isDirectory()) {
+          throw new Error(
+            chalk.yellow(
+              `Provided locale '${locale}' is not a valid directory name, please check if a file exists with the same name, please change it before starting`
+            )
+          )
+        }
+      }
+    })
 
     // notifying user about config
     console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
