@@ -1,5 +1,8 @@
 import { useLocalStorage } from '@mantine/hooks'
-import { createContext, useEffect } from 'react'
+import { createContext, useEffect, useState } from 'react'
+import request from '@lib/functions/request'
+import { GetApi } from '@lib/interfaces/api/Api'
+import { Config } from '@lib/types/config'
 import { appContextDefault } from '@lib/utils/appContext'
 
 /**
@@ -23,6 +26,7 @@ export const AppContext = createContext(appContextDefault)
  */
 const AppProvider = ({ children }: Props) => {
   const [theme, setTheme] = useLocalStorage({ key: 'theme', defaultValue: appContextDefault.theme })
+  const [config, setConfig] = useState<(typeof appContextDefault)['config']>(null)
 
   /**
    * listening to theme change
@@ -61,9 +65,18 @@ const AppProvider = ({ children }: Props) => {
         setTheme('light')
       }
     })
-  })
+  }, [])
 
-  return <AppContext.Provider value={{ theme: theme!, setTheme }}>{children}</AppContext.Provider>
+  /**
+   * getting linguify configs
+   */
+  useEffect(() => {
+    request<GetApi<Config>>('/config', { method: 'GET' })
+      .then(({ data: { data } }) => setConfig(data))
+      .catch(error => console.log(error))
+  }, [])
+
+  return <AppContext.Provider value={{ theme: theme!, setTheme, config }}>{children}</AppContext.Provider>
 }
 
 export default AppProvider
