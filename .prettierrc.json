@@ -17,15 +17,6 @@
       }
     }
   ],
-  "importOrder": [
-    "<BUILTIN_MODULES>",
-    "fs",
-    "express",
-    "<THIRD_PARTY_MODULES>",
-    "^[.]",
-    "^@lib"
-  ],
-  "plugins": [
-    "@ianvs/prettier-plugin-sort-imports"
-  ]
+  "importOrder": ["<BUILTIN_MODULES>", "fs", "express", "<THIRD_PARTY_MODULES>", "^[.]", "^@lib"],
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"]
 }

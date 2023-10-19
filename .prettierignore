@@ -1,0 +1,20 @@
+# version control
+.git
+.svn
+.hg
+
+# Dependency directories
+node_modules
+jspm_packages
+
+# build / generate output
+dist
+build
+
+# package data
+pnpm-lock.yaml
+
+# unnecesary files
+**/*.md
+**/*.yaml
+**/*.yml
