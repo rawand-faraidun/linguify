@@ -1,4 +1,4 @@
-import type { Configs } from './types'
+import type { Config } from './types'
 
 /**
  * configuration file name
@@ -8,7 +8,7 @@ export const configFileName = 'linguify.config.json'
 /**
  * linguify default values
  */
-export const defaultConfig: Configs = {
+export const defaultConfig: Config = {
   localesPath: './public/locales',
   locales: ['en'],
   defaultLocale: 'en',

@@ -4,7 +4,7 @@ import init from './init'
 import start from './start'
 import { defaultPort } from '@lib/defaults'
 
-export { type Configs } from '@lib/types'
+export { type Config } from '@lib/types'
 
 /**
  * starting linguify

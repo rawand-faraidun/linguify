@@ -27,12 +27,12 @@ const init = async () => {
         process.exit(0)
       }
 
-      console.log(chalk.yellow('Overwriting linguify configs'))
+      console.log(chalk.yellow('Overwriting linguify config'))
     }
 
-    // saving the configs file
+    // saving the config file
     writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2))
-    console.log(`Linguify configs saved to ${chalk.cyan(chalk.underline(configPath))} successfully`)
+    console.log(`Linguify config saved to ${chalk.cyan(chalk.underline(configPath))} successfully`)
 
     console.log(chalk.green('Linguify initiated successfully'))
   } catch (error: any) {

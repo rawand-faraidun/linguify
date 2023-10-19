@@ -68,7 +68,7 @@ const AppProvider = ({ children }: Props) => {
   }, [])
 
   /**
-   * getting linguify configs
+   * getting linguify config
    */
   useEffect(() => {
     request<GetApi<Config>>('/config', { method: 'GET' })

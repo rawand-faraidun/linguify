@@ -1,7 +1,7 @@
 /**
- * default linguify configs
+ * default linguify config
  */
-export type Configs = {
+export type Config = {
   /**
    * locales directory path
    *

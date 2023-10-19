@@ -3,7 +3,7 @@ import { resolve } from 'path'
 import chalk from 'chalk'
 import findup from 'findup-sync'
 import { configFileName, defaultConfig } from './defaults'
-import type { Configs } from './types'
+import type { Config } from './types'
 
 /**
  * `node_modules` path, used to detect root
@@ -48,8 +48,8 @@ export const configPath = configPathExpected || configPathRoot
  */
 export const getUserConfig = () => {
   try {
-    if (!existsSync(configPath)) return {} as Configs
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as Configs
+    if (!existsSync(configPath)) return {} as Config
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
