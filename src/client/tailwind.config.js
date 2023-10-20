@@ -13,6 +13,9 @@ export default {
       }
     },
     extend: {
+      fontFamily: {
+        ibm: ['IBM Plex Sans Arabic', 'sans-serif']
+      },
       maxWidth: {
         'screen-2xl': '1400px'
       },

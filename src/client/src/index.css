@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@100;400;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -68,7 +70,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border font-ibm;
   }
   body {
     @apply bg-background text-foreground;
