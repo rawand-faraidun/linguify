@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import Svg from '../Svg'
 import { cn } from '@lib/functions/cn'
 
@@ -21,7 +22,7 @@ interface Props {
 const Logo = ({ className, isLink = true, to = '/', showText = true }: Props) => {
   const svg = (
     <Svg
-      className={cn(showText ? 'aspect-[3545.51/1000]' : 'aspect-[744.87/1000]', className)}
+      className={cn('h-10', showText ? 'aspect-[3545.51/1000]' : 'aspect-[744.87/1000]', className)}
       strokeWidth={0}
       viewBox={cn('0 0', showText ? '3545.51 1000' : '744.87 1000')}
       pathProps={{ className: 'fill-current' }}
@@ -58,10 +59,7 @@ const Logo = ({ className, isLink = true, to = '/', showText = true }: Props) =>
     />
   )
 
-  /**
-   * @todo - use link
-   */
-  return svg
+  return isLink ? <Link to={to || '/'}>{svg}</Link> : svg
 }
 
 export default Logo
