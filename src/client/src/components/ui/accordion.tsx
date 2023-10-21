@@ -1,5 +1,5 @@
-import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import * as React from 'react'
+import * as AccordionPrimitive from '@radix-ui/react-accordion'
 import Svg from '../Svg'
 import { cn } from '@lib/functions/cn'
 

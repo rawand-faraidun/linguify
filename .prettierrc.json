@@ -23,6 +23,17 @@
       }
     }
   ],
-  "importOrder": ["<BUILTIN_MODULES>", "fs", "express", "<THIRD_PARTY_MODULES>", "^[.]", "^@lib"],
+  "importOrder": [
+    "<BUILTIN_MODULES>",
+    "fs",
+    "express",
+    "^(react/(.*)$)|^(react$)",
+    "^(react-router-dom/(.*)$)|^(react-router-dom$)",
+    "<THIRD_PARTY_MODULES>",
+    "^@/(.*)$",
+    "^[.]",
+    "^@lib",
+    ".css$"
+  ],
   "plugins": ["@ianvs/prettier-plugin-sort-imports"]
 }
