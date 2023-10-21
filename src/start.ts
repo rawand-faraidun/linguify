@@ -13,14 +13,14 @@ import { configPath } from '@lib/utils'
  */
 const start = async (port: number = defaultPort) => {
   try {
+    // notifying user about config
+    console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
+
     // validating linguify configs
     linguifyValidation()
 
     // syncing namespaces
     syncNamespaces()
-
-    // notifying user about config
-    console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
 
     // advising to not change locale and namespaces locale
     console.log(chalk.yellow(`Please avoid interacting with locales and namespaces manually while using linguify`))
