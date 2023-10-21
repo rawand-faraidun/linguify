@@ -14,8 +14,6 @@ import { Theme as ThemeColor } from '@lib/types/Theme'
 const Theme = () => {
   const { theme, setTheme, currentTheme } = useContext(AppContext)
 
-  console.log(currentTheme)
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

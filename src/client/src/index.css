@@ -76,3 +76,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .mt-elem-sm {
+    @apply mt-8;
+  }
+  .mt-elem {
+    @apply mt-12;
+  }
+  .mt-elem-lg {
+    @apply mt-16;
+  }
+}
