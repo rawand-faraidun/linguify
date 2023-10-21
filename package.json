@@ -10,7 +10,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "dev": "concurrently -n WATCH,LINGUIFY,CLIENT -c green,cyan,magenta \"pnpm linguifyWatch\" \"pnpm linguifyDev\" \"pnpm clientDev\"",
-    "linguifyDev": "nodemon dist/index.js",
+    "linguifyDev": "nodemon dist/index.js --ignore build/**/*.json",
     "clientDev": "cd src/client && pnpm dev",
     "linguifyWatch": "tsup src/index.ts --format cjs,esm --dts --watch",
     "build": "pnpm linguifyBuild && pnpm clientBuild",

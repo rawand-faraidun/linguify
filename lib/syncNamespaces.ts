@@ -36,19 +36,21 @@ export const syncNamespaces = () => {
     })
 
     // default locale namespaces
-    let defaultNs = readdirSync(resolve(config.localesPath, config.defaultLocale)).filter(file => extname(file) == '.json')
+    let defaultNs = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+      file => extname(file) == '.json'
+    )
 
     // each namespace keys
     let nsKeys: NsKeys = {}
 
     // getting default namespaces and keys
     defaultNs.forEach(ns => {
-      let file = readFileSync(resolve(config.localesPath, config.defaultLocale, ns), 'utf-8')
+      let file = readFileSync(resolve(rootPath, config.localesPath, config.defaultLocale, ns), 'utf-8')
       let json: DynamicObject = {}
       try {
         json = JSON.parse(file)
       } catch {
-        writeFileSync(resolve(config.localesPath, config.defaultLocale, ns), '{}')
+        writeFileSync(resolve(rootPath, config.localesPath, config.defaultLocale, ns), '{}')
       }
       nsKeys[ns] = json
     })
@@ -58,16 +60,16 @@ export const syncNamespaces = () => {
       .filter(l => l != config.defaultLocale)
       .forEach(locale => {
         Object.keys(nsKeys).forEach(ns => {
-          if (!existsSync(resolve(config.localesPath, locale, ns))) {
-            return writeFileSync(resolve(config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns] }))
+          if (!existsSync(resolve(rootPath, config.localesPath, locale, ns))) {
+            return writeFileSync(resolve(rootPath, config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns] }))
           }
-          let file = readFileSync(resolve(config.localesPath, locale, ns), 'utf-8')
+          let file = readFileSync(resolve(rootPath, config.localesPath, locale, ns), 'utf-8')
           let json: DynamicObject = {}
           try {
             json = JSON.parse(file)
-            writeFileSync(resolve(config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns], ...json }))
+            writeFileSync(resolve(rootPath, config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns], ...json }))
           } catch {
-            writeFileSync(resolve(config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns] }))
+            writeFileSync(resolve(rootPath, config.localesPath, locale, ns), JSON.stringify({ ...nsKeys[ns] }))
           }
         })
       })
