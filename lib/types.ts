@@ -23,7 +23,7 @@ export type Config = {
   /**
    * default locale code
    *
-   * used as the main locale for the project and traslation, also used as the source text for google translate
+   * used as the main locale for the project, namespaces and traslation, also used as the source text for google translate
    *
    * @default 'en'
    */
