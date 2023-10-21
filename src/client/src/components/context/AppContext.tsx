@@ -26,6 +26,7 @@ export const AppContext = createContext(appContextDefault)
  */
 const AppProvider = ({ children }: Props) => {
   const [theme, setTheme] = useLocalStorage({ key: 'theme', defaultValue: appContextDefault.theme })
+  const [currentTheme, setCurrentTheme] = useState(appContextDefault.currentTheme)
   const [config, setConfig] = useState<(typeof appContextDefault)['config']>(null)
 
   /**
@@ -39,11 +40,13 @@ const AppProvider = ({ children }: Props) => {
       const query = window.matchMedia('(prefers-color-scheme: dark)')
       const systemTheme = query.matches ? 'dark' : 'light'
       root.classList.add(systemTheme)
+      setCurrentTheme(systemTheme)
 
       // change system theme handler
       const handleSystemThemeChange = () => {
         const systemChangeTheme = query.matches ? 'dark' : 'light'
         root.classList.add(systemChangeTheme)
+        setCurrentTheme(systemChangeTheme)
       }
       // listening to system theme change
       query.addEventListener('change', handleSystemThemeChange)
@@ -51,6 +54,7 @@ const AppProvider = ({ children }: Props) => {
     }
 
     root.classList.add(theme!)
+    setCurrentTheme(theme!)
   }, [theme])
 
   /**
@@ -86,7 +90,7 @@ const AppProvider = ({ children }: Props) => {
       .catch(error => console.error(error))
   }, [])
 
-  return <AppContext.Provider value={{ theme: theme!, setTheme, config }}>{children}</AppContext.Provider>
+  return <AppContext.Provider value={{ theme: theme!, setTheme, currentTheme, config }}>{children}</AppContext.Provider>
 }
 
 export default AppProvider

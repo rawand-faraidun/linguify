@@ -5,6 +5,7 @@ import { AppContext } from '../interfaces/AppContext'
  */
 export const appContextDefault: AppContext = {
   theme: 'system',
+  currentTheme: 'dark',
   setTheme: () => {},
   config: null
 }

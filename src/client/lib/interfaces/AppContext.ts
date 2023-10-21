@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from 'react'
 import { Config } from '../types/config'
-import { Theme } from '../types/Theme'
+import { Color, Theme } from '../types/Theme'
 
 /**
  * app props
@@ -15,6 +15,11 @@ export interface AppContext {
    * set theme color
    */
   setTheme: Dispatch<SetStateAction<Theme>>
+
+  /**
+   * current theme color
+   */
+  currentTheme: Color
 
   /**
    * user config
