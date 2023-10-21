@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Header from './components/App/Header'
 import AppProvider from './components/context/AppContext'
+import { Toaster } from './components/ui/toaster'
 import IndexPage from './pages/Index'
 
 function App() {
@@ -13,6 +14,8 @@ function App() {
           <Routes>
             <Route path="/" element={<IndexPage />} />
           </Routes>
+
+          <Toaster />
         </BrowserRouter>
       </AppProvider>
     </>
