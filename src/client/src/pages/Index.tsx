@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AddNamespace from '@/components/pages/AddNamespace'
-import NamespaceCard from '@/components/pages/NamespaceCard'
+import NamespaceCard from '@/components/pages/Namespace'
 import request from '@lib/functions/request'
 import { GetApi } from '@lib/interfaces/api/Api'
 import { Namespace } from '@lib/interfaces/api/Namespace'
@@ -57,7 +57,7 @@ export default function Page() {
 
           {/* namespaces */}
           {data.map(ns => (
-            <NamespaceCard key={ns} ns={ns} />
+            <NamespaceCard key={ns} ns={ns} onSuccess={() => refresher(r => ++r)} />
           ))}
         </div>
       </div>

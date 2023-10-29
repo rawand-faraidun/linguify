@@ -1,12 +1,18 @@
 import express from 'express'
-import { createNamespace, getNamespaces } from '../controllers/namespace.controller'
+import * as controller from '../controllers/namespace.controller'
 
 const router = express.Router()
 
 // get namerspaces
-router.get('/', getNamespaces)
+router.get('/', controller.getNamespaces)
 
 // create namespace
-router.post('/', createNamespace)
+router.post('/', controller.createNamespace)
+
+// update namespace
+router.put('/:ns', controller.updateNamespace)
+
+// delete namespace
+router.delete('/:ns', controller.deleteNamespace)
 
 export default router

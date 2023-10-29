@@ -9,3 +9,10 @@ export type Namespace = string
 export type AddNamespace = {
   namespace: Namespace
 }
+
+/**
+ * edit namespace
+ */
+export type EditNamespace = {
+  namespace: Namespace
+}
