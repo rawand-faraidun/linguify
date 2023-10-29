@@ -1,24 +1,10 @@
-import { AppContext } from '@/components/context/AppContext'
-import Svg from '@/components/Svg'
-import { Button } from '@/components/ui/button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { useToast } from '@/components/ui/use-toast'
-import { useContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import AddNamespace from '@/components/pages/AddNamespace'
+import NamespaceCard from '@/components/pages/NamespaceCard'
 import request from '@lib/functions/request'
-import { GetApi, PostApi } from '@lib/interfaces/api/Api'
-import { AddNamespace, Namespace } from '@lib/interfaces/api/Namespace'
+import { GetApi } from '@lib/interfaces/api/Api'
+import { Namespace } from '@lib/interfaces/api/Namespace'
 
 /**
  * index page
@@ -26,27 +12,8 @@ import { AddNamespace, Namespace } from '@lib/interfaces/api/Namespace'
  * @returns page
  */
 export default function Page() {
-  const { config } = useContext(AppContext)
   const [refresh, refresher] = useState(0)
   const [data, setData] = useState<Namespace[]>([])
-  const [newNs, setNewNs] = useState<AddNamespace>({ namespace: '' })
-  const { toast } = useToast()
-
-  // add namespace handler
-  const handleSubmit: React.MouseEventHandler<HTMLButtonElement> = async e => {
-    e.stopPropagation()
-    toast({ title: 'Please wait' })
-    try {
-      const {
-        data: { message }
-      } = await request<PostApi>('/namespace', { method: 'POST', data: newNs })
-      toast({ title: message })
-      setNewNs({ namespace: '' })
-      refresher(r => ++r)
-    } catch (error: any) {
-      toast({ title: error.message, variant: 'destructive' })
-    }
-  }
 
   useEffect(() => {
     request<GetApi<Namespace[]>>('/namespace', { method: 'GET' })
@@ -84,47 +51,13 @@ export default function Page() {
         {/* content */}
         <div className="mt-elem grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           <div>
-            {/* new namespace dialog */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" className="p-6 w-full h-full">
-                  <Svg paths={['M12 4.5v15m7.5-7.5h-15']} />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>New namespace</DialogTitle>
-                  <DialogDescription>Create new translation namespace</DialogDescription>
-                </DialogHeader>
-                <div className="py-4 grid grid-cols-1 gap-8">
-                  <Input
-                    id="namespace"
-                    name="namespace"
-                    value={newNs.namespace}
-                    onChange={e => setNewNs({ namespace: e.target.value })}
-                    autoComplete="off"
-                  />
-                </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button onClick={handleSubmit}>Add</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            {/* add namespace dialog */}
+            <AddNamespace onSuccess={() => refresher(r => ++r)} />
           </div>
 
+          {/* namespaces */}
           {data.map(ns => (
-            <Link key={ns} to={`/${ns}`}>
-              <Card key={ns}>
-                <CardHeader>
-                  <CardTitle>{ns.replace('.json', '')}</CardTitle>
-                  <CardDescription>
-                    {config?.localesPath}/{'{locale}'}/{ns}
-                  </CardDescription>
-                </CardHeader>
-              </Card>
-            </Link>
+            <NamespaceCard key={ns} ns={ns} />
           ))}
         </div>
       </div>
