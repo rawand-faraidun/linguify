@@ -26,6 +26,9 @@ dependencies:
   fs:
     specifier: 0.0.1-security
     version: 0.0.1-security
+  lodash:
+    specifier: ^4.17.21
+    version: 4.17.21
   path:
     specifier: ^0.12.7
     version: 0.12.7
@@ -52,6 +55,9 @@ devDependencies:
   '@types/findup-sync':
     specifier: ^4.0.2
     version: 4.0.2
+  '@types/lodash':
+    specifier: ^4.14.200
+    version: 4.14.200
   '@types/node':
     specifier: ^20.8.5
     version: 20.8.5
@@ -813,6 +819,10 @@ packages:
     resolution: {integrity: sha512-9PyP1rgCro6xO3R7zOEoMgx5U9HpLhIg1FFb9p2mWX/x5QI8KMuCWWYtCT1dUQpicp84OsxEAw3iqwIKQY5Pog==}
     dependencies:
       ci-info: 3.9.0
+    dev: true
+
+  /@types/lodash@4.14.200:
+    resolution: {integrity: sha512-YI/M/4HRImtNf3pJgbF+W6FrXovqj+T+/HpENLTooK9PnkacBsDpeP3IpHab40CClUfhNmdM2WTNP2sa2dni5Q==}
     dev: true
 
   /@types/micromatch@4.0.3:
@@ -2255,7 +2265,6 @@ packages:
 
   /lodash@4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
-    dev: true
 
   /lru-cache@4.1.5:
     resolution: {integrity: sha512-sWZlbEP2OsHNkXrMl5GYk/jKk70MBng6UU4YI/qGDYbgf6YbP4EvmqISbXCoJiRKs+1bSpFHVgQxvJ17F2li5g==}

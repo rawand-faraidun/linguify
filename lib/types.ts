@@ -1,4 +1,9 @@
 /**
+ * dynamic object
+ */
+export type DynamicObject = Record<string, any>
+
+/**
  * default linguify config
  */
 export type Config = {
