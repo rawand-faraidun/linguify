@@ -79,12 +79,6 @@ const AppProvider = ({ children }: Props) => {
       .then(({ data: { data } }) => {
         // checking if locales include default locale
         if (!data.locales.includes(data.defaultLocale)) throw new Error('Config locales does not include default locale')
-
-        // reordering locales
-        data.locales.splice(data.locales.indexOf(data.defaultLocale), 1)
-        data.locales.sort()
-        data.locales.unshift(data.defaultLocale)
-
         setConfig(data)
       })
       .catch(error => console.error(error))
