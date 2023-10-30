@@ -6,11 +6,6 @@ import type { DynamicObject } from './types'
 import { config, rootPath } from '@lib/utils'
 
 /**
- * namespace keys
- */
-type NsKeys = Record<string, DynamicObject>
-
-/**
  * syncs all namespaces
  *
  * creates all for each locale
@@ -39,7 +34,7 @@ export const syncNamespaces = () => {
     )
 
     // each namespace keys
-    const nsKeys: NsKeys = {}
+    const nsKeys: DynamicObject = {}
 
     // getting default namespaces and keys
     defaultNs.forEach(ns => {
@@ -67,7 +62,7 @@ export const syncNamespaces = () => {
           let json: DynamicObject = {}
           try {
             json = JSON.parse(file)
-            writeFileSync(path, _.defaultsDeep({ ...nsKeys[ns] }, json))
+            writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
           } catch {
             writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
           }
