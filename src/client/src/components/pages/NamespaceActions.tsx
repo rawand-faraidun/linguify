@@ -1,7 +1,4 @@
-import { useContext, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { AppContext } from '../context/AppContext'
+import { useState } from 'react'
 import Svg from '../Svg'
 import { Button } from '../ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
@@ -16,46 +13,15 @@ import { Input } from '../ui/input'
 import { useToast } from '../ui/use-toast'
 import request from '@lib/functions/request'
 import { DeleteApi, PutApi } from '@lib/interfaces/api/Api'
-import { EditNamespace } from '@lib/interfaces/api/Namespace'
+import { EditNamespace, Namespace } from '@lib/interfaces/api/Namespace'
 
 /**
  * component props
  */
-interface Props {
-  ns: string
-  onSuccess: () => void
-}
-
-/**
- * Namespace card
- *
- * @param props - component props
- *
- * @returns namespace card component
- */
-const NamespaceCard = ({ ns, onSuccess }: Props) => {
-  const namespace = ns.replace('.json', '')
-  const { config } = useContext(AppContext)
-
-  return (
-    <div className="relative">
-      <Link to={`/${ns}`}>
-        <Card key={ns} className="relative">
-          <CardHeader>
-            <CardTitle>{namespace}</CardTitle>
-            <CardDescription>
-              {config?.localesPath}/{'{locale}'}/{ns}
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </Link>
-
-      {/* card actions */}
-      <div className="absolute top-0 right-0 z-10">
-        <NamespaceActions ns={ns} onSuccess={onSuccess} />
-      </div>
-    </div>
-  )
+export interface Props {
+  ns: Namespace
+  onUpdate?: (props: EditNamespace) => void
+  onDelete?: () => void
 }
 
 /**
@@ -65,12 +31,12 @@ const NamespaceCard = ({ ns, onSuccess }: Props) => {
  *
  * @returns namespace actions dropdown component
  */
-export const NamespaceActions = ({ ns, onSuccess }: Props) => {
+const NamespaceActions = ({ ns, onUpdate, onDelete }: Props) => {
+  const { toast } = useToast()
   const namespace = ns.replace('.json', '')
   const [data, setData] = useState<EditNamespace>({ namespace: namespace })
   const [isUpdateOpen, setIsUpdateOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
-  const { toast } = useToast()
 
   // update namespace handler
   const handleSubmit: React.MouseEventHandler<HTMLButtonElement> = async e => {
@@ -78,11 +44,11 @@ export const NamespaceActions = ({ ns, onSuccess }: Props) => {
     toast({ title: 'Please wait' })
     try {
       const {
-        data: { message }
-      } = await request<PutApi>(`/namespace/${ns}`, { method: 'PUT', data: data })
+        data: { data: updated, message }
+      } = await request<PutApi<EditNamespace>>(`/namespace/${ns}`, { method: 'PUT', data: data })
       toast({ title: message })
       setData({ namespace: namespace })
-      onSuccess()
+      if (onUpdate) onUpdate(updated)
     } catch (error: any) {
       toast({ title: error.message, variant: 'destructive' })
     }
@@ -95,9 +61,9 @@ export const NamespaceActions = ({ ns, onSuccess }: Props) => {
     try {
       const {
         data: { message }
-      } = await request<DeleteApi>(`/namespace/${ns}`, { method: 'DELETE' })
+      } = await request<DeleteApi<EditNamespace>>(`/namespace/${ns}`, { method: 'DELETE' })
       toast({ title: message })
-      onSuccess()
+      if (onDelete) onDelete()
     } catch (error: any) {
       toast({ title: error.message, variant: 'destructive' })
     }
@@ -175,4 +141,4 @@ export const NamespaceActions = ({ ns, onSuccess }: Props) => {
   )
 }
 
-export default NamespaceCard
+export default NamespaceActions
