@@ -3,7 +3,7 @@ import { extname, resolve } from 'path'
 import chalk from 'chalk'
 import _ from 'lodash'
 import type { DynamicObject } from './types'
-import { config, rootPath } from '@lib/utils'
+import { config, otherLanguages, rootPath } from '@lib/utils'
 
 /**
  * syncs all namespaces
@@ -50,24 +50,22 @@ export const syncNamespaces = () => {
     })
 
     // syncing keys with other files
-    config.locales
-      .filter(l => l != config.defaultLocale)
-      .forEach(locale => {
-        Object.keys(nsKeys).forEach(ns => {
-          const path = resolve(rootPath, config.localesPath, locale, ns)
-          if (!existsSync(path)) {
-            return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
-          }
-          const file = readFileSync(path, 'utf-8')
-          let json: DynamicObject = {}
-          try {
-            json = JSON.parse(file)
-            writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
-          } catch {
-            writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
-          }
-        })
+    otherLanguages.forEach(locale => {
+      Object.keys(nsKeys).forEach(ns => {
+        const path = resolve(rootPath, config.localesPath, locale, ns)
+        if (!existsSync(path)) {
+          return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+        }
+        const file = readFileSync(path, 'utf-8')
+        let json: DynamicObject = {}
+        try {
+          json = JSON.parse(file)
+          writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
+        } catch {
+          writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+        }
       })
+    })
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
