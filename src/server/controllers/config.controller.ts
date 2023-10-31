@@ -1,5 +1,4 @@
 import { type RequestHandler } from 'express'
-import chalk from 'chalk'
 import { config } from '@lib/utils'
 
 /**
@@ -13,7 +12,6 @@ export const getConfig: RequestHandler = (req, res) => {
       message: 'Config retrieved successfully'
     })
   } catch (error: any) {
-    console.error(chalk.red(error.message))
     res.status(500).json({
       success: false,
       message: error.message

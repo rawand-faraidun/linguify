@@ -3,6 +3,7 @@ import Header from './components/App/Header'
 import AppProvider from './components/context/AppContext'
 import { Toaster } from './components/ui/toaster'
 import IndexPage from './pages/Index'
+import NamespacePage from './pages/Namespace'
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
 
           <Routes>
             <Route path="/" element={<IndexPage />} />
+            <Route path="/:ns" element={<NamespacePage />} />
           </Routes>
 
           <Toaster />

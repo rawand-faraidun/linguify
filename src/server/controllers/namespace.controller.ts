@@ -1,8 +1,9 @@
-import { readdirSync, renameSync, rmSync, writeFileSync } from 'fs'
+import { readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs'
 import { extname, resolve } from 'path'
 import { type RequestHandler } from 'express'
-import chalk from 'chalk'
-import { config, rootPath } from '@lib/utils'
+import { flatten } from '@lib/object'
+import type { DynamicObject } from '@lib/types'
+import { config, otherLanguages, rootPath } from '@lib/utils'
 
 /**
  * gets namespaces
@@ -10,7 +11,7 @@ import { config, rootPath } from '@lib/utils'
 export const getNamespaces: RequestHandler = (req, res) => {
   try {
     // locale namespaces
-    let namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
       file => extname(file) == '.json'
     )
 
@@ -18,6 +19,64 @@ export const getNamespaces: RequestHandler = (req, res) => {
       data: namespaces,
       success: true,
       message: 'Namespaces retrieved successfully'
+    })
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    })
+  }
+}
+
+/**
+ * gets namespace
+ */
+export const getNamespace: RequestHandler = (req, res) => {
+  try {
+    const { ns } = req.params
+    const filename = ns!
+
+    // locale namespaces
+    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+      file => extname(file) == '.json'
+    )
+
+    // checking namespace existance
+    if (!namespaces.map(ns => ns.toLowerCase()).includes(filename.toLowerCase())) throw new Error('Namespace does not exist')
+
+    // each namespace values
+    const values: DynamicObject = {}
+    // each namespace flattened values
+    const flattened: DynamicObject = {}
+    // flattened values array
+    const flattenValues: DynamicObject[] = []
+
+    // reading namespace values from each locale
+    config.locales.forEach(locale => {
+      const path = resolve(rootPath, config.localesPath, locale, filename)
+      const file = readFileSync(path, 'utf-8')
+      const value = JSON.parse(file) || {}
+      values[locale] = value
+      flattened[locale] = flatten(value)
+    })
+
+    // making flattened values array
+    Object.entries(flattened[config.defaultLocale]).forEach(([key, value]) => {
+      const translations = otherLanguages.reduce((obj, locale) => {
+        return { ...obj, [locale]: flattened[locale][key] }
+      }, {})
+      flattenValues.push({ key, value, translations })
+    })
+
+    res.status(200).json({
+      data: {
+        namespace: filename,
+        values,
+        flatten: flattened,
+        flattenValues
+      },
+      success: true,
+      message: 'Namespace retrieved successfully'
     })
   } catch (error: any) {
     res.status(500).json({
@@ -36,7 +95,7 @@ export const createNamespace: RequestHandler = (req, res) => {
     const filename = `${namespace}.json`
 
     // locale namespaces
-    let namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
       file => extname(file) == '.json'
     )
 
@@ -73,7 +132,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
     const filename = `${namespace}.json`
 
     // locale namespaces
-    let namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
       file => extname(file) == '.json'
     )
 
@@ -114,7 +173,7 @@ export const deleteNamespace: RequestHandler = (req, res) => {
     const filename = ns!
 
     // locale namespaces
-    let namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
+    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
       file => extname(file) == '.json'
     )
 

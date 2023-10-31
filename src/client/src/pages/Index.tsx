@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import AddNamespace from '@/components/pages/AddNamespace'
-import NamespaceCard from '@/components/pages/Namespace'
+import NamespaceCard from '@/components/pages/NamespaceCard'
+import { useToast } from '@/components/ui/use-toast'
 import request from '@lib/functions/request'
 import { GetApi } from '@lib/interfaces/api/Api'
-import { Namespace } from '@lib/interfaces/api/Namespace'
+import { NS } from '@lib/interfaces/api/Namespace'
 
 /**
  * index page
@@ -12,15 +13,16 @@ import { Namespace } from '@lib/interfaces/api/Namespace'
  * @returns page
  */
 export default function Page() {
+  const { toast } = useToast()
   const [refresh, refresher] = useState(0)
-  const [data, setData] = useState<Namespace[]>([])
+  const [data, setData] = useState<NS[]>([])
 
   useEffect(() => {
-    request<GetApi<Namespace[]>>('/namespace', { method: 'GET' })
+    request<GetApi<NS[]>>('/namespace', { method: 'GET' })
       .then(({ data: { data } }) => {
         setData(data)
       })
-      .catch(error => console.error(error))
+      .catch(error => toast({ title: error.message }))
   }, [refresh])
 
   return (
@@ -31,7 +33,7 @@ export default function Page() {
           <h1 className="text-4xl font-bold">Translation Namespaces</h1>
           <p className="mt-4 text-lg text-muted-foreground">
             Namespaces (NS) are a feature in internationalization frameworks which allows you to separate translations that
-            get loaded into multiple files. read more anout namespaces in{' '}
+            get loaded into multiple files. read more about namespaces in{' '}
             <Link
               className="underline underline-offset-4"
               to="https://www.i18next.com/principles/namespaces"
@@ -57,7 +59,7 @@ export default function Page() {
 
           {/* namespaces */}
           {data.map(ns => (
-            <NamespaceCard key={ns} ns={ns} onSuccess={() => refresher(r => ++r)} />
+            <NamespaceCard key={ns} ns={ns} onUpdate={() => refresher(r => ++r)} onDelete={() => refresher(r => ++r)} />
           ))}
         </div>
       </div>

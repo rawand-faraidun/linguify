@@ -6,6 +6,9 @@ const router = express.Router()
 // get namerspaces
 router.get('/', controller.getNamespaces)
 
+// get namespace
+router.get('/:ns', controller.getNamespace)
+
 // create namespace
 router.post('/', controller.createNamespace)
 

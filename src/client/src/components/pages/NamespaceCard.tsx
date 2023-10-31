@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppContext } from '../context/AppContext'
 import NamespaceActions, { Props as ActionProps } from './NamespaceActions'
-import { Namespace } from '@lib/interfaces/api/Namespace'
+import { NS } from '@lib/interfaces/api/Namespace'
 
 /**
  * component props
  */
 interface Props extends Omit<ActionProps, 'ns'> {
-  ns: Namespace
+  ns: NS
 }
 
 /**

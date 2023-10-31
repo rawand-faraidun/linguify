@@ -13,7 +13,7 @@ const init = async () => {
 
     // checking if the config file excists, if so asking to overwrite it
     if (existsSync(configPath)) {
-      let { overwrite } = await prompts.prompt({
+      const { overwrite } = await prompts.prompt({
         type: 'toggle',
         name: 'overwrite',
         message: 'A linguify config file already exists. Do you want to overwrite it?',

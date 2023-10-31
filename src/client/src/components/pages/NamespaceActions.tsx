@@ -13,13 +13,13 @@ import { Input } from '../ui/input'
 import { useToast } from '../ui/use-toast'
 import request from '@lib/functions/request'
 import { DeleteApi, PutApi } from '@lib/interfaces/api/Api'
-import { EditNamespace, Namespace } from '@lib/interfaces/api/Namespace'
+import { EditNamespace, NS } from '@lib/interfaces/api/Namespace'
 
 /**
  * component props
  */
 export interface Props {
-  ns: Namespace
+  ns: NS
   onUpdate?: (props: EditNamespace) => void
   onDelete?: () => void
 }
