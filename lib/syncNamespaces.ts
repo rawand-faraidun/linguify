@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
-import { resolve } from 'path'
 import chalk from 'chalk'
 import _ from 'lodash'
+import { getNamespaceJson, getNamespaces, getPath } from './functions'
 import type { DynamicObject } from './types'
-import { config, getNamespaces, otherLanguages, rootPath } from '@lib/utils'
+import { config, otherLanguages } from '@lib/utils'
 
 /**
  * syncs all namespaces
@@ -14,7 +14,7 @@ export const syncNamespaces = () => {
   try {
     // checking or creating locale files
     config.locales.forEach(locale => {
-      const path = resolve(rootPath, config.localesPath, locale)
+      const path = getPath(locale)
       if (!existsSync(path)) {
         mkdirSync(path)
       } else {
@@ -36,7 +36,7 @@ export const syncNamespaces = () => {
 
     // getting default namespaces and keys
     defaultNSs.forEach(ns => {
-      const path = resolve(rootPath, config.localesPath, config.defaultLocale, ns)
+      const path = getPath(config.defaultLocale, ns)
       const file = readFileSync(path, 'utf-8')
       let json: DynamicObject = {}
       try {
@@ -50,14 +50,12 @@ export const syncNamespaces = () => {
     // syncing keys with other files
     otherLanguages.forEach(locale => {
       Object.keys(nsKeys).forEach(ns => {
-        const path = resolve(rootPath, config.localesPath, locale, ns)
+        const path = getPath(locale, ns)
         if (!existsSync(path)) {
           return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
         }
-        const file = readFileSync(path, 'utf-8')
-        let json: DynamicObject = {}
         try {
-          json = JSON.parse(file)
+          const json = getNamespaceJson(locale, ns)
           writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
         } catch {
           writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))

@@ -1,9 +1,7 @@
-import { existsSync, readdirSync, readFileSync } from 'fs'
-import { extname, resolve } from 'path'
-import chalk from 'chalk'
+import { resolve } from 'path'
 import findup from 'findup-sync'
 import { configFileName, defaultConfig } from './defaults'
-import type { Config } from './types'
+import { getUserConfig } from './functions'
 
 /**
  * `node_modules` path, used to detect root
@@ -42,21 +40,6 @@ export const configPathExpected = findup(configFileName)
 export const configPath = configPathExpected || configPathRoot
 
 /**
- * get user config
- *
- * @returns user configurations
- */
-export const getUserConfig = () => {
-  try {
-    if (!existsSync(configPath)) return {} as Config
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
-  } catch (error: any) {
-    console.error(chalk.red(error.message))
-    process.exit(0)
-  }
-}
-
-/**
  * configuration
  */
 export const config = { ...defaultConfig, ...getUserConfig() }
@@ -65,11 +48,3 @@ export const config = { ...defaultConfig, ...getUserConfig() }
  * other languages from config
  */
 export const otherLanguages = config.locales.filter(locale => locale !== config.defaultLocale)
-
-/**
- * gets current namespaces
- *
- * @returns array of namespaces
- */
-export const getNamespaces = () =>
-  readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(file => extname(file) == '.json')

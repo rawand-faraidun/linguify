@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs'
-import { resolve } from 'path'
 import chalk from 'chalk'
-import { configPath, getUserConfig, rootPath } from './utils'
+import { getPath, getUserConfig } from './functions'
+import { configPath } from './utils'
 
 /**
  * validates linguify config
@@ -23,10 +23,10 @@ export const linguifyValidation = () => {
     if (typeof config.localesPath != 'string') {
       throw new Error(chalk.yellow(`Provided 'localesPath' is not a string, please change it before starting`))
     }
-    if (!existsSync(resolve(rootPath, config.localesPath))) {
+    if (!existsSync(getPath())) {
       throw new Error(chalk.yellow(`Provided 'localesPath' is not found, please create the directory before starting`))
     }
-    if (!statSync(resolve(rootPath, config.localesPath)).isDirectory()) {
+    if (!statSync(getPath()).isDirectory()) {
       throw new Error(chalk.yellow(`Provided 'localesPath' is not a directory, please change it before starting`))
     }
 
