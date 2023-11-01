@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AppContext } from '@/components/context/AppContext'
 import NamespaceActions from '@/components/pages/NamespaceActions'
+import NamespaceTable from '@/components/pages/NamespaceTable'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/components/ui/use-toast'
 import request from '@lib/functions/request'
@@ -59,6 +60,7 @@ export default function Page() {
 
       {/* datas */}
       <div>
+        <NamespaceTable data={data} refresher={() => refresher(r => ++r)} />
       </div>
     </div>
   )

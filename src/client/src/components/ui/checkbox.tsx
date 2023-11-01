@@ -16,7 +16,7 @@ const Checkbox = React.forwardRef<
     {...props}
   >
     <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-      <Svg className="h-4 w-4" paths={['20 6 9 17 4 12']} />
+      <Svg className="h-4 w-4" paths={['M4.5 12.75l6 6 9-13.5']} />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ))
