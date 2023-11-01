@@ -3,7 +3,7 @@ import { type RequestHandler } from 'express'
 import { getNamespaces as getConfigNamespaces, getNamespaceJson, getPath, isNamespaceExists } from '@lib/functions'
 import { flatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
-import { config, otherLanguages } from '@lib/utils'
+import { config, otherLocales } from '@lib/utils'
 
 /**
  * gets namespaces
@@ -53,7 +53,7 @@ export const getNamespace: RequestHandler = (req, res) => {
 
     // making flattened values array
     Object.entries(flattened[config.defaultLocale]).forEach(([key, value]) => {
-      const translations = otherLanguages.reduce((obj, locale) => {
+      const translations = otherLocales.reduce((obj, locale) => {
         return { ...obj, [locale]: flattened[locale][key] }
       }, {})
       flattenValues.push({ key, value, translations })
@@ -70,10 +70,7 @@ export const getNamespace: RequestHandler = (req, res) => {
       message: 'Namespace retrieved successfully'
     })
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -97,10 +94,7 @@ export const createNamespace: RequestHandler = (req, res) => {
       message: 'Namespaces created successfully'
     })
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -129,10 +123,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
       message: 'Namespaces updated successfully'
     })
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    })
+    res.status(500).json({ success: false, message: error.message })
   }
 }
 
@@ -156,9 +147,6 @@ export const deleteNamespace: RequestHandler = (req, res) => {
       message: 'Namespaces deleted successfully'
     })
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

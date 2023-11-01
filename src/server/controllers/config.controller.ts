@@ -12,9 +12,6 @@ export const getConfig: RequestHandler = (req, res) => {
       message: 'Config retrieved successfully'
     })
   } catch (error: any) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    })
+    res.status(500).json({ success: false, message: error.message })
   }
 }

@@ -3,7 +3,7 @@ import chalk from 'chalk'
 import _ from 'lodash'
 import { getNamespaceJson, getNamespaces, getPath } from './functions'
 import type { DynamicObject } from './types'
-import { config, otherLanguages } from '@lib/utils'
+import { config, otherLocales } from '@lib/utils'
 
 /**
  * syncs all namespaces
@@ -48,7 +48,7 @@ export const syncNamespaces = () => {
     })
 
     // syncing keys with other files
-    otherLanguages.forEach(locale => {
+    otherLocales.forEach(locale => {
       Object.keys(nsKeys).forEach(ns => {
         const path = getPath(locale, ns)
         if (!existsSync(path)) {

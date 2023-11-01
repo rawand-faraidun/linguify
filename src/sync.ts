@@ -1,6 +1,4 @@
-import { watch } from 'fs'
 import chalk from 'chalk'
-import startServer from './server/server'
 import { defaultPort } from '@lib/defaults'
 import { linguifyValidation } from '@lib/linguifyValidation'
 import { syncNamespaces } from '@lib/syncNamespaces'

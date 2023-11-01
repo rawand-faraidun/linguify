@@ -47,4 +47,4 @@ export const config = { ...defaultConfig, ...getUserConfig() }
 /**
  * other languages from config
  */
-export const otherLanguages = config.locales.filter(locale => locale !== config.defaultLocale)
+export const otherLocales = config.locales.filter(locale => locale !== config.defaultLocale)
