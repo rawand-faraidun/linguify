@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'fs'
-import { resolve } from 'path'
+import { existsSync, readdirSync, readFileSync } from 'fs'
+import { extname, resolve } from 'path'
 import chalk from 'chalk'
 import findup from 'findup-sync'
 import { configFileName, defaultConfig } from './defaults'
@@ -65,3 +65,11 @@ export const config = { ...defaultConfig, ...getUserConfig() }
  * other languages from config
  */
 export const otherLanguages = config.locales.filter(locale => locale !== config.defaultLocale)
+
+/**
+ * gets current namespaces
+ *
+ * @returns array of namespaces
+ */
+export const getNamespaces = () =>
+  readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(file => extname(file) == '.json')

@@ -1,9 +1,9 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'fs'
-import { extname, resolve } from 'path'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
+import { resolve } from 'path'
 import chalk from 'chalk'
 import _ from 'lodash'
 import type { DynamicObject } from './types'
-import { config, otherLanguages, rootPath } from '@lib/utils'
+import { config, getNamespaces, otherLanguages, rootPath } from '@lib/utils'
 
 /**
  * syncs all namespaces
@@ -29,15 +29,13 @@ export const syncNamespaces = () => {
     })
 
     // default locale namespaces
-    const defaultNs = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const defaultNSs = getNamespaces()
 
     // each namespace keys
     const nsKeys: DynamicObject = {}
 
     // getting default namespaces and keys
-    defaultNs.forEach(ns => {
+    defaultNSs.forEach(ns => {
       const path = resolve(rootPath, config.localesPath, config.defaultLocale, ns)
       const file = readFileSync(path, 'utf-8')
       let json: DynamicObject = {}

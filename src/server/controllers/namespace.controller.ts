@@ -1,9 +1,9 @@
-import { readdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'fs'
-import { extname, resolve } from 'path'
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'fs'
+import { resolve } from 'path'
 import { type RequestHandler } from 'express'
 import { flatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
-import { config, otherLanguages, rootPath } from '@lib/utils'
+import { config, getNamespaces as getConfigNamespaces, otherLanguages, rootPath } from '@lib/utils'
 
 /**
  * gets namespaces
@@ -11,9 +11,7 @@ import { config, otherLanguages, rootPath } from '@lib/utils'
 export const getNamespaces: RequestHandler = (req, res) => {
   try {
     // locale namespaces
-    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const namespaces = getConfigNamespaces()
 
     res.status(200).json({
       data: namespaces,
@@ -37,9 +35,7 @@ export const getNamespace: RequestHandler = (req, res) => {
     const filename = ns!
 
     // locale namespaces
-    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const namespaces = getConfigNamespaces()
 
     // checking namespace existance
     if (!namespaces.map(ns => ns.toLowerCase()).includes(filename.toLowerCase())) throw new Error('Namespace does not exist')
@@ -95,9 +91,7 @@ export const createNamespace: RequestHandler = (req, res) => {
     const filename = `${namespace}.json`
 
     // locale namespaces
-    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const namespaces = getConfigNamespaces()
 
     // checking namespace existance
     if (namespaces.map(ns => ns.toLowerCase()).includes(filename.toLowerCase())) throw new Error('Namespace already exists')
@@ -132,9 +126,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
     const filename = `${namespace}.json`
 
     // locale namespaces
-    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const namespaces = getConfigNamespaces()
 
     // checking namespace existance
     if (!namespaces.map(n => n.toLowerCase()).includes(oldFilename.toLowerCase())) {
@@ -173,9 +165,7 @@ export const deleteNamespace: RequestHandler = (req, res) => {
     const filename = ns!
 
     // locale namespaces
-    const namespaces = readdirSync(resolve(rootPath, config.localesPath, config.defaultLocale)).filter(
-      file => extname(file) == '.json'
-    )
+    const namespaces = getConfigNamespaces()
 
     // checking namespace existance
     if (!namespaces.map(ns => ns.toLowerCase()).includes(filename.toLowerCase())) throw new Error('Namespace does not exist')
