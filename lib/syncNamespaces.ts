@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs
 import chalk from 'chalk'
 import _ from 'lodash'
 import { getNamespaceJson, getNamespaces, getPath } from './functions'
+import { clear } from './object'
 import type { DynamicObject } from './types'
 import { config, otherLocales } from '@lib/utils'
 
@@ -40,7 +41,8 @@ export const syncNamespaces = () => {
       const file = readFileSync(path, 'utf-8')
       let json: DynamicObject = {}
       try {
-        json = JSON.parse(file)
+        json = clear(JSON.parse(file))
+        writeFileSync(path, JSON.stringify(json))
       } catch {
         writeFileSync(path, '{}')
       }
@@ -55,7 +57,7 @@ export const syncNamespaces = () => {
           return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
         }
         try {
-          const json = getNamespaceJson(locale, ns)
+          const json = clear(getNamespaceJson(locale, ns))
           writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
         } catch {
           writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))

@@ -1,3 +1,4 @@
+import _ from 'lodash'
 import type { DynamicObject } from './types'
 
 /**
@@ -68,4 +69,15 @@ export const unflatten = (flatObject: DynamicObject, { separator = '.' }: Option
   }
 
   return nested
+}
+
+/**
+ * clears object from empty nested objects
+ *
+ * @param object - object to clear
+ *
+ * @returns clear object
+ */
+export const clear = (object: DynamicObject): DynamicObject => {
+  return _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
 }
