@@ -25,7 +25,7 @@ const request = <T = any>(url: Url, { method = 'GET', headers, ...config }: Conf
   }).catch((err: any) => {
     // customizing error message
     err.originalMessage = err.message
-    err.message = err.response?.data?.message
+    err.message = err.response?.data?.message ?? err.message
     throw err
   })
 
