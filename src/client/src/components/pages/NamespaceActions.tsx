@@ -54,7 +54,7 @@ const NamespaceActions = ({ ns, onUpdate, onDelete }: Props) => {
     }
   }
 
-  // update namespace handler
+  // delete namespace handler
   const handleDelete: React.MouseEventHandler<HTMLButtonElement> = async e => {
     e.stopPropagation()
     toast({ title: 'Please wait' })

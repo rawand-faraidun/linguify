@@ -1,3 +1,4 @@
+import { Key } from './Key'
 import { DynamicObject, FlatObject } from '@lib/types/object'
 
 /**
@@ -14,11 +15,7 @@ export interface Namespace {
   namespace: NS
   values: Record<string, DynamicObject>
   flatten: Record<string, FlatObject>
-  flattenValues: {
-    key: string
-    value: string
-    translations: FlatObject
-  }[]
+  flattenValues: Key[]
 }
 
 /**

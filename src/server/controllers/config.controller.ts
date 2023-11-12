@@ -1,5 +1,5 @@
 import { type RequestHandler } from 'express'
-import { config } from '@lib/utils'
+import { config, otherLocales } from '@lib/utils'
 
 /**
  * gets linguify config
@@ -7,7 +7,7 @@ import { config } from '@lib/utils'
 export const getConfig: RequestHandler = (req, res) => {
   try {
     res.status(200).json({
-      data: config,
+      data: { ...config, otherLocales },
       success: true,
       message: 'Config retrieved successfully'
     })

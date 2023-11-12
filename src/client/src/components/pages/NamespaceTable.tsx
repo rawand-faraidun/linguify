@@ -1,4 +1,7 @@
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
+import Svg from '../Svg'
+import { Button } from '../ui/button'
+import { Checkbox } from '../ui/checkbox'
 import {
   Dialog,
   DialogClose,
@@ -8,17 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger
-} from '@/components/ui/dialog'
-import Svg from '../Svg'
-import { Button } from '../ui/button'
-import { Checkbox } from '../ui/checkbox'
+} from '../ui/dialog'
 import { Input } from '../ui/input'
-import { Label } from '../ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 import { useToast } from '../ui/use-toast'
+import AddKey from './AddKey'
+import KeyActions, { SubKeyActions } from './KeyActions'
 import { cn } from '@lib/functions/cn'
 import request from '@lib/functions/request'
-import { DeleteApi, PostApi } from '@lib/interfaces/api/Api'
+import { DeleteApi } from '@lib/interfaces/api/Api'
+import { EditKey } from '@lib/interfaces/api/Key'
 import { Namespace } from '@lib/interfaces/api/Namespace'
 
 /**
@@ -30,10 +32,7 @@ export interface Props {
 }
 
 // sorting type
-type sort = {
-  key: 'key' | 'value'
-  dir: 'asc' | 'desc'
-}
+type sort = { key: 'key' | 'value'; dir: 'asc' | 'desc' }
 
 /**
  * Namespace data table
@@ -45,41 +44,22 @@ type sort = {
 const NamespaceTable = ({ data, refresher }: Props) => {
   const { toast } = useToast()
   const [datas, setDatas] = useState(data.flattenValues)
-  const [editing, setEditing] = useState<string[]>([])
   const [selected, setSelected] = useState<string[]>([])
   const [expanded, setExpanded] = useState<string[]>([])
+  const editingState = useState<EditKey | null>(null)
   const [sort, setSort] = useState<sort>({ key: 'key', dir: 'asc' })
   const [search, setSeatch] = useState('')
 
-  const [newKey, setNewKey] = useState({ key: '', value: '' })
-
-  // add namespace handler
-  const handleAddKey: React.MouseEventHandler<HTMLButtonElement> = async e => {
+  // delete key handler
+  const handleDelete: React.MouseEventHandler<HTMLButtonElement> = async e => {
     e.stopPropagation()
     toast({ title: 'Please wait' })
     try {
       const {
         data: { message }
-      } = await request<PostApi>(`/namespace/${data.namespace}/key`, { method: 'POST', data: newKey })
+      } = await request<DeleteApi>(`/namespace/${data.namespace}/key`, { method: 'DELETE', data: { keys: selected } })
       toast({ title: message })
-      setNewKey({ key: '', value: '' })
-      refresher(r => ++r)
-    } catch (error: any) {
-      toast({ title: error.message, variant: 'destructive' })
-    }
-  }
-
-  // update namespace handler
-  const handleDelete = async (key?: string) => {
-    toast({ title: 'Please wait' })
-    try {
-      const {
-        data: { message }
-      } = await request<DeleteApi>(`/namespace/${data.namespace}/key`, {
-        method: 'DELETE',
-        data: { keys: key ? [key] : selected }
-      })
-      toast({ title: message })
+      setSelected([])
       refresher(r => ++r)
     } catch (error: any) {
       toast({ title: error.message, variant: 'destructive' })
@@ -92,7 +72,13 @@ const NamespaceTable = ({ data, refresher }: Props) => {
     // filtering
     ordganizedDatas = ordganizedDatas.filter(
       ({ key, value, translations }) =>
-        key.includes(search) || value.includes(search) || Object.values(translations).some(v => v.includes(search))
+        key.includes(search) ||
+        value.includes(search) ||
+        // expanding the row if the translation matches the search
+        Object.values(translations).some(v => {
+          if (v.includes(search)) setExpanded(prev => [...prev, key])
+          return v.includes(search)
+        })
     )
 
     // sorting
@@ -136,7 +122,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                 </DialogHeader>
                 <DialogFooter>
                   <DialogClose asChild>
-                    <Button variant="destructive" onClick={() => handleDelete()}>
+                    <Button variant="destructive" onClick={handleDelete}>
                       Delete
                     </Button>
                   </DialogClose>
@@ -146,47 +132,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
           )}
 
           {/* new key */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <span>Add key</span>
-                <Svg paths={['M12 4.5v15m7.5-7.5h-15']} />
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>New key</DialogTitle>
-                <DialogDescription>Create new translation key</DialogDescription>
-              </DialogHeader>
-              <div className="py-4 grid grid-cols-1 gap-8">
-                <div className="flex flex-col gap-3">
-                  <Label htmlFor="key">Key</Label>
-                  <Input
-                    id="key"
-                    name="key"
-                    value={newKey.key}
-                    onChange={e => setNewKey(prev => ({ ...prev, key: e.target.value }))}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="flex flex-col gap-3">
-                  <Label htmlFor="value">Value</Label>
-                  <Input
-                    id="value"
-                    name="value"
-                    value={newKey.value}
-                    onChange={e => setNewKey(prev => ({ ...prev, value: e.target.value }))}
-                    autoComplete="off"
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button onClick={handleAddKey}>Add</Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <AddKey namespace={data.namespace} onSuccess={() => refresher(r => ++r)} />
         </div>
       </div>
 
@@ -194,12 +140,19 @@ const NamespaceTable = ({ data, refresher }: Props) => {
       <Table className="mt-6">
         <TableHeader>
           <TableRow>
-            {/* checked and is expanded */}
-            <TableHead className="w-[100px]">
-              <Checkbox
-                checked={datas.every(v => selected.includes(v.key))}
-                onCheckedChange={value => (value == true ? setSelected(datas.map(v => v.key)) : setSelected([]))}
-              />
+            {/* selected and is expanded */}
+            <TableHead className="w-[1px]">
+              <div className="flex gap-2 items-center">
+                <Checkbox
+                  checked={datas.every(v => selected.includes(v.key))}
+                  onCheckedChange={value => (value == true ? setSelected(datas.map(v => v.key)) : setSelected([]))}
+                />
+                {datas.some(v => expanded.includes(v.key)) && (
+                  <Button className="p-1" variant="ghost" onClick={() => setExpanded([])}>
+                    <Svg className="w-4 h-4 text-foreground" paths={['M19.5 8.25l-7.5 7.5-7.5-7.5']} />
+                  </Button>
+                )}
+              </div>
             </TableHead>
             {/* key */}
             <TableHead>
@@ -249,77 +202,85 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                 </div>
               </Button>
             </TableHead>
-            <TableHead className="w-[50px]" />
+            <TableHead className="w-[1px]" />
           </TableRow>
         </TableHeader>
 
         {/* datas */}
         {datas.length > 0 ? (
           <TableBody>
-            {datas.map(({ key, value, translations }) => (
-              <Fragment key={key}>
-                {/* row values */}
-                <TableRow
-                  data-state={cn(
-                    selected.includes(key) ? 'selected' : { expanded: expanded.includes(key) || editing.includes(key) }
-                  )}
-                >
-                  {/* table checked state and expand */}
-                  <TableCell>
-                    <div className="flex gap-2 items-center">
-                      <Checkbox
-                        checked={selected.includes(key)}
-                        onCheckedChange={value =>
-                          setSelected(prev => (value == true ? [...prev, key] : prev.filter(s => s != key)))
-                        }
-                      />
-                      <Button
-                        className="p-1"
-                        variant="ghost"
-                        onClick={() =>
-                          setExpanded(prev => (prev.includes(key) ? prev.filter(s => s != key) : [...prev, key]))
-                        }
-                      >
-                        <Svg
-                          className="w-4 h-4"
-                          strokeWidth={3}
-                          paths={[expanded.includes(key) ? 'M19.5 8.25l-7.5 7.5-7.5-7.5' : 'M8.25 4.5l7.5 7.5-7.5 7.5']}
-                        />
-                      </Button>
-                    </div>
-                  </TableCell>
-                  {/* key */}
-                  <TableCell className="text-base">{key}</TableCell>
-                  {/* value */}
-                  <TableCell dir="auto" className="text-base">
-                    {value}
-                  </TableCell>
-                  {/* actions */}
-                  <TableCell></TableCell>
-                </TableRow>
+            {datas.map(row => {
+              const { key, value, translations } = row
+              const isSelected = selected.includes(key)
+              const isExpanded = expanded.includes(key)
 
-                {/* trnaslations */}
-                {expanded.includes(key) &&
-                  Object.entries(translations).map(([tKey, tValue]) => (
-                    <>
-                      <TableRow
-                        key={`${key}-${tKey}`}
-                        className="border-0"
-                        data-state={cn({
-                          expanded: expanded.includes(key) || editing.includes(key)
-                        })}
-                      >
-                        <TableCell />
-                        <TableCell className="border-b">{tKey}</TableCell>
-                        <TableCell dir="auto" className="border-b">
-                          {tValue}
-                        </TableCell>
-                        <TableCell className="border-b"></TableCell>
-                      </TableRow>
-                    </>
-                  ))}
-              </Fragment>
-            ))}
+              return (
+                <Fragment key={key}>
+                  {/* row values */}
+                  <TableRow data-state={cn(isSelected ? 'selected' : { expanded: isExpanded })}>
+                    {/* table checked state and expand */}
+                    <TableCell>
+                      <div className="flex gap-2 items-center">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={value =>
+                            setSelected(prev => (value == true ? [...prev, key] : prev.filter(s => s != key)))
+                          }
+                        />
+                        <Button
+                          className="p-1"
+                          variant="ghost"
+                          onClick={() =>
+                            setExpanded(prev => (prev.includes(key) ? prev.filter(e => e != key) : [...prev, key]))
+                          }
+                        >
+                          <Svg
+                            className="w-4 h-4"
+                            paths={[isExpanded ? 'M19.5 8.25l-7.5 7.5-7.5-7.5' : 'M8.25 4.5l7.5 7.5-7.5 7.5']}
+                          />
+                        </Button>
+                      </div>
+                    </TableCell>
+                    {/* key */}
+                    <TableCell className="text-base">{key}</TableCell>
+                    {/* value */}
+                    <TableCell dir="auto" className="text-base">
+                      {value}
+                    </TableCell>
+                    {/* actions */}
+                    <TableCell>
+                      <KeyActions
+                        namespace={data.namespace}
+                        data={row}
+                        editingState={editingState}
+                        setSelected={setSelected}
+                        onSuccess={() => refresher(r => ++r)}
+                      />
+                    </TableCell>
+                  </TableRow>
+
+                  {/* trnaslations */}
+                  {isExpanded &&
+                    Object.entries(translations).map(([tKey, tValue]) => (
+                      <Fragment key={`${key}-${tKey}`}>
+                        <TableRow className="border-0" data-state={cn({ expanded: isExpanded })}>
+                          <TableCell />
+                          {/* locale */}
+                          <TableCell className="border-b">{tKey}</TableCell>
+                          {/* value */}
+                          <TableCell dir="auto" className="border-b">
+                            {tValue}
+                          </TableCell>
+                          {/* actions */}
+                          <TableCell className="border-b">
+                            <SubKeyActions data={tValue} />
+                          </TableCell>
+                        </TableRow>
+                      </Fragment>
+                    ))}
+                </Fragment>
+              )
+            })}
           </TableBody>
         ) : (
           <TableBody>

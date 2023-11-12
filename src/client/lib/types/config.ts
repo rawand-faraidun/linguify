@@ -4,6 +4,7 @@
 export type Config = {
   localesPath: string
   locales: string[]
+  otherLocales: string[]
   defaultLocale: string
   useGoogleTranslate: boolean
 }

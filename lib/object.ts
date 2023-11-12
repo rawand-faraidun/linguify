@@ -81,3 +81,28 @@ export const unflatten = (flatObject: DynamicObject, { separator = '.' }: Option
 export const clear = (object: DynamicObject): DynamicObject => {
   return _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
 }
+
+/**
+ * check if a path is assignable to the object, returns unvalid path if not
+ *
+ * @param object - object to validate
+ * @param path - path to check
+ * @param options - options
+ *
+ * @returns true is path assignable, point string if not
+ */
+export const isAssignable = (object: DynamicObject, path: _.Many<string>, { separator = '.' }: Options = {}) => {
+  const pathArray = typeof path == 'string' ? path.split(separator) : path
+  // getting the path points
+  const pathPoints = pathArray.reduce<string[]>(
+    (arr, point, index) => [...arr, index > 0 ? `${arr[index - 1]}.${point}` : point],
+    []
+  )
+
+  // checking if all the points are valid
+  for (const point of pathPoints) {
+    if (_.has(object, point) && typeof _.get(object, point) != 'object') return point
+  }
+
+  return true
+}
