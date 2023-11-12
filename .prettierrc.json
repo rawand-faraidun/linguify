@@ -7,13 +7,33 @@
   "arrowParens": "avoid",
   "printWidth": 125,
   "endOfLine": "crlf",
+  "overrides": [
+    {
+      "files": "*.tsx",
+      "options": {
+        "tabWidth": 2,
+        "useTabs": false,
+        "jsxSingleQuote": false
+      }
+    },
+    {
+      "files": "*.css",
+      "options": {
+        "singleQuote": false
+      }
+    }
+  ],
   "importOrder": [
     "<BUILTIN_MODULES>",
     "fs",
+    "express",
+    "^(react/(.*)$)|^(react$)",
+    "^(react-router-dom/(.*)$)|^(react-router-dom$)",
     "<THIRD_PARTY_MODULES>",
-    "^[.]"
+    "^@/(.*)$",
+    "^[.]",
+    "^@lib",
+    ".css$"
   ],
-  "plugins": [
-    "@ianvs/prettier-plugin-sort-imports"
-  ]
+  "plugins": ["@ianvs/prettier-plugin-sort-imports"]
 }

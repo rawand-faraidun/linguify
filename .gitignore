@@ -1,3 +1,6 @@
+# library config file
+linguify.config.json
+
 # Logs
 logs
 *.log
@@ -90,6 +93,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+build
 
 # Gatsby files
 .cache/
