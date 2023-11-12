@@ -20,7 +20,6 @@ import KeyActions, { SubKeyActions } from './KeyActions'
 import { cn } from '@lib/functions/cn'
 import request from '@lib/functions/request'
 import { DeleteApi } from '@lib/interfaces/api/Api'
-import { EditKey } from '@lib/interfaces/api/Key'
 import { Namespace } from '@lib/interfaces/api/Namespace'
 
 /**
@@ -46,7 +45,6 @@ const NamespaceTable = ({ data, refresher }: Props) => {
   const [datas, setDatas] = useState(data.flattenValues)
   const [selected, setSelected] = useState<string[]>([])
   const [expanded, setExpanded] = useState<string[]>([])
-  const editingState = useState<EditKey | null>(null)
   const [sort, setSort] = useState<sort>({ key: 'key', dir: 'asc' })
   const [search, setSeatch] = useState('')
 
@@ -252,7 +250,6 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                       <KeyActions
                         namespace={data.namespace}
                         data={row}
-                        editingState={editingState}
                         setSelected={setSelected}
                         onSuccess={() => refresher(r => ++r)}
                       />

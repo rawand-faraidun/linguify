@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useContext } from 'react'
+import { Dispatch, SetStateAction, useContext, useState } from 'react'
 import { useClipboard } from '@mantine/hooks'
 import {
   Dialog,
@@ -36,7 +36,6 @@ import { NS } from '@lib/interfaces/api/Namespace'
 interface Props {
   namespace: NS
   data: Key
-  editingState: [EditKey | null, Dispatch<SetStateAction<EditKey | null>>]
   setSelected: Dispatch<SetStateAction<string[]>>
   onSuccess: () => void
 }
@@ -55,10 +54,11 @@ interface SubProps {
  *
  * @returns key actions dropdown component
  */
-const KeyActions = ({ namespace, data, editingState: [editing, setEditing], setSelected, onSuccess }: Props) => {
+const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
   const { toast } = useToast()
   const { copy } = useClipboard()
   const { config } = useContext(AppContext)
+  const [editing, setEditing] = useState<EditKey | null>(null)
   const keyTranslations = config?.otherLocales.reduce((obj, locale) => ({ ...obj, [locale]: '' }), {}) || {}
 
   // update key handler
