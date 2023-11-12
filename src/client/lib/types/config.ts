@@ -6,5 +6,4 @@ export type Config = {
   locales: string[]
   otherLocales: string[]
   defaultLocale: string
-  useGoogleTranslate: boolean
 }

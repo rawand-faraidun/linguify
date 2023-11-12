@@ -11,8 +11,7 @@ export const configFileName = 'linguify.config.json'
 export const defaultConfig: Config = {
   localesPath: './public/locales',
   locales: ['en'],
-  defaultLocale: 'en',
-  useGoogleTranslate: false
+  defaultLocale: 'en'
 }
 
 /**
