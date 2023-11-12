@@ -4,6 +4,7 @@ import { getNamespaces as getConfigNamespaces, getNamespaceJson, getPath, isName
 import { flatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
 import { config, otherLocales } from '@lib/utils'
+import validate, { S } from '@lib/validation/validate'
 
 /**
  * gets namespaces
@@ -32,6 +33,7 @@ export const getNamespaces: RequestHandler = (req, res) => {
 export const getNamespace: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
+    validate(S.namespace, ns)
     const filename = ns!
 
     // checking namespace existance
@@ -80,6 +82,7 @@ export const getNamespace: RequestHandler = (req, res) => {
 export const createNamespace: RequestHandler = (req, res) => {
   try {
     const { namespace } = req.body
+    validate(S.namespace, namespace)
     const filename = `${namespace}.json`
 
     // checking namespace existance
@@ -104,8 +107,10 @@ export const createNamespace: RequestHandler = (req, res) => {
 export const updateNamespace: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
-    const oldFilename = ns!
+    validate(S.namespace, ns)
     const { namespace } = req.body
+    validate(S.namespace, namespace)
+    const oldFilename = ns!
     const filename = `${namespace}.json`
 
     // checking namespace existance
@@ -133,6 +138,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
 export const deleteNamespace: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
+    validate(S.namespace, ns)
     const filename = ns!
 
     // checking namespace existance

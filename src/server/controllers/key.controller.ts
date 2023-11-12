@@ -5,6 +5,7 @@ import { getNamespaceJson, getPath, isNamespaceExists } from '@lib/functions'
 import { clear, isAssignable, unflatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
 import { config, otherLocales } from '@lib/utils'
+import validate, { S } from '@lib/validation/validate'
 
 /**
  * create key
@@ -12,7 +13,9 @@ import { config, otherLocales } from '@lib/utils'
 export const createKey: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
+    validate(S.namespace, ns)
     const filename = ns!
+    validate(S.key, req.body, { makeOptional: ['oldKey'] })
     const { key, value, translations } = req.body as { key: string; value: string; translations: Record<string, string> }
 
     // returning key result
@@ -60,7 +63,9 @@ export const createKey: RequestHandler = (req, res) => {
 export const updateKey: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
+    validate(S.namespace, ns)
     const filename = ns!
+    validate(S.key, req.body)
     const { oldKey, key, value, translations } = req.body as {
       oldKey: string
       key: string
@@ -126,8 +131,10 @@ export const updateKey: RequestHandler = (req, res) => {
 export const deleteKeys: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
+    validate(S.namespace, ns)
     const filename = ns!
     const { keys } = req.body as { keys: string[] }
+    validate(S.keysStringArray, keys)
 
     // checking namespace existance
     if (!isNamespaceExists(filename)) throw new Error('Namespace does not exist')
