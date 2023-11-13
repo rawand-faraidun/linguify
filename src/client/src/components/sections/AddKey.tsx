@@ -90,6 +90,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
             <div className="flex flex-col gap-3">
               <Label htmlFor="value">Default value ({config?.defaultLocale})</Label>
               <Input
+                dir="auto"
                 id="value"
                 name="value"
                 value={data.value}
@@ -102,6 +103,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
               <div key={locale} className="flex flex-col gap-3">
                 <Label htmlFor={`value-${locale}`}>{locale}</Label>
                 <Input
+                  dir="auto"
                   id={`value-${locale}`}
                   name={`value-${locale}`}
                   value={data.translations[locale]}
