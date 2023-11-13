@@ -9,7 +9,7 @@ Linguify translation files manager
 1. Initiate Linguify with the `init` command
 
 ```bash
-$ npx linguify init
+npx linguify init
 ```
 
  * This will create `linguify.config.json` file at the root of your project.
@@ -31,19 +31,19 @@ $ npx linguify init
 3. Start linguify.
 
 ```bash
-$ npx linguify
+npx linguify
 ```
 
 or
 
 ```bash
-$ npx linguify start
+npx linguify start
 ```
 
  * Linguify server port can be changed using `-p` or `--port` option following the desired port
 
 ```bash
-$ npx linguify -p 3000
+npx linguify -p 3000
 ```
 
  * Note: Updating `linguify.config.json` while Linguify runs requires restarting it before affecting it.
@@ -57,7 +57,7 @@ It uses `defaultLocale` as the base of translations and namespaces, and copies m
 the `sync` operation happenes everytime Linguify starts, to sync translations manually you can use `sync` command.
 
 ```bash
-$ npx linguify sync
+npx linguify sync
 ```
 
 <hr />
