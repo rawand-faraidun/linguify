@@ -1,5 +1,14 @@
 # linguify
 
+## 1.0.2
+
+### Patch Changes
+
+- e3bc655: Small fixes:
+  - wider key dialogs & fix directions
+  - fix theme button padding
+  - update dependencies
+
 ## 1.0.1
 
 ### Patch Changes
