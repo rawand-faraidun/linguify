@@ -67,7 +67,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
           <Svg paths={['M12 4.5v15m7.5-7.5h-15']} />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-xl">
         <DialogHeader>
           <DialogTitle>New key</DialogTitle>
           <DialogDescription>
