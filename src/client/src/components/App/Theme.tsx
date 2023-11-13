@@ -17,7 +17,7 @@ const Theme = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost">
+        <Button variant="ghost" className="p-2">
           <Svg
             paths={
               currentTheme == 'light'
