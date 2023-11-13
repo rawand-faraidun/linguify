@@ -143,7 +143,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
 
       {/* edit key */}
       <Dialog modal open={editing != null} onOpenChange={() => setEditing(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
             <DialogTitle>Edit key</DialogTitle>
             <DialogDescription>
@@ -167,6 +167,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
                 <div className="flex flex-col gap-3">
                   <Label htmlFor="value">Default value ({config?.defaultLocale})</Label>
                   <Input
+                    dir="auto"
                     id="value"
                     name="value"
                     value={editing.value}
@@ -179,6 +180,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
                   <div key={locale} className="flex flex-col gap-3">
                     <Label htmlFor={`value-${locale}`}>{locale}</Label>
                     <Input
+                      dir="auto"
                       id={`value-${locale}`}
                       name={`value-${locale}`}
                       value={editing.translations[locale]}
