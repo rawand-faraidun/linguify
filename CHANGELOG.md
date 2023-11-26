@@ -1,5 +1,11 @@
 # linguify
 
+## 1.0.4
+
+### Patch Changes
+
+- e847d68: fix schema src
+
 ## 1.0.3
 
 ### Patch Changes
