@@ -8,7 +8,7 @@ export const configFileName = 'linguify.config.json'
 /**
  * config schema path
  */
-export const configSchemaPath = 'https://github.com/rawand-faraidun/linguify/blob/main/assets/schema.json'
+export const configSchemaPath = 'https://raw.githubusercontent.com/rawand-faraidun/linguify/main/assets/schema.json'
 
 /**
  * linguify default values
