@@ -1,0 +1,28 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "localesPath": {
+      "type": "string",
+      "description": "Path to application locales folder",
+      "default": "./public/locales",
+      "$comment": "Path to application locales folder"
+    },
+    "locales": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Supported locales by your applications",
+      "default": ["en"],
+      "$comment": "Supported locales by your applications"
+    },
+    "defaultLocale": {
+      "type": "string",
+      "description": "default locale to your application",
+      "default": "en",
+      "$comment": "default locale to your application"
+    }
+  },
+  "required": ["localesPath", "locales", "defaultLocale"]
+}
