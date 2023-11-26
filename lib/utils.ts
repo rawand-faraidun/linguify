@@ -2,6 +2,7 @@ import { resolve } from 'path'
 import findup from 'findup-sync'
 import { configFileName, defaultConfig } from './defaults'
 import { getUserConfig } from './functions'
+import type { Config } from './types'
 
 /**
  * `node_modules` path, used to detect root
@@ -42,7 +43,7 @@ export const configPath = configPathExpected || configPathRoot
 /**
  * configuration
  */
-export const config = { ...defaultConfig, ...getUserConfig() }
+export const config: Config = { ...defaultConfig, ...getUserConfig() }
 
 /**
  * other languages from config
