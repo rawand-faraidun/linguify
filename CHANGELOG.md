@@ -1,5 +1,11 @@
 # linguify
 
+## 1.0.3
+
+### Patch Changes
+
+- 1da1020: Configuration file schema
+
 ## 1.0.2
 
 ### Patch Changes
