@@ -31,4 +31,13 @@ export type Config = {
    * @default 'en'
    */
   defaultLocale: string
+
+  /**
+   * determines to use single file translations or not
+   *
+   * instead of having a file for each namespace, it allows to have one file for each locale
+   *
+   * @default false
+   */
+  useSingleFile: boolean
 }
