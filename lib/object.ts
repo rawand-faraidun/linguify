@@ -9,6 +9,13 @@ interface Options {
 }
 
 /**
+ * clear options props
+ */
+interface ClearOptions {
+  skipFirstDepth?: boolean
+}
+
+/**
  * flatten object into single-depth object
  *
  * @param object - source object
@@ -18,6 +25,8 @@ interface Options {
  */
 export const flatten = (object: DynamicObject, { separator = '.' }: Options = {}) => {
   const flattened: DynamicObject = {}
+
+  if (!_.isObject(object)) throw new Error("'object' parameter must be a valid object")
 
   for (const key in object) {
     if (!object.hasOwnProperty(key)) continue
@@ -33,6 +42,7 @@ export const flatten = (object: DynamicObject, { separator = '.' }: Options = {}
       flattened[key] = object[key]
     }
   }
+
   return flattened
 }
 
@@ -46,6 +56,8 @@ export const flatten = (object: DynamicObject, { separator = '.' }: Options = {}
  */
 export const unflatten = (flatObject: DynamicObject, { separator = '.' }: Options = {}) => {
   const nested: DynamicObject = {}
+
+  if (!_.isObject(flatObject)) throw new Error("'object' parameter must be a valid object")
 
   for (const key in flatObject) {
     if (!flatObject.hasOwnProperty(key)) continue
@@ -75,12 +87,21 @@ export const unflatten = (flatObject: DynamicObject, { separator = '.' }: Option
  * clears object from empty nested objects
  *
  * @param object - object to clear
+ * @param options - options
+ *
+ * @note if `skipFirstDepth` is true it will reset any first depth key that is not object
  *
  * @returns clear object
  */
-export const clear = (object: DynamicObject): DynamicObject => {
-  return _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
-}
+export const clear = (object: DynamicObject, { skipFirstDepth = false }: ClearOptions = {}): DynamicObject =>
+  skipFirstDepth
+    ? _(object)
+        .pickBy(_.isObject)
+        .mapValues(clear)
+        .assign(_.omitBy(object, _.isObject))
+        .mapValues(v => (_.isObject(v) ? v : {}))
+        .value()
+    : _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
 
 /**
  * check if a path is assignable to the object, returns unvalid path if not

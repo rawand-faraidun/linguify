@@ -1,6 +1,13 @@
 import type { Config } from './types'
 
 /**
+ * default config props
+ */
+type DefaultConfig = Config & {
+  $schema: string
+}
+
+/**
  * configuration file name
  */
 export const configFileName = 'linguify.config.json'
@@ -13,11 +20,12 @@ export const configSchemaPath = 'https://raw.githubusercontent.com/rawand-faraid
 /**
  * linguify default values
  */
-export const defaultConfig = {
+export const defaultConfig: DefaultConfig = {
   $schema: configSchemaPath,
   localesPath: './public/locales',
   locales: ['en'],
-  defaultLocale: 'en'
+  defaultLocale: 'en',
+  useSingleFile: false
 }
 
 /**

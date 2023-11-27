@@ -22,7 +22,13 @@
       "description": "default locale to your application",
       "default": "en",
       "$comment": "default locale to your application"
+    },
+    "useSingleFile": {
+      "type": "boolean",
+      "description": "determines to use single file translations or not",
+      "default": false,
+      "$comment": "determines to use single file translations or not"
     }
   },
-  "required": ["localesPath", "locales", "defaultLocale"]
+  "required": ["localesPath", "locales", "defaultLocale", "useSingleFile"]
 }
