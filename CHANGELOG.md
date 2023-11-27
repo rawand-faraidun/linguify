@@ -1,5 +1,13 @@
 # linguify
 
+## 1.1.0
+
+### Minor Changes
+
+- 8161a2e: Use single translation file:
+  - allow to have one translation file for each locale instead of a file for each namespace
+  - `useSingleFile` config option
+
 ## 1.0.4
 
 ### Patch Changes
