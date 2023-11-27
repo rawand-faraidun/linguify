@@ -30,7 +30,7 @@ const NamespaceCard = ({ ns, ...actionProps }: Props) => {
           <CardHeader>
             <CardTitle>{namespace}</CardTitle>
             <CardDescription>
-              {config?.localesPath}/{'{locale}'}/{ns}
+              {config?.useSingleFile ? `${config?.localesPath}/{locale}.json` : `${config?.localesPath}/{locale}/${ns}`}
             </CardDescription>
           </CardHeader>
         </Card>

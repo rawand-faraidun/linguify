@@ -1,6 +1,12 @@
 import { renameSync, rmSync, writeFileSync } from 'fs'
 import { type RequestHandler } from 'express'
-import { getNamespaces as getConfigNamespaces, getNamespaceJson, getPath, isNamespaceExists } from '@lib/functions'
+import {
+  getNamespaces as getConfigNamespaces,
+  getFileJson,
+  getNamespaceJson,
+  getPath,
+  isNamespaceExists
+} from '@lib/functions'
 import { flatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
 import { config, otherLocales } from '@lib/utils'
@@ -34,10 +40,10 @@ export const getNamespace: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
-    const filename = ns!
+    const name = ns!
 
     // checking namespace existance
-    if (!isNamespaceExists(filename)) throw new Error('Namespace does not exist')
+    if (!isNamespaceExists(name)) throw new Error('Namespace does not exist')
 
     // each namespace values
     const values: DynamicObject = {}
@@ -48,7 +54,7 @@ export const getNamespace: RequestHandler = (req, res) => {
 
     // reading namespace values from each locale
     config.locales.forEach(locale => {
-      const value = getNamespaceJson(locale, filename)
+      let value = getNamespaceJson(locale, name)
       values[locale] = value
       flattened[locale] = flatten(value)
     })
@@ -63,7 +69,7 @@ export const getNamespace: RequestHandler = (req, res) => {
 
     res.status(200).json({
       data: {
-        namespace: filename,
+        namespace: name,
         values,
         flatten: flattened,
         flattenValues
@@ -83,16 +89,22 @@ export const createNamespace: RequestHandler = (req, res) => {
   try {
     const { namespace } = req.body
     validate(S.namespace, namespace)
-    const filename = `${namespace}.json`
+    const name = config.useSingleFile ? namespace! : `${namespace}.json`
 
     // checking namespace existance
-    if (isNamespaceExists(filename)) throw new Error('Namespace already exists')
+    if (isNamespaceExists(name)) throw new Error('Namespace already exists')
 
     // creating the namespace
-    config.locales.forEach(locale => writeFileSync(getPath(locale, filename), '{}'))
+    if (config.useSingleFile) {
+      config.locales.forEach(locale =>
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }))
+      )
+    } else {
+      config.locales.forEach(locale => writeFileSync(getPath(locale, name), '{}'))
+    }
 
     res.status(200).json({
-      data: { namespace: filename },
+      data: { namespace: name },
       success: true,
       message: 'Namespaces created successfully'
     })
@@ -110,20 +122,29 @@ export const updateNamespace: RequestHandler = (req, res) => {
     validate(S.namespace, ns)
     const { namespace } = req.body
     validate(S.namespace, namespace)
-    const oldFilename = ns!
-    const filename = `${namespace}.json`
+    const oldName = ns!
+    const name = config.useSingleFile ? namespace! : `${namespace}.json`
 
     // checking namespace existance
-    if (!isNamespaceExists(oldFilename)) throw new Error('Namespace does not exist')
+    if (!isNamespaceExists(oldName)) throw new Error('Namespace does not exist')
 
     // checking new namespace existance
-    if (isNamespaceExists(filename)) throw new Error('Namespace already exists')
+    if (isNamespaceExists(name)) throw new Error('Namespace already exists')
 
     // renaming the namespace
-    config.locales.forEach(locale => renameSync(getPath(locale, oldFilename), getPath(locale, filename)))
+    if (config.useSingleFile) {
+      config.locales.forEach(locale => {
+        const file = getFileJson(`${locale}.json`)
+        file[namespace] = file[oldName]
+        delete file[oldName]
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+      })
+    } else {
+      config.locales.forEach(locale => renameSync(getPath(locale, oldName), getPath(locale, name)))
+    }
 
     res.status(200).json({
-      data: { namespace: filename, oldNamespace: oldFilename },
+      data: { namespace: name, oldNamespace: oldName },
       success: true,
       message: 'Namespaces updated successfully'
     })
@@ -139,16 +160,24 @@ export const deleteNamespace: RequestHandler = (req, res) => {
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
-    const filename = ns!
+    const name = ns!
 
     // checking namespace existance
-    if (!isNamespaceExists(filename)) throw new Error('Namespace does not exist')
+    if (!isNamespaceExists(name)) throw new Error('Namespace does not exist')
 
     // creating the namespace
-    config.locales.forEach(locale => rmSync(getPath(locale, filename)))
+    if (config.useSingleFile) {
+      config.locales.forEach(locale => {
+        const file = getFileJson(`${locale}.json`)
+        delete file[name]
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+      })
+    } else {
+      config.locales.forEach(locale => rmSync(getPath(locale, name)))
+    }
 
     res.status(200).json({
-      data: { namespace: filename },
+      data: { namespace: name },
       success: true,
       message: 'Namespaces deleted successfully'
     })

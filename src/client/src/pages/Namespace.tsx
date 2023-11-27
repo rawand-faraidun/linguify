@@ -42,7 +42,7 @@ export default function Page() {
         <div>
           <h1 className="text-4xl font-bold">{namespace}</h1>
           <p className="text-muted-foreground">
-            {config?.localesPath}/{'{locale}'}/{ns}
+            {config?.useSingleFile ? `${config?.localesPath}/{locale}.json` : `${config?.localesPath}/{locale}/${ns}`}
           </p>
         </div>
 
