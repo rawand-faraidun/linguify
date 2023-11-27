@@ -9,6 +9,13 @@ interface Options {
 }
 
 /**
+ * clear options props
+ */
+interface ClearOptions {
+  skipFirstDepth?: boolean
+}
+
+/**
  * flatten object into single-depth object
  *
  * @param object - source object
@@ -78,8 +85,10 @@ export const unflatten = (flatObject: DynamicObject, { separator = '.' }: Option
  *
  * @returns clear object
  */
-export const clear = (object: DynamicObject): DynamicObject => {
-  return _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
+export const clear = (object: DynamicObject, { skipFirstDepth = false }: ClearOptions = {}): DynamicObject => {
+  return skipFirstDepth
+    ? _(object).pickBy(_.isObject).mapValues(clear).assign(_.omitBy(object, _.isObject)).value()
+    : _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
 }
 
 /**
