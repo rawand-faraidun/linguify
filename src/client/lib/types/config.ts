@@ -6,4 +6,5 @@ export type Config = {
   locales: string[]
   otherLocales: string[]
   defaultLocale: string
+  useSingleFile: boolean
 }

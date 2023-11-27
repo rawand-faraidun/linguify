@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs'
 import chalk from 'chalk'
 import _ from 'lodash'
-import { getNamespaceJson, getNamespaces, getPath } from './functions'
+import { getFileJson, getNamespaceJson, getNamespaces, getPath } from './functions'
 import { clear } from './object'
 import type { DynamicObject } from './types'
 import { config, otherLocales } from '@lib/utils'
@@ -15,11 +15,17 @@ export const syncNamespaces = () => {
   try {
     // checking or creating locale files
     config.locales.forEach(locale => {
-      const path = getPath(locale)
+      const path = config.useSingleFile ? getPath(`${locale}.json`) : getPath(locale)
       if (!existsSync(path)) {
-        mkdirSync(path)
+        config.useSingleFile ? writeFileSync(path, '{}') : mkdirSync(path)
       } else {
-        if (!statSync(path).isDirectory()) {
+        if (config.useSingleFile && !statSync(path).isFile()) {
+          throw new Error(
+            chalk.yellow(
+              `Provided locale '${locale}' is not a valid json file '${locale}.json', please check if a directory exists with the same name, please change it before starting`
+            )
+          )
+        } else if (!config.useSingleFile && !statSync(path).isDirectory()) {
           throw new Error(
             chalk.yellow(
               `Provided locale '${locale}' is not a valid directory name, please check if a file exists with the same name, please change it before starting`
@@ -29,40 +35,63 @@ export const syncNamespaces = () => {
       }
     })
 
-    // default locale namespaces
-    const defaultNSs = getNamespaces()
-
     // each namespace keys
-    const nsKeys: DynamicObject = {}
+    let nsKeys: DynamicObject = {}
 
     // getting default namespaces and keys
-    defaultNSs.forEach(ns => {
-      const path = getPath(config.defaultLocale, ns)
+    if (config.useSingleFile) {
+      const path = getPath(`${config.defaultLocale}.json`)
       const file = readFileSync(path, 'utf-8')
       let json: DynamicObject = {}
       try {
-        json = clear(JSON.parse(file))
+        json = clear(JSON.parse(file), { skipFirstDepth: true })
         writeFileSync(path, JSON.stringify(json))
       } catch {
         writeFileSync(path, '{}')
       }
-      nsKeys[ns] = json
-    })
+      nsKeys = json
+    } else {
+      // default locale namespaces
+      const defaultNSs = getNamespaces()
+
+      defaultNSs.forEach(ns => {
+        const path = getPath(config.defaultLocale, ns)
+        const file = readFileSync(path, 'utf-8')
+        let json: DynamicObject = {}
+        try {
+          json = clear(JSON.parse(file))
+          writeFileSync(path, JSON.stringify(json))
+        } catch {
+          writeFileSync(path, '{}')
+        }
+        nsKeys[ns] = json
+      })
+    }
 
     // syncing keys with other files
     otherLocales.forEach(locale => {
-      Object.keys(nsKeys).forEach(ns => {
-        const path = getPath(locale, ns)
-        if (!existsSync(path)) {
-          return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
-        }
+      if (config.useSingleFile) {
+        const path = getPath(`${locale}.json`)
         try {
-          const json = clear(getNamespaceJson(locale, ns))
-          writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
+          const json = clear(getFileJson(`${locale}.json`), { skipFirstDepth: true })
+          writeFileSync(path, JSON.stringify(_.defaultsDeep(json, nsKeys)))
         } catch {
-          writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+          writeFileSync(path, JSON.stringify(nsKeys))
         }
-      })
+      } else {
+        Object.keys(nsKeys).forEach(ns => {
+          const path = getPath(locale, ns)
+          if (!existsSync(path)) {
+            return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+          }
+          try {
+            const json = clear(getNamespaceJson(locale, ns))
+            writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
+          } catch {
+            writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+          }
+        })
+      }
     })
   } catch (error: any) {
     console.error(chalk.red(error.message))

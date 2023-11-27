@@ -56,6 +56,14 @@ export const linguifyValidation = () => {
         chalk.yellow(`Provided 'defaultLocale' is not included in in 'locales', please change it before starting`)
       )
     }
+
+    // checking useSingleFile
+    if (typeof config.useSingleFile == 'undefined') {
+      throw new Error(chalk.yellow(`Linguify config file misses 'useSingleFile' key, please add it before starting`))
+    }
+    if (typeof config.useSingleFile != 'boolean') {
+      throw new Error(chalk.yellow(`Provided 'useSingleFile' is not boolean, please change it before starting`))
+    }
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
