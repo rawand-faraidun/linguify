@@ -1,6 +1,6 @@
 {
   "name": "linguify",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Translation manager",
   "private": false,
   "type": "module",
