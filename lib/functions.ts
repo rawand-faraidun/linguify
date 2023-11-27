@@ -33,7 +33,19 @@ export const getPath = (...paths: string[]) => resolve(rootPath, config.localesP
  *
  * @returns array of namespaces
  */
-export const getNamespaces = () => readdirSync(getPath(config.defaultLocale)).filter(file => extname(file) == '.json')
+export const getNamespaces = () =>
+  config.useSingleFile
+    ? Object.keys(JSON.parse(readFileSync(getPath(`${config.defaultLocale}.json`), 'utf-8')))
+    : readdirSync(getPath(config.defaultLocale)).filter(file => extname(file) == '.json')
+
+/**
+ * gets content of a file as json
+ *
+ * @param paths - path to namespace
+ *
+ * @returns file json content
+ */
+export const getFileJson = (...paths: string[]) => JSON.parse(readFileSync(getPath(...paths), 'utf-8'))
 
 /**
  * gets content of a namespace as json
@@ -42,7 +54,19 @@ export const getNamespaces = () => readdirSync(getPath(config.defaultLocale)).fi
  *
  * @returns namespace json content
  */
-export const getNamespaceJson = (...paths: string[]) => JSON.parse(readFileSync(getPath(...paths), 'utf-8'))
+export const getNamespaceJson = (...paths: string[]) => {
+  if (config.useSingleFile) {
+    const path = paths.slice(0, paths.length - 1)
+    if (!path[path.length - 1]?.toLowerCase().endsWith('.json')) {
+      path[path.length - 1] = `${path[path.length - 1]}.json`
+    }
+    const namespace = paths[paths.length - 1]
+
+    return getFileJson(...path)[namespace!]
+  } else {
+    return getFileJson(...paths)
+  }
+}
 
 /**
  * checks if a namespace excists
