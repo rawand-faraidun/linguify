@@ -34,9 +34,10 @@ export const getPath = (...paths: string[]) => resolve(rootPath, config.localesP
  * @returns array of namespaces
  */
 export const getNamespaces = () =>
-  config.useSingleFile
+  (config.useSingleFile
     ? Object.keys(JSON.parse(readFileSync(getPath(`${config.defaultLocale}.json`), 'utf-8')))
     : readdirSync(getPath(config.defaultLocale)).filter(file => extname(file) == '.json')
+  ).sort()
 
 /**
  * gets content of a file as json
