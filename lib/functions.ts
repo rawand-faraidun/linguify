@@ -3,6 +3,7 @@ import { extname, resolve } from 'path'
 import chalk from 'chalk'
 import type { Config } from './types'
 import { config, configPath, rootPath } from './utils'
+import { defaultConfig } from './defaults'
 
 /**
  * get user config
@@ -11,7 +12,7 @@ import { config, configPath, rootPath } from './utils'
  */
 export const getUserConfig = () => {
   try {
-    if (!existsSync(configPath)) return {} as Config
+    if (!existsSync(configPath)) return defaultConfig
     return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
   } catch (error: any) {
     console.error(chalk.red(error.message))
