@@ -43,7 +43,7 @@ export const configPath = configPathExpected || configPathRoot
 /**
  * configuration
  */
-export const config: Config = { ...defaultConfig, ...getUserConfig() }
+export const config: Config = getUserConfig();
 
 /**
  * other languages from config
