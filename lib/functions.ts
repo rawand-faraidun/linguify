@@ -1,19 +1,21 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import { extname, resolve } from 'path'
 import chalk from 'chalk'
+import { defaultConfig } from './defaults'
 import type { Config } from './types'
 import { config, configPath, rootPath } from './utils'
-import { defaultConfig } from './defaults'
 
 /**
  * get user config
  *
  * @returns user configurations
  */
-export const getUserConfig = () => {
+export const getUserConfig = (): Config => {
   try {
     if (!existsSync(configPath)) return defaultConfig
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
+
+    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
+    return Object.assign(defaultConfig, config)
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
