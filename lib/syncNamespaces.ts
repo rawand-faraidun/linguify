@@ -45,7 +45,7 @@ export const syncNamespaces = () => {
       let json: DynamicObject = {}
       try {
         json = clear(JSON.parse(file), { skipFirstDepth: true })
-        writeFileSync(path, JSON.stringify(json))
+        writeFileSync(path, JSON.stringify(json, null, 2))
       } catch {
         writeFileSync(path, '{}')
       }
@@ -60,7 +60,7 @@ export const syncNamespaces = () => {
         let json: DynamicObject = {}
         try {
           json = clear(JSON.parse(file))
-          writeFileSync(path, JSON.stringify(json))
+          writeFileSync(path, JSON.stringify(json, null, 2))
         } catch {
           writeFileSync(path, '{}')
         }
@@ -74,21 +74,21 @@ export const syncNamespaces = () => {
         const path = getPath(`${locale}.json`)
         try {
           const json = clear(getFileJson(`${locale}.json`), { skipFirstDepth: true })
-          writeFileSync(path, JSON.stringify(_.defaultsDeep(json, nsKeys)))
+          writeFileSync(path, JSON.stringify(_.defaultsDeep(json, nsKeys), null, 2))
         } catch {
-          writeFileSync(path, JSON.stringify(nsKeys))
+          writeFileSync(path, JSON.stringify(nsKeys, null, 2))
         }
       } else {
         Object.keys(nsKeys).forEach(ns => {
           const path = getPath(locale, ns)
           if (!existsSync(path)) {
-            return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+            return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }, null, 2))
           }
           try {
             const json = clear(getNamespaceJson(locale, ns))
-            writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] })))
+            writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] }), null, 2))
           } catch {
-            writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }))
+            writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }, null, 2))
           }
         })
       }
