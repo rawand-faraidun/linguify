@@ -97,7 +97,10 @@ export const createNamespace: RequestHandler = (req, res) => {
     // creating the namespace
     if (config.useSingleFile) {
       config.locales.forEach(locale =>
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }, null, 2))
+        writeFileSync(
+          getPath(`${locale}.json`),
+          JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }, null, 2)
+        )
       )
     } else {
       config.locales.forEach(locale => writeFileSync(getPath(locale, name), '{}'))
