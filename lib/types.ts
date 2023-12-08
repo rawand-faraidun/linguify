@@ -40,4 +40,12 @@ export type Config = {
    * @default false
    */
   useSingleFile: boolean
+  /**
+   * determines indentation of output translations files
+   * 
+   * This is used when outputting translations files at `JSON.stringify(translation, null, jsonIndentation)`
+   * 
+   * @default 2
+   */
+  jsonIndentation: number
 }
