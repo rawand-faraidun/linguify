@@ -1,5 +1,4 @@
 import { resolve } from 'path'
-import chalk from 'chalk'
 import findup from 'findup-sync'
 import { configFileName, defaultConfig } from './defaults'
 import { getUserConfig } from './functions'
@@ -44,35 +43,7 @@ export const configPath = configPathExpected || configPathRoot
 /**
  * configuration
  */
-export const config: Config = getUserConfig()
-
-const reportedMissingConfig = new Set<keyof Config>()
-const configWithoutDefault: Config | null = getUserConfig({ withDefault: false })
-
-/**
- * Gets a configuration value or prompt for runing `init` command again
- */
-export function getConfigOrPrompt<Key extends keyof Config>(key: Key): Config[Key] {
-  if (configWithoutDefault && configWithoutDefault[key]) return configWithoutDefault[key]
-
-  const defaultValue = defaultConfig[key]
-
-  if (!reportedMissingConfig.has(key)) {
-    console.log(
-      [
-        `${chalk.cyan.bold(key)} is not set in ${chalk.yellow(configFileName)}`,
-        `By default it is set to ${chalk.cyan(defaultValue)}`,
-        `You can change it in ${chalk.yellow(configFileName)} or run ${chalk.cyan(
-          'linguify init'
-        )} again to configure missing config`
-      ].join('\n')
-    )
-
-    reportedMissingConfig.add(key)
-  }
-
-  return defaultValue
-}
+export const config: Config = { ...defaultConfig, ...getUserConfig() }
 
 /**
  * other languages from config

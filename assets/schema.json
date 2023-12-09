@@ -32,7 +32,7 @@
     "jsonIndentation": {
       "type": "number",
       "description": "determines indentation of output translations files",
-      "default": 2,
+      "default": 0,
       "$comment": "determines indentation of output translations files"
     }
   },

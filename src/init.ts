@@ -33,7 +33,7 @@ const init = async () => {
     // TODO: prompt for config values
 
     // saving the config file
-    writeFileSync(configPath, JSON.stringify(defaultConfig, null, defaultConfig.jsonIndentation))
+    writeFileSync(configPath, JSON.stringify(defaultConfig, null, 2))
     console.log(`Linguify config saved to ${chalk.cyan(chalk.underline(configPath))} successfully`)
 
     console.log(chalk.green('Linguify initiated successfully'))

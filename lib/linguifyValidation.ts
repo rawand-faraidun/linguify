@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs'
 import chalk from 'chalk'
 import { getPath, getUserConfig } from './functions'
-import { config, configPath } from './utils'
+import { configPath } from './utils'
 
 /**
  * validates linguify config
@@ -12,6 +12,9 @@ export const linguifyValidation = () => {
     if (!existsSync(configPath)) {
       throw new Error(`Linguify config file is not found, initiate linguify with '${chalk.underline('linguify init')}'`)
     }
+
+    // user config
+    const config = getUserConfig()
 
     // checking the user config localesPath
     if (!config.localesPath) {
@@ -60,6 +63,15 @@ export const linguifyValidation = () => {
     }
     if (typeof config.useSingleFile != 'boolean') {
       throw new Error(chalk.yellow(`Provided 'useSingleFile' is not boolean, please change it before starting`))
+    }
+
+    // checking jsonIndentation
+    // can be undefined, but must be number
+    if (typeof config.jsonIndentation != 'undefined' && typeof config.jsonIndentation != 'number') {
+      throw new Error(chalk.yellow(`Provided 'jsonIndentation' is not number, please change it before starting`))
+    }
+    if (config.jsonIndentation < 0) {
+      throw new Error(chalk.yellow(`Provided 'jsonIndentation' is invalid, please change it before starting`))
     }
   } catch (error: any) {
     console.error(chalk.red(error.message))

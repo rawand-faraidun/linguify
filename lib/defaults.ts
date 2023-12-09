@@ -26,7 +26,7 @@ export const defaultConfig: DefaultConfig = {
   locales: ['en'],
   defaultLocale: 'en',
   useSingleFile: false,
-  jsonIndentation: 2
+  jsonIndentation: 0
 }
 
 /**

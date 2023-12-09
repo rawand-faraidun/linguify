@@ -10,22 +10,10 @@ import { config, configPath, rootPath } from './utils'
  *
  * @returns user configurations
  */
-export const getUserConfig = ({ withDefault = true } = {}): Config => {
+export const getUserConfig = () => {
   try {
-    if (!existsSync(configPath)) {
-      console.error(
-        chalk.red(
-          `Linguify config file not found at ${chalk.underline(configPath)}.\nPlease run ${chalk.cyan(
-            'linguify init'
-          )} to create one. until then default values will be used`
-        )
-      )
-
-      process.exit(0)
-    }
-
-    const config = JSON.parse(readFileSync(configPath, 'utf-8'))
-    return withDefault ? Object.assign(defaultConfig, config) : config
+    if (!existsSync(configPath)) return {} as Config
+    return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
