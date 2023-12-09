@@ -46,6 +46,7 @@ export const configPath = configPathExpected || configPathRoot
  */
 export const config: Config = getUserConfig()
 
+const reportedMissingConfig = new Set<keyof Config>()
 /**
  * Gets a configuration value or prompt for runing `init` command again
  */
@@ -56,15 +57,19 @@ export function getConfigOrPrompt<Key extends keyof Config>(key: Key): Config[Ke
 
   const defaultValue = defaultConfig[key]
 
-  console.log(
-    [
-      `${chalk.cyan.bold(key)} is not set in ${chalk.yellow(configFileName)}`,
-      `By default it is set to ${chalk.cyan(defaultValue)}`,
-      `You can change it in ${chalk.yellow(configFileName)} or run ${chalk.cyan(
-        'linguify init'
-      )} again to configure missing config`
-    ].join('\n')
-  )
+  if (!reportedMissingConfig.has(key)) {
+    console.log(
+      [
+        `${chalk.cyan.bold(key)} is not set in ${chalk.yellow(configFileName)}`,
+        `By default it is set to ${chalk.cyan(defaultValue)}`,
+        `You can change it in ${chalk.yellow(configFileName)} or run ${chalk.cyan(
+          'linguify init'
+        )} again to configure missing config`
+      ].join('\n')
+    )
+
+    reportedMissingConfig.add(key)
+  }
 
   return defaultValue
 }
