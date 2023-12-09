@@ -10,12 +10,14 @@ import { config, configPath, rootPath } from './utils'
  *
  * @returns user configurations
  */
-export const getUserConfig = (): Config => {
+export const getUserConfig = ({ withDefault = true } = {}) => {
   try {
-    if (!existsSync(configPath)) return defaultConfig
+    if (!existsSync(configPath)) {
+      return withDefault ? defaultConfig : {}
+    }
 
-    const config = JSON.parse(readFileSync(configPath, 'utf-8'));
-    return Object.assign(defaultConfig, config)
+    const config = JSON.parse(readFileSync(configPath, 'utf-8'))
+    return withDefault ? Object.assign(defaultConfig, config) : config
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
