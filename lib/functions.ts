@@ -13,7 +13,6 @@ import { config, configPath, rootPath } from './utils'
 export const getUserConfig = ({ withDefault = true } = {}): Config => {
   try {
     if (!existsSync(configPath)) {
-      // TODO: should we just log warning or exit?
       console.error(
         chalk.red(
           `Linguify config file not found at ${chalk.underline(configPath)}.\nPlease run ${chalk.cyan(
@@ -22,7 +21,7 @@ export const getUserConfig = ({ withDefault = true } = {}): Config => {
         )
       )
 
-      return withDefault ? defaultConfig : (null as never)
+      process.exit(0)
     }
 
     const config = JSON.parse(readFileSync(configPath, 'utf-8'))
