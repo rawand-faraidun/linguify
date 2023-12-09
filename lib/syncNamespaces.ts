@@ -12,7 +12,7 @@ import { config, getConfigOrPrompt, otherLocales } from '@lib/utils'
  * creates all for each locale
  */
 export const syncNamespaces = () => {
-  const jsonIndentation = getConfigOrPrompt("jsonIndentation")
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
 
   try {
     // checking or creating locale files

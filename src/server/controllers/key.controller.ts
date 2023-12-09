@@ -50,7 +50,10 @@ export const createKey: RequestHandler = (req, res) => {
       file[name] = _.merge(defaultJson, defaultUnflattened)
       writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(defaultJson, defaultUnflattened), null, jsonIndentation))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(defaultJson, defaultUnflattened), null, jsonIndentation)
+      )
     }
 
     // // adding to other languages
@@ -130,7 +133,10 @@ export const updateKey: RequestHandler = (req, res) => {
       file[name] = _.merge(newJson, defaultUnflattened)
       writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(newJson, defaultUnflattened), null, jsonIndentation))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(newJson, defaultUnflattened), null, jsonIndentation)
+      )
     }
 
     // modifing to other languages
