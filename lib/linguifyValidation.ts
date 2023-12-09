@@ -58,11 +58,18 @@ export const linguifyValidation = () => {
     }
 
     // checking useSingleFile
-    if (typeof config.useSingleFile == 'undefined') {
-      throw new Error(chalk.yellow(`Linguify config file misses 'useSingleFile' key, please add it before starting`))
-    }
-    if (typeof config.useSingleFile != 'boolean') {
+    // can be undefined, but must be boolean
+    if (typeof config.useSingleFile != 'undefined' && typeof config.useSingleFile != 'boolean') {
       throw new Error(chalk.yellow(`Provided 'useSingleFile' is not boolean, please change it before starting`))
+    }
+
+    // checking jsonIndentation
+    // can be undefined, but must be number
+    if (typeof config.jsonIndentation != 'undefined' && typeof config.jsonIndentation != 'number') {
+      throw new Error(chalk.yellow(`Provided 'jsonIndentation' is not number, please change it before starting`))
+    }
+    if (config.jsonIndentation < 0) {
+      throw new Error(chalk.yellow(`Provided 'jsonIndentation' is invalid, please change it before starting`))
     }
   } catch (error: any) {
     console.error(chalk.red(error.message))

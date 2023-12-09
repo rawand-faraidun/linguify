@@ -97,7 +97,10 @@ export const createNamespace: RequestHandler = (req, res) => {
     // creating the namespace
     if (config.useSingleFile) {
       config.locales.forEach(locale =>
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }))
+        writeFileSync(
+          getPath(`${locale}.json`),
+          JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }, null, config.jsonIndentation)
+        )
       )
     } else {
       config.locales.forEach(locale => writeFileSync(getPath(locale, name), '{}'))
@@ -137,7 +140,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
         const file = getFileJson(`${locale}.json`)
         file[namespace] = file[oldName]
         delete file[oldName]
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => renameSync(getPath(locale, oldName), getPath(locale, name)))
@@ -170,7 +173,7 @@ export const deleteNamespace: RequestHandler = (req, res) => {
       config.locales.forEach(locale => {
         const file = getFileJson(`${locale}.json`)
         delete file[name]
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => rmSync(getPath(locale, name)))

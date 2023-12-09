@@ -7,4 +7,5 @@ export type Config = {
   otherLocales: string[]
   defaultLocale: string
   useSingleFile: boolean
+  jsonIndentation: number
 }

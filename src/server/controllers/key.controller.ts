@@ -46,9 +46,12 @@ export const createKey: RequestHandler = (req, res) => {
     if (config.useSingleFile) {
       const file = getFileJson(`${config.defaultLocale}.json`)
       file[name] = _.merge(defaultJson, defaultUnflattened)
-      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file))
+      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, config.jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(defaultJson, defaultUnflattened)))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(defaultJson, defaultUnflattened), null, config.jsonIndentation)
+      )
     }
 
     // // adding to other languages
@@ -58,14 +61,14 @@ export const createKey: RequestHandler = (req, res) => {
         const json = getNamespaceJson(locale, name)
         const unflattened = unflatten({ [key]: translations[locale] || value })
         file[name] = _.merge(json, unflattened)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     } else {
       otherLocales.forEach(locale => {
         const json = getNamespaceJson(locale, name)
         const unflattened = unflatten({ [key]: translations[locale] || value })
-        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened)))
+        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened), null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     }
@@ -124,9 +127,12 @@ export const updateKey: RequestHandler = (req, res) => {
     if (config.useSingleFile) {
       const file = getFileJson(`${config.defaultLocale}.json`)
       file[name] = _.merge(newJson, defaultUnflattened)
-      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file))
+      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, config.jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(newJson, defaultUnflattened)))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(newJson, defaultUnflattened), null, config.jsonIndentation)
+      )
     }
 
     // modifing to other languages
@@ -138,7 +144,7 @@ export const updateKey: RequestHandler = (req, res) => {
         _.unset(json, oldKey)
         json = clear(json)
         file[name] = _.merge(json, unflattened)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     } else {
@@ -147,7 +153,7 @@ export const updateKey: RequestHandler = (req, res) => {
         _.unset(json, oldKey)
         json = clear(json)
         const unflattened = unflatten({ [key]: translations[locale] || value })
-        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened)))
+        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened), null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     }
@@ -186,13 +192,13 @@ export const deleteKeys: RequestHandler = (req, res) => {
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
         file[name] = clear(json)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => {
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
-        writeFileSync(getPath(locale, name), JSON.stringify(clear(json)))
+        writeFileSync(getPath(locale, name), JSON.stringify(clear(json), null, config.jsonIndentation))
       })
     }
 

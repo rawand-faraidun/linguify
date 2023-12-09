@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import { extname, resolve } from 'path'
 import chalk from 'chalk'
+import { defaultConfig } from './defaults'
 import type { Config } from './types'
 import { config, configPath, rootPath } from './utils'
 
