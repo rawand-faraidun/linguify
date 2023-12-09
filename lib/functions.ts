@@ -10,10 +10,10 @@ import { config, configPath, rootPath } from './utils'
  *
  * @returns user configurations
  */
-export const getUserConfig = ({ withDefault = true } = {}) => {
+export const getUserConfig = ({ withDefault = true } = {}): Config => {
   try {
     if (!existsSync(configPath)) {
-      return withDefault ? defaultConfig : {}
+      return withDefault ? defaultConfig : null as never
     }
 
     const config = JSON.parse(readFileSync(configPath, 'utf-8'))

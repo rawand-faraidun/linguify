@@ -47,13 +47,13 @@ export const configPath = configPathExpected || configPathRoot
 export const config: Config = getUserConfig()
 
 const reportedMissingConfig = new Set<keyof Config>()
-const configWithoutDefault = getUserConfig({ withDefault: false })
+const configWithoutDefault: Config | null = getUserConfig({ withDefault: false })
 
 /**
  * Gets a configuration value or prompt for runing `init` command again
  */
 export function getConfigOrPrompt<Key extends keyof Config>(key: Key): Config[Key] {
-  if (configWithoutDefault[key]) return configWithoutDefault[key]
+  if (configWithoutDefault && configWithoutDefault[key]) return configWithoutDefault[key]
 
   const defaultValue = defaultConfig[key]
 
