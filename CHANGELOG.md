@@ -1,5 +1,15 @@
 # linguify
 
+## 1.2.0
+
+### Minor Changes
+
+- 3dc59ea: output JSON indentation
+
+  - allow to indent output json files
+  - `jsonIndentation` optional config option
+  - `useSingleFile` is now optional
+
 ## 1.1.0
 
 ### Minor Changes
