@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'fs'
 import { extname, resolve } from 'path'
 import chalk from 'chalk'
+import { defaultConfig } from './defaults'
 import type { Config } from './types'
 import { config, configPath, rootPath } from './utils'
 
@@ -9,10 +10,22 @@ import { config, configPath, rootPath } from './utils'
  *
  * @returns user configurations
  */
-export const getUserConfig = () => {
+export const getUserConfig = ({ withDefault = true } = {}): Config => {
   try {
-    if (!existsSync(configPath)) return {} as Config
-    return JSON.parse(readFileSync(configPath, 'utf-8')) as Config
+    if (!existsSync(configPath)) {
+      console.error(
+        chalk.red(
+          `Linguify config file not found at ${chalk.underline(configPath)}.\nPlease run ${chalk.cyan(
+            'linguify init'
+          )} to create one. until then default values will be used`
+        )
+      )
+
+      process.exit(0)
+    }
+
+    const config = JSON.parse(readFileSync(configPath, 'utf-8'))
+    return withDefault ? Object.assign(defaultConfig, config) : config
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)

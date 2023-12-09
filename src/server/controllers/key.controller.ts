@@ -4,7 +4,7 @@ import _ from 'lodash'
 import { getFileJson, getNamespaceJson, getPath, isNamespaceExists } from '@lib/functions'
 import { clear, isAssignable, unflatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
-import { config, otherLocales } from '@lib/utils'
+import { config, getConfigOrPrompt, otherLocales } from '@lib/utils'
 import validate, { S } from '@lib/validation/validate'
 
 /**
@@ -20,6 +20,8 @@ type Key = {
  * create key
  */
 export const createKey: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
+
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
@@ -46,9 +48,12 @@ export const createKey: RequestHandler = (req, res) => {
     if (config.useSingleFile) {
       const file = getFileJson(`${config.defaultLocale}.json`)
       file[name] = _.merge(defaultJson, defaultUnflattened)
-      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file))
+      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(defaultJson, defaultUnflattened)))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(defaultJson, defaultUnflattened), null, jsonIndentation)
+      )
     }
 
     // // adding to other languages
@@ -58,14 +63,14 @@ export const createKey: RequestHandler = (req, res) => {
         const json = getNamespaceJson(locale, name)
         const unflattened = unflatten({ [key]: translations[locale] || value })
         file[name] = _.merge(json, unflattened)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     } else {
       otherLocales.forEach(locale => {
         const json = getNamespaceJson(locale, name)
         const unflattened = unflatten({ [key]: translations[locale] || value })
-        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened)))
+        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened), null, jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     }
@@ -87,6 +92,8 @@ export const createKey: RequestHandler = (req, res) => {
  * update key
  */
 export const updateKey: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
+
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
@@ -124,9 +131,12 @@ export const updateKey: RequestHandler = (req, res) => {
     if (config.useSingleFile) {
       const file = getFileJson(`${config.defaultLocale}.json`)
       file[name] = _.merge(newJson, defaultUnflattened)
-      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file))
+      writeFileSync(getPath(`${config.defaultLocale}.json`), JSON.stringify(file, null, jsonIndentation))
     } else {
-      writeFileSync(getPath(config.defaultLocale, name), JSON.stringify(_.merge(newJson, defaultUnflattened)))
+      writeFileSync(
+        getPath(config.defaultLocale, name),
+        JSON.stringify(_.merge(newJson, defaultUnflattened), null, jsonIndentation)
+      )
     }
 
     // modifing to other languages
@@ -138,7 +148,7 @@ export const updateKey: RequestHandler = (req, res) => {
         _.unset(json, oldKey)
         json = clear(json)
         file[name] = _.merge(json, unflattened)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     } else {
@@ -147,7 +157,7 @@ export const updateKey: RequestHandler = (req, res) => {
         _.unset(json, oldKey)
         json = clear(json)
         const unflattened = unflatten({ [key]: translations[locale] || value })
-        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened)))
+        writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened), null, jsonIndentation))
         result.translations.push({ [locale]: value })
       })
     }
@@ -169,6 +179,7 @@ export const updateKey: RequestHandler = (req, res) => {
  * delete key
  */
 export const deleteKeys: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
@@ -186,13 +197,13 @@ export const deleteKeys: RequestHandler = (req, res) => {
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
         file[name] = clear(json)
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => {
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
-        writeFileSync(getPath(locale, name), JSON.stringify(clear(json)))
+        writeFileSync(getPath(locale, name), JSON.stringify(clear(json), null, jsonIndentation))
       })
     }
 

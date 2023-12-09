@@ -28,6 +28,12 @@
       "description": "determines to use single file translations or not",
       "default": false,
       "$comment": "determines to use single file translations or not"
+    },
+    "jsonIndentation": {
+      "type": "number",
+      "description": "determines indentation of output translations files",
+      "default": 2,
+      "$comment": "determines indentation of output translations files"
     }
   },
   "required": ["localesPath", "locales", "defaultLocale", "useSingleFile"]

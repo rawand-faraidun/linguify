@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'fs'
 import chalk from 'chalk'
 import { getPath, getUserConfig } from './functions'
-import { configPath } from './utils'
+import { config, configPath } from './utils'
 
 /**
  * validates linguify config
@@ -12,9 +12,6 @@ export const linguifyValidation = () => {
     if (!existsSync(configPath)) {
       throw new Error(`Linguify config file is not found, initiate linguify with '${chalk.underline('linguify init')}'`)
     }
-
-    // user config
-    const config = getUserConfig()
 
     // checking the user config localesPath
     if (!config.localesPath) {
