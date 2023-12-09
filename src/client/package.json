@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mantine/hooks": "^7.2.2",
+    "@mantine/hooks": "^7.3.1",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -32,21 +32,21 @@
     "path": "^0.12.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-router-dom": "^6.20.0",
+    "react-router-dom": "^6.20.1",
     "sort-by": "^1.2.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
-    "@types/react": "^18.2.39",
+    "@types/node": "^20.10.4",
+    "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react-swc": "^3.5.0",
     "autoprefixer": "^10.4.16",
     "class-variance-authority": "^0.7.0",
-    "postcss": "^8.4.31",
-    "tailwind-merge": "^2.0.0",
-    "tailwindcss": "^3.3.5",
+    "postcss": "^8.4.32",
+    "tailwind-merge": "^2.1.0",
+    "tailwindcss": "^3.3.6",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.3.2",
-    "vite": "^5.0.2"
+    "typescript": "^5.3.3",
+    "vite": "^5.0.7"
   }
 }
