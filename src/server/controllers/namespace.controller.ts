@@ -9,7 +9,7 @@ import {
 } from '@lib/functions'
 import { flatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
-import { config, otherLocales } from '@lib/utils'
+import { config, getConfigOrPrompt, otherLocales } from '@lib/utils'
 import validate, { S } from '@lib/validation/validate'
 
 /**
@@ -86,6 +86,7 @@ export const getNamespace: RequestHandler = (req, res) => {
  * create namespace
  */
 export const createNamespace: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
   try {
     const { namespace } = req.body
     validate(S.namespace, namespace)
@@ -99,7 +100,7 @@ export const createNamespace: RequestHandler = (req, res) => {
       config.locales.forEach(locale =>
         writeFileSync(
           getPath(`${locale}.json`),
-          JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }, null, 2)
+          JSON.stringify({ ...getFileJson(`${locale}.json`), [namespace]: {} }, null, jsonIndentation)
         )
       )
     } else {
@@ -120,6 +121,8 @@ export const createNamespace: RequestHandler = (req, res) => {
  * update namespace
  */
 export const updateNamespace: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
+
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
@@ -140,7 +143,7 @@ export const updateNamespace: RequestHandler = (req, res) => {
         const file = getFileJson(`${locale}.json`)
         file[namespace] = file[oldName]
         delete file[oldName]
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, 2))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => renameSync(getPath(locale, oldName), getPath(locale, name)))
@@ -160,6 +163,8 @@ export const updateNamespace: RequestHandler = (req, res) => {
  * delete namespace
  */
 export const deleteNamespace: RequestHandler = (req, res) => {
+  const jsonIndentation = getConfigOrPrompt('jsonIndentation')
+
   try {
     const { ns } = req.params
     validate(S.namespace, ns)
@@ -173,7 +178,7 @@ export const deleteNamespace: RequestHandler = (req, res) => {
       config.locales.forEach(locale => {
         const file = getFileJson(`${locale}.json`)
         delete file[name]
-        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, 2))
+        writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => rmSync(getPath(locale, name)))
