@@ -36,5 +36,5 @@
       "$comment": "determines indentation of output translations files"
     }
   },
-  "required": ["localesPath", "locales", "defaultLocale", "useSingleFile"]
+  "required": ["localesPath", "locales", "defaultLocale"]
 }

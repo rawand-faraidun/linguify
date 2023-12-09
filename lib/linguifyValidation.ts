@@ -58,10 +58,8 @@ export const linguifyValidation = () => {
     }
 
     // checking useSingleFile
-    if (typeof config.useSingleFile == 'undefined') {
-      throw new Error(chalk.yellow(`Linguify config file misses 'useSingleFile' key, please add it before starting`))
-    }
-    if (typeof config.useSingleFile != 'boolean') {
+    // can be undefined, but must be boolean
+    if (typeof config.useSingleFile != 'undefined' && typeof config.useSingleFile != 'boolean') {
       throw new Error(chalk.yellow(`Provided 'useSingleFile' is not boolean, please change it before starting`))
     }
 
