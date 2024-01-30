@@ -1,0 +1,5 @@
+---
+"linguify": patch
+---
+
+Update dependencies
