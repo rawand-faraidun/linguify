@@ -1,3 +1,6 @@
+import { Link } from 'react-router-dom'
+import { FiGithub } from 'react-icons/fi'
+import { Button } from '../ui/button'
 import Logo from './Logo'
 import Theme from './Theme'
 
@@ -14,7 +17,12 @@ const Header = () => {
           <Logo className="h-8" />
         </div>
 
-        <div>
+        <div className="flex items-center gap-2">
+          <Link to="https://github.com/rawand-faraidun/linguify" target="_blank">
+            <Button variant="ghost" className="p-2">
+              <FiGithub className="w-6 h-6" />
+            </Button>
+          </Link>
           <Theme />
         </div>
       </div>

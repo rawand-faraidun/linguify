@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { LuPlus } from 'react-icons/lu'
 import {
   Dialog,
   DialogClose,
@@ -9,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
-import Svg from '../Svg'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { useToast } from '../ui/use-toast'
@@ -57,7 +57,7 @@ const AddNamespace = ({ onSuccess }: Props) => {
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="outline" className="p-6 w-full h-full">
-            <Svg paths={['M12 4.5v15m7.5-7.5h-15']} />
+            <LuPlus className="w-6 h-6" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">

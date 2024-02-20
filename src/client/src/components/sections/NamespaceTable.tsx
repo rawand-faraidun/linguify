@@ -1,5 +1,5 @@
 import { Dispatch, Fragment, SetStateAction, useEffect, useState } from 'react'
-import Svg from '../Svg'
+import { LuChevronDown, LuChevronRight, LuChevronUp, LuTrash2 } from 'react-icons/lu'
 import { Button } from '../ui/button'
 import { Checkbox } from '../ui/checkbox'
 import {
@@ -66,15 +66,14 @@ const NamespaceTable = ({ data, refresher }: Props) => {
 
   useEffect(() => {
     let ordganizedDatas = data.flattenValues.slice()
-
     // filtering
     ordganizedDatas = ordganizedDatas.filter(
       ({ key, value, translations }) =>
-        key.includes(search) ||
-        value.includes(search) ||
+        key.toLowerCase().includes(search.toLowerCase()) ||
+        value.toLowerCase().includes(search.toLowerCase()) ||
         // expanding the row if the translation matches the search
         Object.values(translations).some(v => {
-          if (v.includes(search)) setExpanded(prev => [...prev, key])
+          if (v.toLowerCase().includes(search.toLowerCase())) setExpanded(prev => [...prev, key])
           return v.includes(search)
         })
     )
@@ -105,12 +104,8 @@ const NamespaceTable = ({ data, refresher }: Props) => {
             <Dialog>
               <DialogTrigger asChild>
                 <Button className="gap-2" variant="destructive">
-                  <span>Delete all</span>
-                  <Svg
-                    paths={[
-                      'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0'
-                    ]}
-                  />
+                  <span>Delete selected</span>
+                  <LuTrash2 className="w-5 h-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -147,7 +142,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                 />
                 {datas.some(v => expanded.includes(v.key)) && (
                   <Button className="p-1" variant="ghost" onClick={() => setExpanded([])}>
-                    <Svg className="w-4 h-4 text-foreground" paths={['M19.5 8.25l-7.5 7.5-7.5-7.5']} />
+                    <LuChevronDown className="w-4 h-4 text-foreground" />
                   </Button>
                 )}
               </div>
@@ -163,15 +158,13 @@ const NamespaceTable = ({ data, refresher }: Props) => {
               >
                 Key
                 <div className="flex flex-col">
-                  <Svg
+                  <LuChevronUp
                     className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
                     strokeWidth={3}
-                    paths={['M4.5 15.75l7.5-7.5 7.5 7.5']}
                   />
-                  <Svg
+                  <LuChevronDown
                     className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
                     strokeWidth={3}
-                    paths={['M19.5 8.25l-7.5 7.5-7.5-7.5']}
                   />
                 </div>
               </Button>
@@ -187,15 +180,13 @@ const NamespaceTable = ({ data, refresher }: Props) => {
               >
                 Value
                 <div className="flex flex-col">
-                  <Svg
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'value' && sort.dir == 'desc' })}
+                  <LuChevronUp
+                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
                     strokeWidth={3}
-                    paths={['M4.5 15.75l7.5-7.5 7.5 7.5']}
                   />
-                  <Svg
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'value' && sort.dir == 'asc' })}
+                  <LuChevronDown
+                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
                     strokeWidth={3}
-                    paths={['M19.5 8.25l-7.5 7.5-7.5-7.5']}
                   />
                 </div>
               </Button>
@@ -232,10 +223,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                             setExpanded(prev => (prev.includes(key) ? prev.filter(e => e != key) : [...prev, key]))
                           }
                         >
-                          <Svg
-                            className="w-4 h-4"
-                            paths={[isExpanded ? 'M19.5 8.25l-7.5 7.5-7.5-7.5' : 'M8.25 4.5l7.5 7.5-7.5 7.5']}
-                          />
+                          {isExpanded ? <LuChevronDown className="w-4 h-4" /> : <LuChevronRight className="w-4 h-4" />}
                         </Button>
                       </div>
                     </TableCell>

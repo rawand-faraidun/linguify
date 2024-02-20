@@ -1,6 +1,6 @@
 import { useContext, useState } from 'react'
+import { LuPlus } from 'react-icons/lu'
 import { AppContext } from '../context/AppContext'
-import Svg from '../Svg'
 import { Button } from '../ui/button'
 import {
   Dialog,
@@ -64,7 +64,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <span>Add key</span>
-          <Svg paths={['M12 4.5v15m7.5-7.5h-15']} />
+          <LuPlus className="w-5 h-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">

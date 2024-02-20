@@ -1,7 +1,7 @@
 import * as React from 'react'
 import * as ToastPrimitives from '@radix-ui/react-toast'
 import { cva, type VariantProps } from 'class-variance-authority'
-import Svg from '../Svg'
+import { LuX } from 'react-icons/lu'
 import { cn } from '@lib/functions/cn'
 
 const ToastProvider = ToastPrimitives.Provider
@@ -72,7 +72,7 @@ const ToastClose = React.forwardRef<
     toast-close=""
     {...props}
   >
-    <Svg className="h-4 w-4" paths={['M6 18L18 6M6 6l12 12']} />
+    <LuX className="h-4 w-4" />
   </ToastPrimitives.Close>
 ))
 ToastClose.displayName = ToastPrimitives.Close.displayName

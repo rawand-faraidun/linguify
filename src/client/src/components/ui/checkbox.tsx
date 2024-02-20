@@ -1,6 +1,6 @@
 import * as React from 'react'
 import * as CheckboxPrimitive from '@radix-ui/react-checkbox'
-import Svg from '../Svg'
+import { LuCheck } from 'react-icons/lu'
 import { cn } from '@lib/functions/cn'
 
 const Checkbox = React.forwardRef<
@@ -16,7 +16,7 @@ const Checkbox = React.forwardRef<
     {...props}
   >
     <CheckboxPrimitive.Indicator className={cn('flex items-center justify-center text-current')}>
-      <Svg className="h-4 w-4" paths={['M4.5 12.75l6 6 9-13.5']} />
+      <LuCheck className="w-4 h-4" />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ))

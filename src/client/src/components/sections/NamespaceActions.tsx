@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Svg from '../Svg'
+import { LuMoreVertical } from 'react-icons/lu'
 import { Button } from '../ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import {
@@ -73,12 +73,8 @@ const NamespaceActions = ({ ns, onUpdate, onDelete }: Props) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="aspect-square p-1">
-            <Svg
-              paths={[
-                'M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z'
-              ]}
-            />
+          <Button variant="ghost" size="icon">
+            <LuMoreVertical className="w-5 h-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
