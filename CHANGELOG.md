@@ -1,5 +1,16 @@
 # linguify
 
+## 1.2.2
+
+### Patch Changes
+
+- 0faa1df: changes:
+  - fix filtering case
+  - changes svg icons to `react-icons`
+  - added footer, prevent elements from sticking to bottom of the screen
+  - update dependencies
+  - other small changes
+
 ## 1.2.1
 
 ### Patch Changes
