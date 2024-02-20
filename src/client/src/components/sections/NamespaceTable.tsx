@@ -66,15 +66,14 @@ const NamespaceTable = ({ data, refresher }: Props) => {
 
   useEffect(() => {
     let ordganizedDatas = data.flattenValues.slice()
-
     // filtering
     ordganizedDatas = ordganizedDatas.filter(
       ({ key, value, translations }) =>
-        key.includes(search) ||
-        value.includes(search) ||
+        key.toLowerCase().includes(search.toLowerCase()) ||
+        value.toLowerCase().includes(search.toLowerCase()) ||
         // expanding the row if the translation matches the search
         Object.values(translations).some(v => {
-          if (v.includes(search)) setExpanded(prev => [...prev, key])
+          if (v.toLowerCase().includes(search.toLowerCase())) setExpanded(prev => [...prev, key])
           return v.includes(search)
         })
     )
