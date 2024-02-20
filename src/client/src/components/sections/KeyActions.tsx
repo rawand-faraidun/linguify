@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useState } from 'react'
 import { useClipboard } from '@mantine/hooks'
+import { LuMoreVertical } from 'react-icons/lu'
 import {
   Dialog,
   DialogClose,
@@ -10,7 +11,6 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 import { AppContext } from '../context/AppContext'
-import Svg from '../Svg'
 import { Button } from '../ui/button'
 import {
   DropdownMenu,
@@ -97,12 +97,8 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="aspect-square p-1">
-            <Svg
-              paths={[
-                'M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z'
-              ]}
-            />
+          <Button variant="ghost" size="icon">
+            <LuMoreVertical className="w-5 h-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -225,12 +221,8 @@ export const SubKeyActions = ({ data }: SubProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="aspect-square p-1">
-          <Svg
-            paths={[
-              'M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z'
-            ]}
-          />
+        <Button variant="ghost" size="icon">
+          <LuMoreVertical className="w-5 h-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
