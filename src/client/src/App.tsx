@@ -1,4 +1,5 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import Footer from './components/App/Footer'
 import Header from './components/App/Header'
 import AppProvider from './components/context/AppContext'
 import { Toaster } from './components/ui/toaster'
@@ -17,6 +18,7 @@ function App() {
             <Route path="/:ns" element={<NamespacePage />} />
           </Routes>
 
+          <Footer />
           <Toaster />
         </BrowserRouter>
       </AppProvider>
