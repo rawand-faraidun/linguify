@@ -2,7 +2,7 @@ import { writeFileSync } from 'fs'
 import { type RequestHandler } from 'express'
 import _ from 'lodash'
 import { getFileJson, getNamespaceJson, getPath, isNamespaceExists } from '@lib/functions'
-import { clear, isAssignable, unflatten } from '@lib/object'
+import { clear, isAssignable, sort, unflatten } from '@lib/object'
 import type { DynamicObject } from '@lib/types'
 import { config, otherLocales } from '@lib/utils'
 import validate, { S } from '@lib/validation/validate'
@@ -112,7 +112,7 @@ export const updateKey: RequestHandler = (req, res) => {
     // removing old key
     let newJson = _.cloneDeep(defaultJson)
     _.unset(newJson, oldKey)
-    newJson = clear(newJson)
+    newJson = sort(clear(newJson))
 
     // checking if key changed
     if (oldKey != key) {
@@ -142,7 +142,7 @@ export const updateKey: RequestHandler = (req, res) => {
         let json = getNamespaceJson(locale, name)
         const unflattened = unflatten({ [key]: translations[locale] || value })
         _.unset(json, oldKey)
-        json = clear(json)
+        json = sort(clear(json))
         file[name] = _.merge(json, unflattened)
         writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
@@ -151,7 +151,7 @@ export const updateKey: RequestHandler = (req, res) => {
       otherLocales.forEach(locale => {
         let json = getNamespaceJson(locale, name)
         _.unset(json, oldKey)
-        json = clear(json)
+        json = sort(clear(json))
         const unflattened = unflatten({ [key]: translations[locale] || value })
         writeFileSync(getPath(locale, name), JSON.stringify(_.merge(json, unflattened), null, config.jsonIndentation))
         result.translations.push({ [locale]: value })
@@ -191,14 +191,14 @@ export const deleteKeys: RequestHandler = (req, res) => {
         const file = getFileJson(`${locale}.json`)
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
-        file[name] = clear(json)
+        file[name] = sort(clear(json))
         writeFileSync(getPath(`${locale}.json`), JSON.stringify(file, null, config.jsonIndentation))
       })
     } else {
       config.locales.forEach(locale => {
         let json = getNamespaceJson(locale, name)
         keys.forEach(k => _.unset(json, k))
-        writeFileSync(getPath(locale, name), JSON.stringify(clear(json), null, config.jsonIndentation))
+        writeFileSync(getPath(locale, name), JSON.stringify(sort(clear(json)), null, config.jsonIndentation))
       })
     }
 

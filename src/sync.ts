@@ -7,7 +7,7 @@ import { configPath } from '@lib/utils'
 /**
  * sync linguify command
  */
-const sync = async (port: number = defaultPort) => {
+const sync = async () => {
   try {
     // validating linguify configs
     linguifyValidation()
