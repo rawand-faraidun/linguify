@@ -67,6 +67,26 @@ linguify -p 3000
 
  * Note: Updating `linguify.config.json` while Linguify runs requires restarting it before affecting it.
 
+### Import & Export translations
+
+Linguify can import from or export to Excel translations file (xlsx).
+
+### Import translations
+
+```bash
+linguify import
+```
+
+ * Note: the file's first row must contain `locales` names, and the first column must be named `key`. It is advised to first use `export` to get a translations xlsx file.
+
+### Export translations
+
+```bash
+linguify export
+```
+
+Both commands have an option to pass the exact path of the translations file `--path <PATH>`, if path not passed it will try to import from or export to `translations.xlsx` from `localesPath`
+
 ## How it works?
 
 Linguify first validated the user config, then scans the `localesPath` for `namespaces`, read this article from [i18next documentation](https://www.i18next.com/principles/namespaces) if not sure how it works.
