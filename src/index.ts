@@ -3,7 +3,7 @@ import { program } from 'commander'
 import init from './init'
 import start from './start'
 import sync from './sync'
-import { exportTranslations } from './translations'
+import { exportTranslations, importTranslations } from './translations'
 import { defaultPort, xlsxFileName } from '@lib/defaults'
 import { getPath } from '@lib/functions'
 
@@ -36,5 +36,14 @@ program
   .option('-p, --path <path>', 'path', getPath(xlsxFileName))
   .description('export translations to xlsx')
   .action(options => exportTranslations(options.path || getPath(xlsxFileName)))
+
+/**
+ * import translations from xlsx
+ */
+program
+  .command('import')
+  .option('-p, --path <path>', 'path', getPath(xlsxFileName))
+  .description('import translations from xlsx')
+  .action(options => importTranslations(options.path || getPath(xlsxFileName)))
 
 program.parse(process.argv)
