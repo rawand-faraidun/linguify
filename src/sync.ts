@@ -1,17 +1,12 @@
 import chalk from 'chalk'
-import { defaultPort } from '@lib/defaults'
-import { linguifyValidation } from '@lib/linguifyValidation'
 import { syncNamespaces } from '@lib/syncNamespaces'
 import { configPath } from '@lib/utils'
 
 /**
  * sync linguify command
  */
-const sync = async (port: number = defaultPort) => {
+const sync = async () => {
   try {
-    // validating linguify configs
-    linguifyValidation()
-
     // notifying user about config
     console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
 

@@ -2,7 +2,6 @@ import { watch } from 'fs'
 import chalk from 'chalk'
 import startServer from './server/server'
 import { defaultPort } from '@lib/defaults'
-import { linguifyValidation } from '@lib/linguifyValidation'
 import { syncNamespaces } from '@lib/syncNamespaces'
 import { configPath } from '@lib/utils'
 
@@ -15,9 +14,6 @@ const start = async (port: number = defaultPort) => {
   try {
     // notifying user about config
     console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
-
-    // validating linguify configs
-    linguifyValidation()
 
     // syncing namespaces
     syncNamespaces()

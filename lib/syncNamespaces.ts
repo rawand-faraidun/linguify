@@ -2,7 +2,8 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs
 import chalk from 'chalk'
 import _ from 'lodash'
 import { getFileJson, getNamespaceJson, getNamespaces, getPath } from './functions'
-import { clear } from './object'
+import { linguifyValidation } from './linguifyValidation'
+import { clear, sort } from './object'
 import type { DynamicObject } from './types'
 import { config, otherLocales } from '@lib/utils'
 
@@ -13,6 +14,9 @@ import { config, otherLocales } from '@lib/utils'
  */
 export const syncNamespaces = () => {
   try {
+    // validating linguify configs
+    linguifyValidation()
+
     // checking or creating locale files
     config.locales.forEach(locale => {
       const path = config.useSingleFile ? getPath(`${locale}.json`) : getPath(locale)
@@ -44,7 +48,7 @@ export const syncNamespaces = () => {
       const file = readFileSync(path, 'utf-8')
       let json: DynamicObject = {}
       try {
-        json = clear(JSON.parse(file), { skipFirstDepth: true })
+        json = sort(clear(JSON.parse(file), { skipFirstDepth: true }))
         writeFileSync(path, JSON.stringify(json, null, config.jsonIndentation))
       } catch {
         writeFileSync(path, '{}')
@@ -59,7 +63,7 @@ export const syncNamespaces = () => {
         const file = readFileSync(path, 'utf-8')
         let json: DynamicObject = {}
         try {
-          json = clear(JSON.parse(file))
+          json = sort(clear(JSON.parse(file)))
           writeFileSync(path, JSON.stringify(json, null, config.jsonIndentation))
         } catch {
           writeFileSync(path, '{}')
@@ -73,7 +77,7 @@ export const syncNamespaces = () => {
       if (config.useSingleFile) {
         const path = getPath(`${locale}.json`)
         try {
-          const json = clear(getFileJson(`${locale}.json`), { skipFirstDepth: true })
+          const json = sort(clear(getFileJson(`${locale}.json`), { skipFirstDepth: true }))
           writeFileSync(path, JSON.stringify(_.defaultsDeep(json, nsKeys), null, config.jsonIndentation))
         } catch {
           writeFileSync(path, JSON.stringify(nsKeys, null, config.jsonIndentation))
@@ -85,7 +89,7 @@ export const syncNamespaces = () => {
             return writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }, null, config.jsonIndentation))
           }
           try {
-            const json = clear(getNamespaceJson(locale, ns))
+            const json = sort(clear(getNamespaceJson(locale, ns)))
             writeFileSync(path, JSON.stringify(_.defaultsDeep(json, { ...nsKeys[ns] }), null, config.jsonIndentation))
           } catch {
             writeFileSync(path, JSON.stringify({ ...nsKeys[ns] }, null, config.jsonIndentation))

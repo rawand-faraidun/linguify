@@ -104,6 +104,21 @@ export const clear = (object: DynamicObject, { skipFirstDepth = false }: ClearOp
     : _(object).pickBy(_.isObject).mapValues(clear).omitBy(_.isEmpty).assign(_.omitBy(object, _.isObject)).value()
 
 /**
+ * sorts object and nested objects keys by alphabetical order.
+ *
+ * @param object - object to sort
+ *
+ * @returns sorted object
+ */
+export const sort = (object: DynamicObject): DynamicObject =>
+  _(object)
+    .toPairs()
+    .map(([key, value]) => [key, _.isObject(value) ? sort(value) : value])
+    .sortBy(0)
+    .fromPairs()
+    .value()
+
+/**
  * check if a path is assignable to the object, returns unvalid path if not
  *
  * @param object - object to validate
