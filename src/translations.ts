@@ -4,8 +4,7 @@ import _ from 'lodash'
 import xlsx from 'node-xlsx'
 import { xlsxFileName } from '@lib/defaults'
 import { getFileJson, getNamespaceJson, getNamespaces, getPath, isNamespaceExists } from '@lib/functions'
-import { linguifyValidation } from '@lib/linguifyValidation'
-import { clear, flatten, sort, unflatten } from '@lib/object'
+import { flatten, unflatten } from '@lib/object'
 import { syncNamespaces } from '@lib/syncNamespaces'
 import type { DynamicObject } from '@lib/types'
 import { config, otherLocales } from '@lib/utils'
@@ -16,9 +15,6 @@ import { config, otherLocales } from '@lib/utils'
 export const importTranslations = async (path: string = getPath(xlsxFileName)) => {
   try {
     console.log(chalk.blue('Importing linguify trnalsations from xlsx'))
-
-    // validating linguify configs
-    linguifyValidation()
 
     // syncing namespaces
     syncNamespaces()
@@ -83,9 +79,6 @@ export const importTranslations = async (path: string = getPath(xlsxFileName)) =
 export const exportTranslations = async (path: string = getPath(xlsxFileName)) => {
   try {
     console.log(chalk.blue('Exporting linguify trnalsations to xlsx'))
-
-    // validating linguify configs
-    linguifyValidation()
 
     // syncing namespaces
     syncNamespaces()

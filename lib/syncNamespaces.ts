@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'fs
 import chalk from 'chalk'
 import _ from 'lodash'
 import { getFileJson, getNamespaceJson, getNamespaces, getPath } from './functions'
+import { linguifyValidation } from './linguifyValidation'
 import { clear, sort } from './object'
 import type { DynamicObject } from './types'
 import { config, otherLocales } from '@lib/utils'
@@ -13,6 +14,9 @@ import { config, otherLocales } from '@lib/utils'
  */
 export const syncNamespaces = () => {
   try {
+    // validating linguify configs
+    linguifyValidation()
+
     // checking or creating locale files
     config.locales.forEach(locale => {
       const path = config.useSingleFile ? getPath(`${locale}.json`) : getPath(locale)

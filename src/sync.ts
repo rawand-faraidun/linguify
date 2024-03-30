@@ -1,5 +1,4 @@
 import chalk from 'chalk'
-import { linguifyValidation } from '@lib/linguifyValidation'
 import { syncNamespaces } from '@lib/syncNamespaces'
 import { configPath } from '@lib/utils'
 
@@ -8,9 +7,6 @@ import { configPath } from '@lib/utils'
  */
 const sync = async () => {
   try {
-    // validating linguify configs
-    linguifyValidation()
-
     // notifying user about config
     console.log(`Reading linguify config from ${chalk.cyan(chalk.underline(configPath))}`)
 
