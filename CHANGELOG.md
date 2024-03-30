@@ -1,5 +1,15 @@
 # linguify
 
+## 1.3.0
+
+### Minor Changes
+
+- 3af0e28: changes:
+  - update dependencies
+  - sort objects
+  - export to excel
+  - import from excel
+
 ## 1.2.2
 
 ### Patch Changes
