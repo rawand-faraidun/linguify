@@ -1,5 +1,4 @@
 import chalk from 'chalk'
-import { defaultPort } from '@lib/defaults'
 import { linguifyValidation } from '@lib/linguifyValidation'
 import { syncNamespaces } from '@lib/syncNamespaces'
 import { configPath } from '@lib/utils'

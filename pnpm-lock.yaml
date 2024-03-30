@@ -32,6 +32,9 @@ dependencies:
   lodash:
     specifier: ^4.17.21
     version: 4.17.21
+  node-xlsx:
+    specifier: ^0.23.0
+    version: 0.23.0
   path:
     specifier: ^0.12.7
     version: 0.12.7
@@ -2709,6 +2712,14 @@ packages:
     resolution: {integrity: sha512-y10wOWt8yZpqXmOgRo77WaHEmhYQYGNA6y421PKsKYWEK8aW+cqAphborZDhqfyKrbZEN92CN1X2KbafY2s7Yw==}
     dev: true
 
+  /node-xlsx@0.23.0:
+    resolution: {integrity: sha512-r3KaSZSsSrK92rbPXnX/vDdxURmPPik0rjJ3A+Pybzpjyrk4G6WyGfj8JIz5dMMEpCmWVpmO4qoVPBxnpLv/8Q==}
+    engines: {node: '>=10.0.0'}
+    hasBin: true
+    dependencies:
+      xlsx: '@cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz'
+    dev: false
+
   /nodemon@3.1.0:
     resolution: {integrity: sha512-xqlktYlDMCepBJd43ZQhjWwMw2obW/JRvkrLxq5RCNcuDDX1DbcPT+qT1IlIIdf+DhnWs90JpTMe+Y5KxOchvA==}
     engines: {node: '>=10'}
@@ -3943,3 +3954,11 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+  '@cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz':
+    resolution: {tarball: https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz}
+    name: xlsx
+    version: 0.19.3
+    engines: {node: '>=0.8'}
+    hasBin: true
+    dev: false

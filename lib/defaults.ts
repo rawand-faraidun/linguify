@@ -18,6 +18,11 @@ export const configFileName = 'linguify.config.json'
 export const configSchemaPath = 'https://raw.githubusercontent.com/rawand-faraidun/linguify/main/assets/schema.json'
 
 /**
+ * xlsx translations file name
+ */
+export const xlsxFileName = 'translations.xlsx'
+
+/**
  * linguify default values
  */
 export const defaultConfig: DefaultConfig = {
