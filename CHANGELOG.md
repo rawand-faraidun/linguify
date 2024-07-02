@@ -1,5 +1,12 @@
 # linguify
 
+## 1.3.1
+
+### Patch Changes
+
+- 6aa9e8f: changes:
+  - update dependencies
+
 ## 1.3.0
 
 ### Minor Changes
