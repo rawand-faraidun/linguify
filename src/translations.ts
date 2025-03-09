@@ -14,7 +14,7 @@ import { config, otherLocales } from '@lib/utils'
  */
 export const importTranslations = async (path: string = getPath(xlsxFileName)) => {
   try {
-    console.log(chalk.blue('Importing linguify trnalsations from xlsx'))
+    console.log(chalk.blue('Importing linguify translations from xlsx'))
 
     // syncing namespaces
     syncNamespaces()
@@ -66,7 +66,7 @@ export const importTranslations = async (path: string = getPath(xlsxFileName)) =
     // syncing namespaces to add the missing properties
     syncNamespaces()
 
-    console.log(chalk.green('Imported linguify trnalsations successfully'))
+    console.log(chalk.green('Imported linguify translations successfully'))
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
@@ -78,7 +78,7 @@ export const importTranslations = async (path: string = getPath(xlsxFileName)) =
  */
 export const exportTranslations = async (path: string = getPath(xlsxFileName)) => {
   try {
-    console.log(chalk.blue('Exporting linguify trnalsations to xlsx'))
+    console.log(chalk.blue('Exporting linguify translations to xlsx'))
 
     // syncing namespaces
     syncNamespaces()
@@ -112,7 +112,7 @@ export const exportTranslations = async (path: string = getPath(xlsxFileName)) =
     const buffer = xlsx.build([{ name: 'trnaslations', data, options: {} }])
     writeFileSync(path, buffer)
 
-    console.log(chalk.green('Exported linguify trnalsations successfully'))
+    console.log(chalk.green('Exported linguify translations successfully'))
   } catch (error: any) {
     console.error(chalk.red(error.message))
     process.exit(0)
