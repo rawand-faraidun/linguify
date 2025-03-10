@@ -11,7 +11,7 @@ import Theme from './Theme'
  */
 const Header = () => {
   return (
-    <header className="sticky top-0 p-3 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 p-3 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="container flex justify-between items-center">
         <div>
           <Logo className="h-8" />
