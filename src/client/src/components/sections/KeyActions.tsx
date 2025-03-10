@@ -139,7 +139,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
 
       {/* edit key */}
       <Dialog modal open={editing != null} onOpenChange={() => setEditing(null)}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit key</DialogTitle>
             <DialogDescription>

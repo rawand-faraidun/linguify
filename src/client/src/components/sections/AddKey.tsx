@@ -67,7 +67,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
           <LuPlus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>New key</DialogTitle>
           <DialogDescription>
