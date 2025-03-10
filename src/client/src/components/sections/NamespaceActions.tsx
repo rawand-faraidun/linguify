@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LuMoreVertical } from 'react-icons/lu'
+import { LuEllipsisVertical } from 'react-icons/lu'
 import { Button } from '../ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
 import {
@@ -74,7 +74,7 @@ const NamespaceActions = ({ ns, onUpdate, onDelete }: Props) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <LuMoreVertical className="w-5 h-5" />
+            <LuEllipsisVertical className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -98,7 +98,7 @@ const NamespaceActions = ({ ns, onUpdate, onDelete }: Props) => {
               Edit <code className="text-foreground">{namespace}</code> translation namespace
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 gap-8 py-4">
             <Input
               id="namespace"
               name="namespace"

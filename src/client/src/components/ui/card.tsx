@@ -4,7 +4,7 @@ import { cn } from '@lib/functions/cn'
 const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('rounded-lg border bg-card text-card-foreground shadow-sm hover:scale-[1.01] transition', className)}
+    className={cn('bg-card text-card-foreground shadow-xs rounded-lg border transition hover:scale-[1.01]', className)}
     {...props}
   />
 ))
@@ -23,7 +23,7 @@ const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HT
 CardTitle.displayName = 'CardTitle'
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, ...props }, ref) => <p ref={ref} className={cn('text-sm text-muted-foreground', className)} {...props} />
+  ({ className, ...props }, ref) => <p ref={ref} className={cn('text-muted-foreground text-sm', className)} {...props} />
 )
 CardDescription.displayName = 'CardDescription'
 

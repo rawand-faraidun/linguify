@@ -35,9 +35,9 @@ export default function Page() {
   }, [ns, refresh])
 
   return (
-    <div className="container mt-elem">
+    <div className="mt-elem container">
       {/* head */}
-      <div className="flex justify-between items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         {/* title */}
         <div>
           <h1 className="text-4xl font-bold">{namespace}</h1>

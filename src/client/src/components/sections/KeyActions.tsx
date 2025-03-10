@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useState } from 'react'
 import { useClipboard } from '@mantine/hooks'
-import { LuMoreVertical } from 'react-icons/lu'
+import { LuEllipsisVertical } from 'react-icons/lu'
 import {
   Dialog,
   DialogClose,
@@ -98,7 +98,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <LuMoreVertical className="w-5 h-5" />
+            <LuEllipsisVertical className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -139,7 +139,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
 
       {/* edit key */}
       <Dialog modal open={editing != null} onOpenChange={() => setEditing(null)}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>Edit key</DialogTitle>
             <DialogDescription>
@@ -149,7 +149,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
           </DialogHeader>
           {editing != null && (
             <ScrollArea className="max-h-[50vh]">
-              <div className="py-4 pl-1 pr-3 grid grid-cols-1 gap-8">
+              <div className="grid grid-cols-1 gap-8 py-4 pl-1 pr-3">
                 <div className="flex flex-col gap-3">
                   <Label htmlFor="key">Key</Label>
                   <Input
@@ -222,7 +222,7 @@ export const SubKeyActions = ({ data }: SubProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <LuMoreVertical className="w-5 h-5" />
+          <LuEllipsisVertical className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

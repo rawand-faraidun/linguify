@@ -18,7 +18,7 @@ const Theme = () => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="p-2">
-          {currentTheme == 'light' ? <LuSun className="w-6 h-6" /> : <LuMoonStar className="w-6 h-6" />}
+          {currentTheme == 'light' ? <LuSun className="h-6 w-6" /> : <LuMoonStar className="h-6 w-6" />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="z-high" align="end">

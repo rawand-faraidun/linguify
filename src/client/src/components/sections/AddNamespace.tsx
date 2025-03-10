@@ -56,8 +56,8 @@ const AddNamespace = ({ onSuccess }: Props) => {
       {/* new namespace dialog */}
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline" className="p-6 w-full h-full">
-            <LuPlus className="w-6 h-6" />
+          <Button variant="outline" className="h-full w-full p-6">
+            <LuPlus className="h-6 w-6" />
           </Button>
         </DialogTrigger>
         <DialogContent className="max-w-md">
@@ -65,7 +65,7 @@ const AddNamespace = ({ onSuccess }: Props) => {
             <DialogTitle>New namespace</DialogTitle>
             <DialogDescription>Create new translation namespace</DialogDescription>
           </DialogHeader>
-          <div className="py-4 grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 gap-8 py-4">
             <Input
               id="namespace"
               name="namespace"

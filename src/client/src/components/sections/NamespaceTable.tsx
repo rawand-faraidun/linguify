@@ -88,7 +88,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
   return (
     <>
       {/* table actions */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div className="w-full max-w-sm">
           <Input
             className="w-full"
@@ -105,7 +105,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
               <DialogTrigger asChild>
                 <Button className="gap-2" variant="destructive">
                   <span>Delete selected</span>
-                  <LuTrash2 className="w-5 h-5" />
+                  <LuTrash2 className="h-5 w-5" />
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
@@ -135,14 +135,14 @@ const NamespaceTable = ({ data, refresher }: Props) => {
           <TableRow>
             {/* selected and is expanded */}
             <TableHead className="w-[1px]">
-              <div className="flex gap-2 items-center">
+              <div className="flex items-center gap-2">
                 <Checkbox
                   checked={datas.every(v => selected.includes(v.key))}
                   onCheckedChange={value => (value == true ? setSelected(datas.map(v => v.key)) : setSelected([]))}
                 />
                 {datas.some(v => expanded.includes(v.key)) && (
                   <Button className="p-1" variant="ghost" onClick={() => setExpanded([])}>
-                    <LuChevronDown className="w-4 h-4 text-foreground" />
+                    <LuChevronDown className="text-foreground h-4 w-4" />
                   </Button>
                 )}
               </div>
@@ -159,11 +159,11 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                 Key
                 <div className="flex flex-col">
                   <LuChevronUp
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
+                    className={cn('h-3 w-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
                     strokeWidth={3}
                   />
                   <LuChevronDown
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
+                    className={cn('h-3 w-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
                     strokeWidth={3}
                   />
                 </div>
@@ -181,11 +181,11 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                 Value
                 <div className="flex flex-col">
                   <LuChevronUp
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
+                    className={cn('h-3 w-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'desc' })}
                     strokeWidth={3}
                   />
                   <LuChevronDown
-                    className={cn('w-3 h-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
+                    className={cn('h-3 w-3', { 'text-foreground': sort.key == 'key' && sort.dir == 'asc' })}
                     strokeWidth={3}
                   />
                 </div>
@@ -209,7 +209,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                   <TableRow data-state={cn(isSelected ? 'selected' : { expanded: isExpanded })}>
                     {/* table checked state and expand */}
                     <TableCell>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex items-center gap-2">
                         <Checkbox
                           checked={isSelected}
                           onCheckedChange={value =>
@@ -223,7 +223,7 @@ const NamespaceTable = ({ data, refresher }: Props) => {
                             setExpanded(prev => (prev.includes(key) ? prev.filter(e => e != key) : [...prev, key]))
                           }
                         >
-                          {isExpanded ? <LuChevronDown className="w-4 h-4" /> : <LuChevronRight className="w-4 h-4" />}
+                          {isExpanded ? <LuChevronDown className="h-4 w-4" /> : <LuChevronRight className="h-4 w-4" />}
                         </Button>
                       </div>
                     </TableCell>
