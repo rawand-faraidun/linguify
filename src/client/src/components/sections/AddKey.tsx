@@ -64,7 +64,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <span>Add key</span>
-          <LuPlus className="w-5 h-5" />
+          <LuPlus className="h-5 w-5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-xl">
@@ -76,7 +76,7 @@ const AddKey = ({ namespace, onSuccess }: Props) => {
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[50vh]">
-          <div className="py-4 pl-1 pr-3 grid grid-cols-1 gap-8">
+          <div className="grid grid-cols-1 gap-8 py-4 pl-1 pr-3">
             <div className="flex flex-col gap-3">
               <Label htmlFor="key">Key</Label>
               <Input

@@ -11,8 +11,8 @@ import Theme from './Theme'
  */
 const Header = () => {
   return (
-    <header className="sticky top-0 p-3 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="container flex justify-between items-center">
+    <header className="bg-background/95 supports-backdrop-filter:bg-background/60 sticky top-0 z-50 w-full border-b p-3 backdrop-blur">
+      <div className="container flex items-center justify-between">
         <div>
           <Logo className="h-8" />
         </div>
@@ -20,7 +20,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <Link to="https://github.com/rawand-faraidun/linguify" target="_blank">
             <Button variant="ghost" className="p-2">
-              <FiGithub className="w-6 h-6" />
+              <FiGithub className="h-6 w-6" />
             </Button>
           </Link>
           <Theme />

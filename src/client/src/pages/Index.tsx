@@ -27,11 +27,11 @@ export default function Page() {
 
   return (
     <>
-      <div className="container mt-elem">
+      <div className="mt-elem container">
         {/* title */}
         <div>
           <h1 className="text-4xl font-bold">Translation Namespaces</h1>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="text-muted-foreground mt-4 text-lg">
             Namespaces (NS) are a feature in internationalization frameworks which allows you to separate translations that
             get loaded into multiple files. read more about namespaces in{' '}
             <Link
@@ -43,7 +43,7 @@ export default function Page() {
             </Link>
             .
           </p>
-          <p className="mt-3 text-muted-foreground">
+          <p className="text-muted-foreground mt-3">
             Linguify uses <code className="text-foreground">defaultLocale</code> as source of namespaces and uses it for
             validating and creating new ones.{' '}
             <span className="text-yellow-600">Please avoid interacting with locale folders and namespaces manually</span>.
@@ -51,7 +51,7 @@ export default function Page() {
         </div>
 
         {/* content */}
-        <div className="mt-elem grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="mt-elem grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           <div>
             {/* add namespace dialog */}
             <AddNamespace onSuccess={() => refresher(r => ++r)} />
