@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, useContext, useState } from 'react'
 import { useClipboard } from '@mantine/hooks'
-import { LuMoreVertical } from 'react-icons/lu'
+import { LuEllipsisVertical } from 'react-icons/lu'
 import {
   Dialog,
   DialogClose,
@@ -98,7 +98,7 @@ const KeyActions = ({ namespace, data, setSelected, onSuccess }: Props) => {
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon">
-            <LuMoreVertical className="h-5 w-5" />
+            <LuEllipsisVertical className="h-5 w-5" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
@@ -222,7 +222,7 @@ export const SubKeyActions = ({ data }: SubProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon">
-          <LuMoreVertical className="h-5 w-5" />
+          <LuEllipsisVertical className="h-5 w-5" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
