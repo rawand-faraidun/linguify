@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'fs'
+import { parse } from 'path'
 import chalk from 'chalk'
 import _ from 'lodash'
 import xlsx from 'node-xlsx'
@@ -93,7 +94,10 @@ export const exportTranslations = async (path: string = getPath(xlsxFileName)) =
     config.locales.forEach(locale => {
       flattened[locale] = flatten(
         namespaces.reduce<DynamicObject>(
-          (obj, namespace) => ({ ...obj, [namespace]: getNamespaceJson(locale, namespace) }),
+          (obj, namespace) => ({
+            ...obj,
+            [config.useSingleFile ? namespace : parse(namespace).name]: getNamespaceJson(locale, namespace)
+          }),
           {}
         )
       )
