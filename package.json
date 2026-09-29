@@ -5,6 +5,7 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
+		"start": "tsx apps/cli/src/index.ts",
 		"dev": "turbo run dev",
 		"build": "turbo run build",
 		"lint": "biome check .",
@@ -17,6 +18,7 @@
 		"@biomejs/biome": "^2.5.14",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
+		"tsx": "^4.23.15",
 		"turbo": "^2.11.5",
 		"typescript": "catalog:"
 	},

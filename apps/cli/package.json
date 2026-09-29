@@ -5,6 +5,9 @@
 	"scripts": {
 		"typecheck": "tsc"
 	},
+	"dependencies": {
+		"commander": "^15.0.0"
+	},
 	"devDependencies": {
 		"@linguify/api": "workspace:*",
 		"@linguify/biome-config": "workspace:*",
