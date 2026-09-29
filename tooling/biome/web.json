@@ -11,7 +11,21 @@
 	},
 	"linter": {
 		"rules": {
+			"correctness": {
+				"noNodejsModules": "error",
+				"noProcessGlobal": "error",
+				"noGlobalDirnameFilename": "error"
+			},
 			"style": {
+				"noRestrictedGlobals": {
+					"level": "error",
+					"options": {
+						"deniedGlobals": {
+							"Buffer": "Browser code has no Buffer; use Uint8Array or TextEncoder.",
+							"global": "Browser code has no `global`; use globalThis."
+						}
+					}
+				},
 				"noRestrictedImports": {
 					"level": "error",
 					"options": {

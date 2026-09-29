@@ -1,0 +1,21 @@
+{
+	"name": "@linguify/studio-client",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"typecheck": "tsc"
+	},
+	"devDependencies": {
+		"@linguify/api": "workspace:*",
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/constants": "workspace:*",
+		"@linguify/table": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@linguify/types": "workspace:*",
+		"@linguify/ui": "workspace:*",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vite": "^8.3.1"
+	}
+}

@@ -17,7 +17,6 @@
 		"@biomejs/biome": "^2.5.14",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
-		"@types/node": "catalog:",
 		"turbo": "^2.11.5",
 		"typescript": "catalog:"
 	},

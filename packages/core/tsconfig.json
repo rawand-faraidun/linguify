@@ -1,0 +1,4 @@
+{
+	"extends": "@linguify/tsconfig/node",
+	"include": ["src"]
+}
