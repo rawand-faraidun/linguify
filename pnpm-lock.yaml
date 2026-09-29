@@ -260,6 +260,9 @@ importers:
       '@linguify/biome-config':
         specifier: workspace:*
         version: link:../../tooling/biome
+      '@linguify/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@linguify/tsconfig':
         specifier: workspace:*
         version: link:../../tooling/typescript

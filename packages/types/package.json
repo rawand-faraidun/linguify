@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",
+		"@linguify/constants": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"typescript": "catalog:"
 	}
