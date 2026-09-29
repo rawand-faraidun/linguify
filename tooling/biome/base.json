@@ -1,0 +1,82 @@
+{
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true,
+		"defaultBranch": "main"
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": ["**", "!!**/.agents", "!!**/.claude", "!**/skills-lock.json"]
+	},
+	"formatter": {
+		"enabled": true,
+		"useEditorconfig": true,
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineEnding": "lf",
+		"lineWidth": 120
+	},
+	"javascript": {
+		"formatter": {
+			"enabled": true,
+			"quoteStyle": "single",
+			"arrowParentheses": "asNeeded",
+			"trailingCommas": "none",
+			"semicolons": "asNeeded",
+			"jsxQuoteStyle": "double"
+		}
+	},
+	"json": {
+		"formatter": {
+			"trailingCommas": "none"
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"suspicious": {
+				"noConsole": "warn"
+			},
+			"style": {
+				"useFilenamingConvention": {
+					"level": "error",
+					"options": {
+						"strictCase": true,
+						"requireAscii": true,
+						"filenameCases": ["kebab-case"]
+					}
+				}
+			},
+			"correctness": {
+				"noUnusedImports": "warn",
+				"noUnusedVariables": "warn"
+			},
+			"a11y": {
+				"noSvgWithoutTitle": "off"
+			}
+		}
+	},
+	"assist": {
+		"enabled": true,
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							[":NODE:", ":BUN:"],
+							["@linguify/*", "@linguify/**"],
+							[":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
+							":ALIAS:",
+							":PATH:"
+						],
+						"identifierOrder": "natural"
+					}
+				}
+			}
+		}
+	}
+}

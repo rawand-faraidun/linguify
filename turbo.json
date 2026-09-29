@@ -1,0 +1,20 @@
+{
+	"$schema": "https://turborepo.com/schema.json",
+	"agentGuidance": false,
+	"tasks": {
+		"build": {
+			"dependsOn": ["^build"],
+			"outputs": ["dist/**"]
+		},
+		"dev": {
+			"cache": false,
+			"persistent": true
+		},
+		"typecheck": {
+			"dependsOn": ["transit"]
+		},
+		"transit": {
+			"dependsOn": ["^transit"]
+		}
+	}
+}

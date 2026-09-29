@@ -1,0 +1,25 @@
+{
+	"editor.defaultFormatter": "biomejs.biome",
+	"editor.formatOnSave": true,
+	"files.insertFinalNewline": true,
+	"files.trimTrailingWhitespace": true,
+	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit",
+		"source.organizeImports.biome": "explicit"
+	},
+	"[yaml]": {
+		"editor.defaultFormatter": null
+	},
+	"[markdown]": {
+		"editor.defaultFormatter": null,
+		"files.trimTrailingWhitespace": false
+	},
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
+	"js/ts.tsdk.promptToUseWorkspaceVersion": true,
+	"json.schemaDownload.trustedDomains": {
+		"https://turborepo.com": true,
+		"https://ui.shadcn.com": true,
+		"https://unpkg.com": true,
+		"https://json.schemastore.org": true
+	}
+}

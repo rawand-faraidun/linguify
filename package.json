@@ -1,0 +1,47 @@
+{
+	"name": "@linguify/monorepo",
+	"description": "Developer-first translation file manager.",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "turbo run dev",
+		"build": "turbo run build",
+		"lint": "biome check .",
+		"typecheck": "turbo run typecheck",
+		"check": "biome check .",
+		"format": "biome format --write .",
+		"verify": "pnpm lint && pnpm typecheck && pnpm build"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.14",
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"turbo": "^2.11.5",
+		"typescript": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"packageManager": "pnpm@11.22.0",
+	"keywords": [
+		"i18n",
+		"localize",
+		"translation"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rawand Faraidun",
+		"email": "201.rawand@gmail.com",
+		"url": "https://github.com/rawand-faraidun"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rawand-faraidun/linguify.git"
+	},
+	"homepage": "https://github.com/rawand-faraidun/linguify#readme",
+	"bugs": {
+		"url": "https://github.com/rawand-faraidun/linguify/issues"
+	}
+}

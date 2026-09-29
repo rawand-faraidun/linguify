@@ -1,0 +1,10 @@
+{
+	"name": "@linguify/tsconfig",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Shared TypeScript configs: base, node, web and extension variants",
+	"exports": {
+		"./*": "./*.json"
+	}
+}

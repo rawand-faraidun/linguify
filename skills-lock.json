@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "skills": {
+    "caveman": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "d346a4b77231f4466ad3913b1cf608cf6762d6b1e041a84fa95712740bb98a2a",
+      "wellKnownDigest": "sha256:a0b2792856607c683a3b0f910c371dbb4bf1334375ec94b1ba628f6177a07a71"
+    },
+    "codebase-design": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "bcc601d01654bdad170cd03672fdeaea67e22d7a91760ca42602b6e7ce136f1f",
+      "wellKnownDigest": "sha256:93ff99d22ef9ba80cd37866d3f2742c643b23dc2302adfe77f79f774e299b911"
+    },
+    "executing-plans": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "78a07800ee99a5861ae10be59d79fad085fdca10444e8aaeb2691597e357cff8",
+      "wellKnownDigest": "sha256:5036191743cbb55b8665ddf0d6b89daad668525adf28291fe1054e86e01972d9"
+    },
+    "find-skills": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "913b9d37d0d54047dd65222bb8c67b2bf04e3cb87dcad1729068d7a8b2c8c396",
+      "wellKnownDigest": "sha256:b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "improve-codebase-architecture": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "0cc581cb29e36fe8d5582a7050fa2dea21e788e8034ef295ab8bc852f404f6a4",
+      "wellKnownDigest": "sha256:9d3dffd6eaf34fbe49eaffb331bfe3b261f1297cd050da42db2055a5588871df"
+    },
+    "resolving-merge-conflicts": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "bff6e06cec85897477759ed052410450aa91057644f5b70d888e26bc8b348847",
+      "wellKnownDigest": "sha256:0569ceadd02418da6a74ce0b8d549803e46838823f9585f8b169a6cf9da66ffc"
+    },
+    "setup-ts-deep-modules": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "ebf379784b3771fbeefe50a1cc465fb8ba77d686b7dfa74490868e89fb9e3f79",
+      "wellKnownDigest": "sha256:512b9c07c26f9c40f68fcc4fd0875ed642719487f74514bdc8b48a700a0b7819"
+    },
+    "shadcn": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "d37ca78d3e027ab8ba1e4770327c83712c49232658d0fa0cccfda10da820e3c5",
+      "wellKnownDigest": "sha256:857f558f874c974fe467422b458ec38f386ae8199f603ea4f8d7d9d6d6fe51e2"
+    },
+    "subagent-driven-development": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "25d0c0f59f6ee1385f02f51f0f40ecf12e0b472477906b6dbee94231fcad561f",
+      "wellKnownDigest": "sha256:3653a129e62cda2b9504cd8a31750bdf4de8adfcd550a099bd8b8285f93ab8ff"
+    },
+    "systematic-debugging": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "5d6e3099e1e1daf500c89dcc36d01e4055ca6ed71a7a2e473f339fb3117cbd15",
+      "wellKnownDigest": "sha256:b405a1cf9f35d855dbc5fbe324a84efd339ed0342c018d5ecaebc0b11b287f87"
+    },
+    "writing-plans": {
+      "source": "skills.sh",
+      "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
+      "sourceType": "well-known",
+      "computedHash": "dde011155c2086d74a90271e92034a567c33df95f42d5abb61b428d1625522e8",
+      "wellKnownDigest": "sha256:15e0904e553df8b84418657d8956271c03529ec1e667e0f5b7ac6e9392a3e9cd"
+    }
+  }
+}

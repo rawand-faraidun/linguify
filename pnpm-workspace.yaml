@@ -1,0 +1,18 @@
+packages:
+  - apps/*
+  - apps/studio/*
+  - packages/*
+  - tooling/*
+
+engineStrict: true
+
+allowBuilds:
+  esbuild: true
+
+catalog:
+  '@types/node': ^24.19.0
+  '@types/react': ^19.3.0
+  '@types/react-dom': ^19.3.0
+  react: ^19.3.0
+  react-dom: ^19.3.0
+  typescript: ^6.0.3

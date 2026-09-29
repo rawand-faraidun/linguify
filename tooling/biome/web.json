@@ -1,0 +1,70 @@
+{
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
+		},
+		"formatter": {
+			"enabled": true,
+			"quoteStyle": "double"
+		}
+	},
+	"linter": {
+		"rules": {
+			"style": {
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"@linguify/core": "Browser code must not import @linguify/core: it reaches node:fs.",
+							"@linguify/api": {
+								"allowImportNames": ["AppRouter", "RouterInputs", "RouterOutputs"],
+								"message": "Browser code may only import the router types from @linguify/api."
+							}
+						}
+					}
+				}
+			},
+			"suspicious": {
+				"noArrayIndexKey": "warn"
+			},
+			"nursery": {
+				"useSortedClasses": {
+					"level": "warn",
+					"fix": "safe",
+					"options": {
+						"attributes": ["classList"],
+						"functions": ["clsx", "cva", "cn"]
+					}
+				}
+			},
+			"a11y": {
+				"noSvgWithoutTitle": "info"
+			}
+		},
+		"domains": {
+			"react": "recommended"
+		}
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							[":NODE:", ":BUN:"],
+							["react", "react/**"],
+							["@linguify/*", "@linguify/**"],
+							[":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
+							":ALIAS:",
+							":PATH:",
+							"**/*.css"
+						],
+						"identifierOrder": "natural"
+					}
+				}
+			}
+		}
+	}
+}
