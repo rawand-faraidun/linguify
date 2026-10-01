@@ -9,7 +9,8 @@
 	},
 	"dependencies": {
 		"@linguify/constants": "workspace:*",
-		"@linguify/types": "workspace:*"
+		"@linguify/types": "workspace:*",
+		"flat": "^6.0.1"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

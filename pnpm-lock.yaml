@@ -222,6 +222,9 @@ importers:
       '@linguify/types':
         specifier: workspace:*
         version: link:../types
+      flat:
+        specifier: ^6.0.1
+        version: 6.0.1
     devDependencies:
       '@linguify/biome-config':
         specifier: workspace:*
@@ -662,6 +665,11 @@ packages:
       picomatch:
         optional: true
 
+  flat@6.0.1:
+    resolution: {integrity: sha512-/3FfIa8mbrg3xE7+wAhWeV+bd7L2Mof+xtZb5dRDKZ+wDvYJK4WDYeIOuOhre5Yv5aQObZrlbRmk3RTSiuQBtw==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -1052,6 +1060,8 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.7):
     optionalDependencies:
       picomatch: 4.0.7
+
+  flat@6.0.1: {}
 
   fsevents@2.3.3:
     optional: true
