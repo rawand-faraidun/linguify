@@ -15,3 +15,11 @@ export const lineEnding = '\n'
  * then ignored; the config schema rejects it instead
  */
 export const maxIndentation = 10
+
+/**
+ * a plain file name: no folder separators, and not `.` or `..`
+ *
+ * @note file names from the config are joined onto a folder, so a separator or `..` would let one
+ * point outside it
+ */
+export const fileNamePattern = /^(?!\.{1,2}$)[^/\\]+$/

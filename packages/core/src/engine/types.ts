@@ -1,4 +1,4 @@
-import type { EngineCapabilities, EngineId, EngineOptions } from '@linguify/types'
+import type { EngineCapabilities, EngineId } from '@linguify/types'
 import type { z } from 'zod'
 
 /**
@@ -16,7 +16,8 @@ export type Engine = {
 	capabilities: EngineCapabilities
 
 	/**
-	 * the engine's `options` schema — strict, with every field described and defaulted
+	 * the engine's `options` schema — a strict object whose every field is described and defaulted;
+	 * {@link registerEngine} refuses any engine that breaks this
 	 */
-	options: z.ZodType<EngineOptions>
+	options: z.ZodObject
 }

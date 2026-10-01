@@ -4,6 +4,14 @@
 export const studioDefaultPort = 5678
 
 /**
+ * the ports the studio can bind
+ */
+export const studioPortRange = {
+	min: 1,
+	max: 65_535
+} as const
+
+/**
  * the only address the studio binds
  *
  * @note loopback only: the studio writes files, so it must never be reachable from the network.

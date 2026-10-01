@@ -8,6 +8,11 @@
 export const defaultEngineId = 'json'
 
 /**
+ * what an engine id may look like — lowercase letters, digits and `-`, starting with a letter: `json`
+ */
+export const engineIdPattern = /^[a-z][a-z0-9-]*$/
+
+/**
  * how an engine can lay out a locale on disk; each engine declares which of these it supports
  */
 export const fileStructures = {

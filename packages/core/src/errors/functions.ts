@@ -1,5 +1,6 @@
 import { errorCodes } from '@linguify/constants'
 import type { ErrorCode } from '@linguify/types'
+import type { Expect } from '../utils/type-checks'
 import type { ConfigErrorCode } from './config-error'
 import type { ConflictErrorCode } from './conflict-error'
 import type { EngineErrorCode } from './engine-error'
@@ -28,8 +29,6 @@ export type ClassifiedErrorCode =
 export type EveryErrorCodeIsClassified = Expect<
 	[Exclude<ErrorCode, ClassifiedErrorCode>] extends [never] ? true : false
 >
-
-type Expect<T extends true> = T
 
 /**
  * turns anything thrown into a {@link LinguifyError}

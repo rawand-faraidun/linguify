@@ -40,6 +40,14 @@ export const schemaLocations = {
 } as const
 
 /**
+ * what a locale code may contain: letters, digits, `-` and `_` — `en`, `ckb`, `pt-BR`, `zh_Hant`
+ *
+ * @note a locale code becomes a file or folder name (`ckb.json`, `ckb/common.json`), so path
+ * separators and dots must never get in
+ */
+export const localeCodePattern = /^[A-Za-z0-9_-]+$/
+
+/**
  * the locale a new project starts with, and the default one
  */
 const initialLocale = 'en'
