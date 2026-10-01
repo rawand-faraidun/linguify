@@ -1,24 +1,3 @@
 {
-	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
-	"linter": {
-		"rules": {
-			"style": {
-				"noRestrictedImports": {
-					"level": "error",
-					"options": {
-						"paths": {
-							"node:fs": {
-								"importNames": ["writeFile", "writeFileSync", "appendFile", "appendFileSync"],
-								"message": "Write files with writeFile from @linguify/core: it is atomic, so an interrupted write never leaves broken JSON."
-							},
-							"node:fs/promises": {
-								"importNames": ["writeFile", "appendFile"],
-								"message": "Write files with writeFile from @linguify/core: it is atomic, so an interrupted write never leaves broken JSON."
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json"
 }

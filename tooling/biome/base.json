@@ -48,6 +48,27 @@
 						"requireAscii": true,
 						"filenameCases": ["kebab-case"]
 					}
+				},
+				"noRestrictedImports": {
+					"level": "error",
+					"options": {
+						"paths": {
+							"node:fs": {
+								"importNames": ["writeFile", "writeFileSync", "appendFile", "appendFileSync"],
+								"message": "Write files with writeFile from @linguify/core: it is atomic, so an interrupted write never leaves broken JSON."
+							},
+							"node:fs/promises": {
+								"importNames": ["writeFile", "appendFile"],
+								"message": "Write files with writeFile from @linguify/core: it is atomic, so an interrupted write never leaves broken JSON."
+							}
+						},
+						"patterns": [
+							{
+								"group": ["**/engines/**"],
+								"message": "Only `engines/` may import a specific engine; everything else resolves engines through the registry."
+							}
+						]
+					}
 				}
 			},
 			"correctness": {
