@@ -92,3 +92,38 @@ export const descriptionDefaults = {
 	enabled: true,
 	name: '_desc.json'
 } as const
+
+/**
+ * where a config value can come from
+ */
+export const configLayers = {
+	/**
+	 * linguify's own default
+	 */
+	default: 'default',
+
+	/**
+	 * the editor's settings — `linguify.*` in VS Code
+	 */
+	editor: 'editor',
+
+	/**
+	 * the project's `linguify.config.json`
+	 */
+	project: 'project',
+
+	/**
+	 * a command-line flag
+	 */
+	flag: 'flag'
+} as const
+
+/**
+ * the layers from weakest to strongest — a later layer's value wins
+ */
+export const configLayerOrder = [
+	configLayers.default,
+	configLayers.editor,
+	configLayers.project,
+	configLayers.flag
+] as const

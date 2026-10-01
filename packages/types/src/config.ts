@@ -1,8 +1,9 @@
+import type { configLayers } from '@linguify/constants'
 import type { EngineId, EngineOptions } from './engine'
 import type { Locale } from './identifiers'
 import type { IoFormat } from './io'
 import type { ViewMode } from './ui'
-import type { Optional } from './values'
+import type { Optional, Values } from './values'
 
 /**
  * the descriptions file's settings, after `true` / `false` has been expanded
@@ -88,4 +89,33 @@ export type ConfigInput = {
 	studio?: Optional<StudioConfig> | undefined
 	extension?: Optional<ExtensionConfig> | undefined
 	io?: Optional<IoConfig> | undefined
+}
+
+/**
+ * where a config value came from
+ */
+export type ConfigLayer = Values<typeof configLayers>
+
+/**
+ * the layer each config value came from, by its dotted path — `studio.port` → `flag`
+ */
+export type ConfigSources = Record<string, ConfigLayer>
+
+/**
+ * the config layers a caller can supply; each holds whatever that source contained, unchecked
+ *
+ * @note defaults are not a layer the caller passes — they apply last, wherever nothing else set a value
+ */
+export type ConfigLayerInputs = {
+	editor?: unknown
+	project?: unknown
+	flag?: unknown
+}
+
+/**
+ * a resolved config, with the layer every value came from
+ */
+export type ResolvedConfig = {
+	config: Config
+	sources: ConfigSources
 }
