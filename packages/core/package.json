@@ -10,12 +10,14 @@
 	"dependencies": {
 		"@linguify/constants": "workspace:*",
 		"@linguify/keys": "workspace:*",
-		"@linguify/types": "workspace:*"
+		"@linguify/types": "workspace:*",
+		"write-file-atomic": "^7.0.1"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/write-file-atomic": "^4.0.3",
 		"typescript": "catalog:"
 	}
 }

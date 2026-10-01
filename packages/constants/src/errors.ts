@@ -100,5 +100,10 @@ export const errorCodes = {
 	/**
 	 * the studio's port is already taken
 	 */
-	portInUse: 'PORT_IN_USE'
+	portInUse: 'PORT_IN_USE',
+
+	/**
+	 * a failure linguify did not anticipate — a bug, or the environment breaking underneath it
+	 */
+	unexpected: 'UNEXPECTED'
 } as const
