@@ -1,4 +1,4 @@
-import { indentationStyles, lineEnding } from '@linguify/constants'
+import { indentationStyles, lineEnding, tabCharacter } from '@linguify/constants'
 import type { IndentationStyle } from '@linguify/types'
 
 /**
@@ -25,7 +25,7 @@ export type FormatOptions = {
  * @returns the file content, Unicode written as is rather than escaped
  */
 export const formatJson = (value: object, { indentation, indentationStyle, finalNewline }: FormatOptions): string => {
-	const indent = indentation === 0 ? undefined : indentationStyle === indentationStyles.tab ? '\t' : indentation
+	const indent = indentation === 0 ? undefined : indentationStyle === indentationStyles.tab ? tabCharacter : indentation
 	const content = JSON.stringify(value, null, indent)
 	return finalNewline ? `${content}${lineEnding}` : content
 }

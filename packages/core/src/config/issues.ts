@@ -1,4 +1,4 @@
-import { configLayers, errorCodes } from '@linguify/constants'
+import { configLayers, configPathSeparator, errorCodes, rootPathLabel } from '@linguify/constants'
 import type { ConfigLayer, ErrorDetails } from '@linguify/types'
 import type { z } from 'zod'
 import { ConfigError } from '../errors'
@@ -34,7 +34,7 @@ export const layerNames: Record<ConfigLayer, string> = {
  * @returns its dotted path and message
  */
 export const toConfigIssue = (issue: z.core.$ZodIssue): ConfigIssue => ({
-	path: issue.path.map(String).join('.'),
+	path: issue.path.map(String).join(configPathSeparator),
 	message: issue.message
 })
 
@@ -51,7 +51,7 @@ export const invalidConfig = (title: string, issues: ConfigIssue[], details: Err
 	const lines = issues.map(issue => {
 		const origin =
 			issue.layers === undefined ? '' : ` (from ${issue.layers.map(layer => layerNames[layer]).join(', ')})`
-		return `  ${issue.path || '(root)'}${origin}: ${issue.message}`
+		return `  ${issue.path || rootPathLabel}${origin}: ${issue.message}`
 	})
 	return new ConfigError([`${title}:`, ...lines].join('\n'), {
 		code: errorCodes.configInvalid,

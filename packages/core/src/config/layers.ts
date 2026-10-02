@@ -1,4 +1,4 @@
-import { configLayerOrder, configLayers } from '@linguify/constants'
+import { configLayerOrder, configLayers, configPathSeparator } from '@linguify/constants'
 import type { ConfigLayer, ConfigLayerInputs, ResolvedConfig } from '@linguify/types'
 import { collectLeafPaths, type Equal, type Expect, isPlainObject, mergeDeep } from '../utils'
 import { type ConfigIssue, invalidConfig, layerNames, toConfigIssue } from './issues'
@@ -45,7 +45,7 @@ export const resolveConfig = (inputs: ConfigLayerInputs): ResolvedConfig => {
 	}
 	const config = result.data
 	const sources = Object.fromEntries(
-		collectLeafPaths(config).map(path => [path.join('.'), sourceOf(path, layers)] as const)
+		collectLeafPaths(config).map(path => [path.join(configPathSeparator), sourceOf(path, layers)] as const)
 	)
 	return { config, sources }
 }

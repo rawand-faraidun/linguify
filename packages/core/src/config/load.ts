@@ -8,6 +8,7 @@ import {
 	configSearchPlaces,
 	configSearchStrategy,
 	errorCodes,
+	fileErrorCodes,
 	legacyConfigKeys,
 	projectRootMarkers
 } from '@linguify/constants'
@@ -109,15 +110,21 @@ const readProjectConfig = async (
 	} catch (error) {
 		if (error instanceof ConfigError) throw error
 		const code = (error as NodeJS.ErrnoException).code
-		if (config !== undefined && (code === 'ENOENT' || code === 'ENOTDIR' || code === 'EISDIR')) {
-			const reason = code === 'EISDIR' ? 'is a folder, not a config file' : 'does not exist'
+		if (
+			config !== undefined &&
+			(code === fileErrorCodes.notFound ||
+				code === fileErrorCodes.notADirectory ||
+				code === fileErrorCodes.isADirectory)
+		) {
+			const reason = code === fileErrorCodes.isADirectory ? 'is a folder, not a config file' : 'does not exist'
 			throw new ConfigError(`Config file ${reason}: ${resolve(cwd, config)}`, {
 				code: errorCodes.configNotFound,
 				details: { file: resolve(cwd, config) },
 				cause: error
 			})
 		}
-		if (config !== undefined && (code === 'EACCES' || code === 'EPERM')) throw cannotRead(resolve(cwd, config), error)
+		if (config !== undefined && (code === fileErrorCodes.accessDenied || code === fileErrorCodes.notPermitted))
+			throw cannotRead(resolve(cwd, config), error)
 		if (error instanceof SyntaxError) {
 			throw new ConfigError(error.message, { code: errorCodes.configInvalid, cause: error })
 		}

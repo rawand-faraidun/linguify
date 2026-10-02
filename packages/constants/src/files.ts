@@ -39,3 +39,19 @@ export const generatedFileFormat = {
 	indentationStyle: 'tab',
 	finalNewline: true
 } as const
+
+/**
+ * the character a tab-indented file is indented with
+ */
+export const tabCharacter = '\t'
+
+/**
+ * the Node.js error codes linguify tells apart when a file cannot be used
+ */
+export const fileErrorCodes = {
+	notFound: 'ENOENT',
+	notADirectory: 'ENOTDIR',
+	isADirectory: 'EISDIR',
+	accessDenied: 'EACCES',
+	notPermitted: 'EPERM'
+} as const

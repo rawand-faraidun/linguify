@@ -1,4 +1,4 @@
-import { engineIdPattern, errorCodes } from '@linguify/constants'
+import { configPathSeparator, engineIdPattern, errorCodes, rootPathLabel } from '@linguify/constants'
 import type { EngineId } from '@linguify/types'
 import { EngineError, UnexpectedError } from '../errors'
 import type { Engine } from './types'
@@ -46,7 +46,7 @@ const findEngineProblem = (engine: Engine): string | undefined => {
 	if (undescribed.length > 0) return `every option needs a description, and these have none: ${undescribed.join(', ')}`
 	const empty = engine.options.safeParse({})
 	if (!empty.success) {
-		const fields = empty.error.issues.map(issue => issue.path.map(String).join('.') || '(root)')
+		const fields = empty.error.issues.map(issue => issue.path.map(String).join(configPathSeparator) || rootPathLabel)
 		return `every option needs a default, and these have none: ${fields.join(', ')}`
 	}
 	return undefined

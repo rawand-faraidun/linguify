@@ -154,3 +154,26 @@ export const configLayerOrder = [
 	configLayers.project,
 	configLayers.flag
 ] as const
+
+/**
+ * separates the segments of a config path — `studio.port`, `options.indentation` — in sources and
+ * error messages
+ */
+export const configPathSeparator = '.'
+
+/**
+ * how the config's top level is named where a path would be empty, in error messages
+ */
+export const rootPathLabel = '(root)'
+
+/**
+ * the generated config JSON Schema's draft and title
+ *
+ * @note draft-07 rather than the newest draft: it is the one editors — VS Code's JSON support included
+ * — implement most completely
+ */
+export const configJsonSchema = {
+	draft: 'draft-07',
+	draftUri: 'http://json-schema.org/draft-07/schema#',
+	title: `${appName} config`
+} as const

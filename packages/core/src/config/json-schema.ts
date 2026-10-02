@@ -1,15 +1,7 @@
-import { appName, defaultEngineId, schemaLocations } from '@linguify/constants'
+import { configJsonSchema, defaultEngineId, schemaLocations } from '@linguify/constants'
 import { z } from 'zod'
 import { listEngines } from '../engine'
 import { configObject } from './schema'
-
-/**
- * the JSON Schema draft the config schema is written in
- *
- * @note draft-07 rather than the newest draft: it is the one editors — VS Code's JSON support
- * included — implement most completely
- */
-const draft = 'draft-07'
 
 /**
  * a JSON Schema document, as plain data
@@ -31,9 +23,9 @@ export const generateConfigJsonSchema = (): JsonSchema => {
 	const engines = listEngines()
 
 	return {
-		$schema: 'http://json-schema.org/draft-07/schema#',
+		$schema: configJsonSchema.draftUri,
 		$id: schemaLocations.remote,
-		title: `${appName} config`,
+		title: configJsonSchema.title,
 		...base,
 		properties: {
 			...properties,
@@ -63,6 +55,10 @@ export const generateConfigJsonSchema = (): JsonSchema => {
  * @returns its JSON Schema, without a `$schema` of its own
  */
 const toJsonSchema = (schema: z.ZodType): JsonSchema => {
-	const { $schema: _draft, ...rest } = z.toJSONSchema(schema, { target: draft, io: 'input', unrepresentable: 'any' })
+	const { $schema: _draft, ...rest } = z.toJSONSchema(schema, {
+		target: configJsonSchema.draft,
+		io: 'input',
+		unrepresentable: 'any'
+	})
 	return rest
 }
