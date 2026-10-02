@@ -3,6 +3,8 @@
 	"version": "1.4.1",
 	"type": "module",
 	"scripts": {
+		"build": "pnpm schema",
+		"schema": "tsx scripts/generate-schema.ts",
 		"typecheck": "tsc"
 	},
 	"dependencies": {

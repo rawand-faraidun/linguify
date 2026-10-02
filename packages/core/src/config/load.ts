@@ -62,8 +62,8 @@ export const loadConfig = async ({ cwd, config, editor, flag }: LoadConfigOption
 /**
  * finds and reads the project config file
  *
- * @note the search runs from `cwd` up to the nearest `package.json` — the project's root — or to the
- * filesystem root when there is none
+ * @note the search runs from `cwd` up to the nearest `package.json` or `package.yaml` — the project's
+ * root — or to the filesystem root when there is none
  *
  * @param cwd - absolute folder to start from
  * @param config - an explicit file, relative to `cwd`

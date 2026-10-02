@@ -29,3 +29,13 @@ export const fileNamePattern = /^(?!\.{1,2}$)[^/\\]+$/
  * file; `JSON.parse` rejects it, so it is dropped before parsing
  */
 export const byteOrderMark = '﻿'
+
+/**
+ * how linguify lays out the files it generates for itself, such as `schema.json` — the repository's
+ * own style, one tab per level
+ */
+export const generatedFileFormat = {
+	indentation: 2,
+	indentationStyle: 'tab',
+	finalNewline: true
+} as const
