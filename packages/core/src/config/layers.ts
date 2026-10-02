@@ -1,6 +1,6 @@
 import { configLayerOrder, configLayers } from '@linguify/constants'
 import type { ConfigLayer, ConfigLayerInputs, ResolvedConfig } from '@linguify/types'
-import { collectLeafPaths, isPlainObject, mergeDeep } from '../utils'
+import { collectLeafPaths, type Equal, type Expect, isPlainObject, mergeDeep } from '../utils'
 import { type ConfigIssue, invalidConfig, layerNames, toConfigIssue } from './issues'
 import { configObject, configSchema } from './schema'
 
@@ -11,6 +11,14 @@ type SuppliedLayer = {
 	layer: Exclude<ConfigLayer, typeof configLayers.default>
 	content: Record<string, unknown>
 }
+
+/**
+ * compiles only while {@link ConfigLayerInputs} names exactly the layers a caller can supply
+ *
+ * @note the input type is spelled out by hand in `@linguify/types` for readability; this keeps it in
+ * step with `configLayers`
+ */
+export type LayerInputsMatchLayers = Expect<Equal<keyof ConfigLayerInputs, SuppliedLayer['layer']>>
 
 /**
  * resolves the config from its layers — defaults ▸ editor settings ▸ project config ▸ flags, later

@@ -23,3 +23,9 @@ export const maxIndentation = 10
  * point outside it
  */
 export const fileNamePattern = /^(?!\.{1,2}$)[^/\\]+$/
+
+/**
+ * the invisible character some editors — Windows Notepad among them — put at the start of a UTF-8
+ * file; `JSON.parse` rejects it, so it is dropped before parsing
+ */
+export const byteOrderMark = '﻿'

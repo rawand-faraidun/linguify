@@ -11,6 +11,7 @@
 		"@linguify/constants": "workspace:*",
 		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
+		"cosmiconfig": "^10.0.1",
 		"write-file-atomic": "^7.0.1",
 		"zod": "^4.6.5"
 	},

@@ -104,7 +104,8 @@ export type ConfigSources = Record<string, ConfigLayer>
 /**
  * the config layers a caller can supply; each holds whatever that source contained, unchecked
  *
- * @note defaults are not a layer the caller passes — they apply last, wherever nothing else set a value
+ * @note defaults are not a layer the caller passes; they are the weakest, filling in every value no
+ * layer set
  */
 export type ConfigLayerInputs = {
 	editor?: unknown
@@ -118,4 +119,24 @@ export type ConfigLayerInputs = {
 export type ResolvedConfig = {
 	config: Config
 	sources: ConfigSources
+}
+
+/**
+ * a resolved config, with where its file was found
+ */
+export type LoadedConfig = ResolvedConfig & {
+	/**
+	 * the config file's absolute path
+	 */
+	file: string
+
+	/**
+	 * the folder holding the config file; every relative path in the config is resolved from here
+	 */
+	root: string
+
+	/**
+	 * the locales folder's absolute path — `path`, resolved from `root`
+	 */
+	localesDirectory: string
 }

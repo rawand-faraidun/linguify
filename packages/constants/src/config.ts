@@ -5,9 +5,21 @@ import { studioDefaultPort } from './studio'
 import { viewModes } from './ui'
 
 /**
+ * the files that mark a project's root and so end the config search — the same ones cosmiconfig's
+ * `project` strategy stops at
+ */
+export const projectRootMarkers: readonly string[] = ['package.json', 'package.yaml']
+
+/**
+ * the config file's extension; `--config` must point at one, since a different extension would make
+ * the loader run it as JavaScript or read it as YAML
+ */
+export const configFileExtension = '.json'
+
+/**
  * the only config file name linguify reads
  */
-export const configFileName = `${appName}.config.json`
+export const configFileName = `${appName}.config${configFileExtension}`
 
 /**
  * the name cosmiconfig searches under
@@ -21,6 +33,21 @@ export const configModuleName = appName
  * files are never searched
  */
 export const configSearchPlaces = [configFileName] as const
+
+/**
+ * how far up the config search goes: from the working directory up to the nearest `package.json`
+ *
+ * @note the config sits at its project's root — next to a Next.js app's `package.json` in a monorepo,
+ * say. A project with no `package.json` at all is searched up to the filesystem root
+ */
+export const configSearchStrategy = 'project'
+
+/**
+ * top-level keys only a linguify 1.x config has — `localesPath`, `defaultLocale`, …
+ *
+ * @note when a rejected config contains any of them, the error points to the upgrade guide
+ */
+export const legacyConfigKeys: readonly string[] = ['localesPath', 'defaultLocale', 'useSingleFile', 'jsonIndentation']
 
 /**
  * the generated JSON Schema's file name, shipped at the cli package root
