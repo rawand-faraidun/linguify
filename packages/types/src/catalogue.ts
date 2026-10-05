@@ -44,6 +44,15 @@ export type Revision = string
  */
 export type KeyRow = {
 	key: KeyPath
+
+	/**
+	 * the key's description, when descriptions are on and it has one
+	 */
 	description?: string
+
+	/**
+	 * the key's text per locale, the default locale first; a locale without the key is left out,
+	 * which `diff` calls missing
+	 */
 	values: Record<Locale, string>
 }

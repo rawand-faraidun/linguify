@@ -1,18 +1,20 @@
-import { fileStructures, indentationStyles, maxIndentation } from '@linguify/constants'
+import { defaultFileFormat, fileStructures, indentationStyles, maxIndentation } from '@linguify/constants'
+import type { EngineOptions } from '@linguify/types'
 import { z } from 'zod'
 
 /**
  * the JSON engine's option defaults
  *
  * @note kept with the engine rather than in `@linguify/constants`, so adding an engine never touches
- * anything outside its own folder
+ * anything outside its own folder; the layout follows `defaultFileFormat`, so the translation files and
+ * the descriptions file are laid out alike unless the config says otherwise
  */
 export const jsonOptionDefaults = {
 	fileStructure: fileStructures.single,
 	namespaces: true,
-	indentation: 2,
-	indentationStyle: indentationStyles.space,
-	finalNewline: true
+	indentation: defaultFileFormat.indentation,
+	indentationStyle: defaultFileFormat.indentationStyle,
+	finalNewline: defaultFileFormat.finalNewline
 } as const
 
 /**
@@ -52,3 +54,15 @@ export const jsonOptions = z.strictObject({
  * the JSON engine's options, with every default applied
  */
 export type JsonOptions = z.output<typeof jsonOptions>
+
+/**
+ * whether a JSON project's keys start with a namespace
+ *
+ * @param options - the JSON engine's options
+ *
+ * @returns `true` in multi-file, where every file is a namespace, and otherwise what `namespaces` says
+ */
+export const isJsonNamespaced = (options: EngineOptions): boolean => {
+	const { fileStructure, namespaces } = jsonOptions.parse(options)
+	return fileStructure === fileStructures.multi || namespaces
+}

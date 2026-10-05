@@ -4,8 +4,10 @@ import {
 	configFileName,
 	descriptionDefaults,
 	fileNamePattern,
+	ioColumns,
 	ioFormats,
 	localeCodePattern,
+	reservedKeySegments,
 	studioPortRange,
 	viewModes
 } from '@linguify/constants'
@@ -20,6 +22,11 @@ import type { Equal, Expect } from '../utils'
 const localeCode = z
 	.string()
 	.regex(localeCodePattern, 'A locale code may only contain letters, digits, `-` and `_` — `en`, `ckb`, `pt-BR`')
+	.refine(code => !reservedKeySegments.includes(code), 'Not a locale code: this name is reserved')
+	.refine(
+		code => !Object.values<string>(ioColumns).includes(code),
+		'Not a locale code: export and import name a column this'
+	)
 
 /**
  * the descriptions file settings in their object form

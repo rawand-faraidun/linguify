@@ -21,6 +21,11 @@ export const warningCodes = {
 	keyExists: 'KEY_EXISTS',
 
 	/**
+	 * `namespace add` found the namespace already there and left it unchanged
+	 */
+	namespaceExists: 'NAMESPACE_EXISTS',
+
+	/**
 	 * `key remove` found no key at a path and moved on to the next
 	 */
 	keyNotFound: 'KEY_NOT_FOUND',

@@ -11,14 +11,14 @@ export type IoFormat = Values<typeof ioFormats>
  * `./translations.<format>`
  */
 export type ExportInput = {
-	format?: IoFormat
-	path?: string
+	format?: IoFormat | undefined
+	path?: string | undefined
 }
 
 /**
  * `import`'s input; both fields fall back exactly as `export`'s do, so the two round-trip
  */
 export type ImportInput = {
-	format?: IoFormat
-	path?: string
+	format?: IoFormat | undefined
+	path?: string | undefined
 }

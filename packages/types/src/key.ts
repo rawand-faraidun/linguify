@@ -11,20 +11,20 @@ export type AddKeyInput = {
 	/**
 	 * the default locale's text; `""` when omitted
 	 */
-	value?: string
+	value?: string | undefined
 
 	/**
 	 * text for other locales; a locale left out gets `""`, or the default locale's text under
 	 * `keys.fillWithDefault`
 	 */
-	translations?: Record<Locale, string>
+	translations?: Record<Locale, string> | undefined
 
-	description?: string
+	description?: string | undefined
 
 	/**
 	 * create the key's namespace when it does not exist, instead of failing
 	 */
-	createNamespace?: boolean
+	createNamespace?: boolean | undefined
 }
 
 /**
@@ -36,19 +36,19 @@ export type SetKeyInput = {
 	/**
 	 * the default locale's new text
 	 */
-	value?: string
+	value?: string | undefined
 
 	/**
 	 * other locales' new text
 	 */
-	translations?: Record<Locale, string>
+	translations?: Record<Locale, string> | undefined
 
 	/**
 	 * apply `value` to every locale, not only the default
 	 */
-	all?: boolean
+	all?: boolean | undefined
 
-	description?: string
+	description?: string | undefined
 }
 
 /**

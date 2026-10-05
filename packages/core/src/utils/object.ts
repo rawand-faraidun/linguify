@@ -12,6 +12,20 @@ export const isPlainObject = (value: unknown): value is Record<string, unknown> 
 }
 
 /**
+ * reads a property only when the object holds it itself
+ *
+ * @note `{}.toString` is a function inherited from `Object.prototype`, so a key named `toString` would
+ * otherwise find a value in every object
+ *
+ * @param record - object to read
+ * @param key - property name
+ *
+ * @returns the property's value, or `undefined` when the object does not hold it
+ */
+export const getOwn = <T>(record: Readonly<Record<string, T>>, key: string): T | undefined =>
+	Object.hasOwn(record, key) ? record[key] : undefined
+
+/**
  * merges two plain objects; the second wins
  *
  * @note nested plain objects merge, everything else — arrays included — is replaced whole; an
@@ -26,8 +40,8 @@ export const isPlainObject = (value: unknown): value is Record<string, unknown> 
 export const mergeDeep = (base: Record<string, unknown>, override: Record<string, unknown>): Record<string, unknown> =>
 	Object.fromEntries(
 		[...new Set([...Object.keys(base), ...Object.keys(override)])].flatMap((key): [string, unknown][] => {
-			const weak = Object.hasOwn(base, key) ? base[key] : undefined
-			const strong = Object.hasOwn(override, key) ? override[key] : undefined
+			const weak = getOwn(base, key)
+			const strong = getOwn(override, key)
 			if (strong === undefined) return weak === undefined ? [] : [[key, weak]]
 			if (isPlainObject(weak) && isPlainObject(strong)) return [[key, mergeDeep(weak, strong)]]
 			return [[key, strong]]

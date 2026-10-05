@@ -12,6 +12,9 @@
 		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"cosmiconfig": "^10.0.1",
+		"papaparse": "^5.7.0",
+		"read-excel-file": "^9.3.10",
+		"write-excel-file": "^4.1.1",
 		"write-file-atomic": "^7.0.1",
 		"zod": "^4.6.5"
 	},
@@ -19,6 +22,7 @@
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/papaparse": "^5.5.2",
 		"@types/write-file-atomic": "^4.0.3",
 		"typescript": "catalog:"
 	}

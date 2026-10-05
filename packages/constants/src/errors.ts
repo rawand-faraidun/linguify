@@ -27,7 +27,8 @@ export const errorCodes = {
 	engineUnknown: 'ENGINE_UNKNOWN',
 
 	/**
-	 * a translation file is not valid JSON
+	 * a translation or descriptions file cannot be read: it is not valid JSON, or not a
+	 * readable file at all — a folder, or a file without read permission
 	 */
 	fileInvalid: 'FILE_INVALID',
 
@@ -78,7 +79,8 @@ export const errorCodes = {
 	keyExists: 'KEY_EXISTS',
 
 	/**
-	 * the path runs through an existing translation, so it cannot hold a nested key
+	 * a translation cannot go at the path: it runs through an existing translation, which cannot hold
+	 * nested keys, or nested keys are already there, which a translation would replace
 	 */
 	keyNotAssignable: 'KEY_NOT_ASSIGNABLE',
 
@@ -88,7 +90,9 @@ export const errorCodes = {
 	descriptionsDisabled: 'DESCRIPTIONS_DISABLED',
 
 	/**
-	 * an import file's content cannot be read in the chosen format
+	 * an import file cannot be used: it does not exist, its content cannot be read in the chosen format,
+	 * or its table is not one linguify can import — no `key` column, a repeated column or key, an
+	 * unusable key path
 	 */
 	importInvalid: 'IMPORT_INVALID',
 

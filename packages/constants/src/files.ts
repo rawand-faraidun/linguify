@@ -9,6 +9,12 @@ export const fileEncoding = 'utf8'
 export const lineEnding = '\n'
 
 /**
+ * the line ending Windows tools write, and Git on Windows checks files out with by default
+ * (`core.autocrlf`)
+ */
+export const windowsLineEnding = '\r\n'
+
+/**
  * the widest indentation a written file can use
  *
  * @note `JSON.stringify` silently caps indentation at 10, so a wider setting would be accepted and
@@ -54,4 +60,34 @@ export const fileErrorCodes = {
 	isADirectory: 'EISDIR',
 	accessDenied: 'EACCES',
 	notPermitted: 'EPERM'
+} as const
+
+/**
+ * how a catalogue's revision is computed from the files it was read from
+ */
+export const revisionHashing = {
+	algorithm: 'sha256',
+	encoding: 'hex',
+
+	/**
+	 * written between a file's path and its text, and after the text, so no two different sets of
+	 * files can run together into the same input
+	 */
+	separator: '\u0000',
+
+	/**
+	 * stands in for a file that does not exist, so "the file is missing" and "the file is empty" give
+	 * different revisions — creating an empty file is a change too
+	 */
+	absentFile: '\u0000absent'
+} as const
+
+/**
+ * how a file is laid out when the engine's options say nothing about it — the descriptions file under
+ * an engine without formatting options, say; tabs, like every other default
+ */
+export const defaultFileFormat = {
+	indentation: 2,
+	indentationStyle: 'tab',
+	finalNewline: true
 } as const

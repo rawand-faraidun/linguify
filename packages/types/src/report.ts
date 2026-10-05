@@ -1,5 +1,5 @@
 import type { changeKinds, warningCodes } from '@linguify/constants'
-import type { Revision } from './catalogue'
+import type { Catalogue, Revision } from './catalogue'
 import type { KeyPath, Locale } from './identifiers'
 import type { Values } from './values'
 
@@ -26,9 +26,14 @@ export type KeyChange = {
 	from?: KeyPath
 
 	/**
-	 * the locales the change reached
+	 * the locales whose text the change reached, in config order
 	 */
 	locales: Locale[]
+
+	/**
+	 * set when the change also reached the key's description
+	 */
+	description?: true
 }
 
 /**
@@ -49,6 +54,17 @@ export type Report = {
 }
 
 /**
+ * what an operation that changes translations returns — it never writes; the caller plans and applies
+ */
+export type OperationResult = {
+	/**
+	 * the catalogue after the change; the one passed in is left as it was
+	 */
+	catalogue: Catalogue
+	report: Report
+}
+
+/**
  * one file a write plan creates or replaces
  */
 export type PlannedWrite = {
@@ -66,17 +82,20 @@ export type WritePlan = {
 
 /**
  * the options every mutation accepts, on top of its own input
+ *
+ * @note an optional field of any operation input also takes `undefined`: a zod contract's `.optional()`
+ * produces it, and every contract in `@linguify/api` must satisfy its input type
  */
 export type MutationOptions = {
 	/**
 	 * compute the plan without writing anything
 	 */
-	dryRun?: boolean
+	dryRun?: boolean | undefined
 
 	/**
 	 * the revision the caller last read; the write is rejected if the files have moved since
 	 */
-	expectedRevision?: Revision
+	expectedRevision?: Revision | undefined
 }
 
 /**

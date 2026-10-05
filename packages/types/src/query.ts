@@ -7,7 +7,7 @@ export type DiffInput = {
 	/**
 	 * compare only this locale against the default
 	 */
-	locale?: Locale
+	locale?: Locale | undefined
 }
 
 /**
@@ -33,11 +33,26 @@ export type LocaleDiff = {
 }
 
 /**
+ * `list locales`' result
+ */
+export type LocaleList = {
+	/**
+	 * the default locale, the one every other is compared against
+	 */
+	default: Locale
+
+	/**
+	 * every configured locale, in config order
+	 */
+	locales: Locale[]
+}
+
+/**
  * `list keys`' input
  */
 export type ListKeysInput = {
 	/**
-	 * include only this locale's values
+	 * include only this locale's values; every key is still listed, so the ones it lacks show
 	 */
-	locale?: Locale
+	locale?: Locale | undefined
 }

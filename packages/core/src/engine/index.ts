@@ -1,2 +1,5 @@
 export * from './registry'
+export * from './revision'
+export * from './snapshot'
+export * from './structure'
 export * from './types'

@@ -4,17 +4,17 @@ import { fileEncoding } from '@linguify/constants'
 import writeFileAtomic from 'write-file-atomic'
 
 /**
- * writes a text file atomically, creating its folders first
+ * writes a file atomically, creating its folders first
  *
  * @note the content goes to a temporary file beside the target, which is then renamed over it — a
  * crash or a full disk mid-write leaves the old file whole, never half-written JSON
  *
  * @param path - file to write
- * @param content - the file's complete new content
+ * @param content - the file's complete new content — text, written as UTF-8, or bytes
  */
-export const writeFile = async (path: string, content: string): Promise<void> => {
+export const writeFile = async (path: string, content: string | Uint8Array): Promise<void> => {
 	await mkdir(dirname(path), { recursive: true })
-	await writeFileAtomic(path, content, { encoding: fileEncoding })
+	await writeFileAtomic(path, typeof content === 'string' ? content : Buffer.from(content), { encoding: fileEncoding })
 }
 
 /**

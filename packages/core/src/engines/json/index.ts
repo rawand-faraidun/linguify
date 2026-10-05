@@ -1,6 +1,8 @@
 import { fileStructures } from '@linguify/constants'
 import { registerEngine } from '../../engine'
-import { jsonOptions } from './options'
+import { isJsonNamespaced, jsonOptions } from './options'
+import { readJson } from './read'
+import { serializeJson } from './serialize'
 
 /**
  * the JSON engine's id, as written in a config's `engine`
@@ -14,5 +16,8 @@ registerEngine({
 		namespaces: true,
 		fileStructures: [fileStructures.single, fileStructures.multi]
 	},
-	options: jsonOptions
+	options: jsonOptions,
+	namespaced: isJsonNamespaced,
+	read: readJson,
+	serialize: serializeJson
 })

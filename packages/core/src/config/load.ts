@@ -1,7 +1,6 @@
 import { access } from 'node:fs/promises'
 import { dirname, extname, join, resolve } from 'node:path'
 import {
-	byteOrderMark,
 	configFileExtension,
 	configFileName,
 	configModuleName,
@@ -15,7 +14,7 @@ import {
 import type { LoadedConfig } from '@linguify/types'
 import { cosmiconfig, type Loader } from 'cosmiconfig'
 import { ConfigError } from '../errors'
-import { isPlainObject } from '../utils'
+import { isPlainObject, stripByteOrderMark } from '../utils'
 import { resolveConfig } from './layers'
 
 /**
@@ -166,7 +165,7 @@ const withLegacyHint = <T>(run: () => T, content: unknown): T => {
  */
 const loadJson: Loader = (filepath, content) => {
 	try {
-		return JSON.parse(content.startsWith(byteOrderMark) ? content.slice(byteOrderMark.length) : content)
+		return JSON.parse(stripByteOrderMark(content))
 	} catch (error) {
 		if (error instanceof SyntaxError) error.message = `JSON Error in ${filepath}:\n${error.message}`
 		throw error

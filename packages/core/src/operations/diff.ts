@@ -1,0 +1,48 @@
+import { emptyTranslation, errorCodes } from '@linguify/constants'
+import { flattenTree } from '@linguify/keys'
+import type { Catalogue, DiffInput, LocaleDiff } from '@linguify/types'
+import { ValidationError } from '../errors'
+import { getOwn } from '../utils'
+import { localeOrder, type OperationContext } from './context'
+import { requireLocale } from './guards'
+
+/**
+ * compares each locale with the default locale
+ *
+ * @note `missing` is what `sync` adds, `extra` what `sync --remove-unused` removes. Only translations
+ * count: a key holding text in one locale and nested keys in another is missing on one side and extra
+ * on the other
+ *
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ * @param input - `diff`'s input
+ *
+ * @returns one entry per locale other than the default, in config order — or only `locale`'s
+ *
+ * @throws {@link NotFoundError} `LOCALE_UNKNOWN` when `locale` is not configured
+ * @throws {@link ValidationError} `INVALID_INPUT` when `locale` is the default locale itself
+ */
+export const diff = (context: OperationContext, catalogue: Catalogue, input: DiffInput = {}): LocaleDiff[] => {
+	const { config } = context
+	if (input.locale !== undefined) {
+		requireLocale(context, input.locale)
+		if (input.locale === config.default) {
+			throw new ValidationError(
+				`\`${input.locale}\` is the default locale — \`diff\` compares the other locales against it`,
+				{ code: errorCodes.invalidInput, details: { locale: input.locale } }
+			)
+		}
+	}
+
+	const source = flattenTree(catalogue.locales[config.default] ?? {})
+	const targets = input.locale === undefined ? localeOrder(config).slice(1) : [input.locale]
+	return targets.map(locale => {
+		const target = flattenTree(catalogue.locales[locale] ?? {})
+		return {
+			locale,
+			missing: Object.keys(source).filter(key => getOwn(target, key) === undefined),
+			extra: Object.keys(target).filter(key => getOwn(source, key) === undefined),
+			empty: Object.keys(source).filter(key => getOwn(target, key) === emptyTranslation)
+		}
+	})
+}
