@@ -29,7 +29,7 @@ export type LoadConfigOptions = {
 	/**
 	 * a config file to load instead of searching — `--config`
 	 */
-	config?: string
+	config?: string | undefined
 
 	/**
 	 * the editor settings layer

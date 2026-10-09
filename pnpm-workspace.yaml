@@ -11,8 +11,5 @@ allowBuilds:
 
 catalog:
   '@types/node': ^24.19.0
-  '@types/react': ^19.3.0
-  '@types/react-dom': ^19.3.0
-  react: ^19.3.0
-  react-dom: ^19.3.0
   typescript: ^6.0.3
+  zod: ^4.6.5

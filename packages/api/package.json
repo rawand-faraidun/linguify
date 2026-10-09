@@ -10,7 +10,9 @@
 	"dependencies": {
 		"@linguify/constants": "workspace:*",
 		"@linguify/core": "workspace:*",
-		"@linguify/types": "workspace:*"
+		"@linguify/types": "workspace:*",
+		"@trpc/server": "^11.19.0",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

@@ -101,15 +101,7 @@ export const applyWrite = async (
 
 	return inTurn(loaded.localesDirectory, async () => {
 		const current = await readCatalogue(loaded)
-		if (current.revision !== expectedRevision) {
-			throw new ConflictError(
-				'The translation files changed on disk after they were read. Read them again, then save',
-				{
-					code: errorCodes.staleCatalogue,
-					details: { expected: expectedRevision, actual: current.revision }
-				}
-			)
-		}
+		if (current.revision !== expectedRevision) throw staleCatalogue(expectedRevision, current.revision)
 
 		const written = new Set(plan.write.map(({ file }) => file.toLowerCase()))
 		const renamed = plan.delete.filter(file => written.has(file.toLowerCase()))
@@ -141,3 +133,15 @@ const inTurn = async <T>(folder: string, task: () => Promise<T>): Promise<T> => 
 		if (writes.get(folder) === settled) writes.delete(folder)
 	}
 }
+
+/**
+ * @param expected - the revision the caller read the translations at
+ * @param actual - the revision the files are at now
+ *
+ * @returns the error for a write that would overwrite changes the caller never saw
+ */
+export const staleCatalogue = (expected: Revision, actual: Revision): ConflictError =>
+	new ConflictError('The translation files changed on disk after they were read. Read them again, then save', {
+		code: errorCodes.staleCatalogue,
+		details: { expected, actual }
+	})

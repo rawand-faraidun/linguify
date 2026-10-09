@@ -16,7 +16,7 @@
 		"read-excel-file": "^9.3.10",
 		"write-excel-file": "^4.1.1",
 		"write-file-atomic": "^7.0.1",
-		"zod": "^4.6.5"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

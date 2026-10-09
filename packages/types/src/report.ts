@@ -111,7 +111,8 @@ export type MutationResult = {
 	revision: Revision
 
 	/**
-	 * whether the plan was written — `false` under `dryRun`
+	 * whether the plan was carried out — `false` under `dryRun`; an empty plan is carried out by writing
+	 * nothing
 	 */
 	applied: boolean
 }
