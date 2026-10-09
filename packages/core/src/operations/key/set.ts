@@ -1,11 +1,36 @@
 import { changeKinds, errorCodes, keyPathStates } from '@linguify/constants'
 import { findConflicts, findDuplicate, inspectKeyPath, readTranslation, setTranslation } from '@linguify/keys'
-import type { Catalogue, Descriptions, Locale, OperationResult, SetKeyInput, TranslationTree } from '@linguify/types'
+import type { Catalogue, Descriptions, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { NotFoundError } from '../../errors'
 import { getOwn } from '../../utils'
 import type { OperationContext } from '../context'
 import { requireDescriptions, requireKeyPath } from '../guards'
+import type { OperationResult } from '../report'
 import { collectGivenText, invalid, notAssignable } from './shared'
+
+/**
+ * `key set`'s input — changes an existing key and never creates one
+ */
+export type SetKeyInput = {
+	path: KeyPath
+
+	/**
+	 * the default locale's new text
+	 */
+	value?: string | undefined
+
+	/**
+	 * other locales' new text
+	 */
+	translations?: Record<Locale, string> | undefined
+
+	/**
+	 * apply `value` to every locale, not only the default
+	 */
+	all?: boolean | undefined
+
+	description?: string | undefined
+}
 
 /**
  * changes an existing key's text or description

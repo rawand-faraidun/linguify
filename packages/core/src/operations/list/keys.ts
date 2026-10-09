@@ -1,7 +1,17 @@
-import type { Catalogue, KeyRow, ListKeysInput } from '@linguify/types'
+import type { Catalogue, KeyRow, Locale } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireLocale } from '../guards'
 import { buildKeyRows } from '../rows'
+
+/**
+ * `list keys`' input
+ */
+export type ListKeysInput = {
+	/**
+	 * include only this locale's values; every key is still listed, so the ones it lacks show
+	 */
+	locale?: Locale | undefined
+}
 
 /**
  * lists every key with its text in each locale

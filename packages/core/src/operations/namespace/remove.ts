@@ -1,10 +1,18 @@
 import { changeKinds } from '@linguify/constants'
 import { removeNode } from '@linguify/keys'
-import type { Catalogue, Locale, OperationResult, RemoveNamespaceInput, TranslationTree } from '@linguify/types'
+import type { Catalogue, Locale, NamespaceName, TranslationTree } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireNamespaceName } from '../guards'
 import { dropDescriptions } from '../key/shared'
+import type { OperationResult } from '../report'
 import { findNamespaceHolders, namespaceNotFound } from './shared'
+
+/**
+ * `namespace remove`'s input — removes the namespace and every key in it, from every locale
+ */
+export type RemoveNamespaceInput = {
+	name: NamespaceName
+}
 
 /**
  * removes a namespace and every key in it from every locale, with their descriptions

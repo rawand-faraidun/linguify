@@ -4,9 +4,9 @@ import { flatten, unflatten } from 'flat'
 import { joinKeyPath, splitKeyPath } from './path'
 
 /**
- * {@link pruneTree} options
+ * {@link removeNode} options
  */
-export type PruneOptions = {
+export type RemoveNodeOptions = {
 	/**
 	 * keep first-level groups even when empty, so an empty namespace survives
 	 */
@@ -135,7 +135,7 @@ export const setTranslation = (tree: TranslationTree, path: KeyPath, text: strin
 export const removeNode = (
 	tree: TranslationTree,
 	path: KeyPath,
-	{ keepTopLevel = false }: PruneOptions = {}
+	{ keepTopLevel = false }: RemoveNodeOptions = {}
 ): TranslationTree => {
 	const [segment = '', ...rest] = splitKeyPath(path)
 	const current = Object.hasOwn(tree, segment) ? tree[segment] : undefined
@@ -156,23 +156,6 @@ export const removeNode = (
  */
 const omit = (tree: TranslationTree, segment: string): TranslationTree =>
 	Object.fromEntries(Object.entries(tree).filter(([key]) => key !== segment))
-
-/**
- * removes groups that hold no translation, at any depth
- *
- * @param tree - tree to prune
- * @param options - options
- *
- * @returns a new tree without empty groups
- */
-export const pruneTree = (tree: TranslationTree, { keepTopLevel = false }: PruneOptions = {}): TranslationTree =>
-	Object.fromEntries(
-		Object.entries(tree).flatMap(([segment, node]): [string, TranslationNode][] => {
-			if (typeof node === 'string') return [[segment, node]]
-			const pruned = pruneTree(node)
-			return keepTopLevel || Object.keys(pruned).length > 0 ? [[segment, pruned]] : []
-		})
-	)
 
 const collator = new Intl.Collator(keyCollation.locale, keyCollation.options)
 

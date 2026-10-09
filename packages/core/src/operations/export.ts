@@ -1,8 +1,17 @@
 import { emptyTranslation, ioColumns } from '@linguify/constants'
-import type { Catalogue, ExportInput } from '@linguify/types'
+import type { Catalogue, IoFormat } from '@linguify/types'
 import { encodeTable, type IoTarget, resolveIoTarget, type Table } from '../io'
 import { localeOrder, type OperationContext } from './context'
 import { buildKeyRows } from './rows'
+
+/**
+ * `export`'s input; both fields fall back — the format to `io.format`, the path to
+ * `./translations.<format>`
+ */
+export type ExportInput = {
+	format?: IoFormat | undefined
+	path?: string | undefined
+}
 
 /**
  * an export, ready to be written

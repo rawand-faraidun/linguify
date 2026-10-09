@@ -1,12 +1,13 @@
 import { changeKinds, emptyTranslation, errorCodes, ioColumns } from '@linguify/constants'
 import { findConflicts, findDuplicate, readTranslation, setTranslation } from '@linguify/keys'
-import type { Catalogue, KeyChange, KeyPath, Locale, OperationResult, TranslationTree } from '@linguify/types'
+import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, type LinguifyError, NotFoundError, ValidationError } from '../errors'
 import { importInvalid, type Table } from '../io'
 import { getOwn } from '../utils'
 import type { OperationContext } from './context'
 import { requireKeyPath } from './guards'
 import { notAssignable } from './key/shared'
+import type { KeyChange, OperationResult } from './report'
 
 /**
  * a table read from an import file

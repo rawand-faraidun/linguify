@@ -1,17 +1,17 @@
 import { changeKinds, warningCodes } from '@linguify/constants'
 import { joinKeyPath, readNode, removeNode, splitKeyPath } from '@linguify/keys'
-import type {
-	Catalogue,
-	KeyChange,
-	KeyPath,
-	OperationResult,
-	RemoveKeysInput,
-	TranslationTree,
-	Warning
-} from '@linguify/types'
+import type { Catalogue, KeyPath, TranslationTree } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireKeyPath } from '../guards'
+import type { KeyChange, OperationResult, Warning } from '../report'
 import { invalid } from './shared'
+
+/**
+ * `key remove`'s input; a path that does not exist is a warning, not a failure
+ */
+export type RemoveKeysInput = {
+	paths: KeyPath[]
+}
 
 /**
  * removes keys from every locale, with their descriptions

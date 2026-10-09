@@ -1,19 +1,21 @@
 import { changeKinds, emptyTranslation, errorCodes, warningCodes } from '@linguify/constants'
 import { flattenTree, joinKeyPath, readNode } from '@linguify/keys'
-import type {
-	Catalogue,
-	KeyChange,
-	KeyPath,
-	Locale,
-	OperationResult,
-	SyncInput,
-	TranslationNode,
-	TranslationTree,
-	Warning
-} from '@linguify/types'
+import type { Catalogue, KeyPath, Locale, TranslationNode, TranslationTree } from '@linguify/types'
 import { ValidationError } from '../errors'
 import { getOwn } from '../utils'
 import { localeOrder, type OperationContext } from './context'
+import type { KeyChange, OperationResult, Warning } from './report'
+
+/**
+ * `sync`'s input
+ */
+export type SyncInput = {
+	/**
+	 * also remove the keys the default locale no longer has, and their descriptions; falls back to
+	 * `sync.removeUnused`
+	 */
+	removeUnused?: boolean | undefined
+}
 
 /**
  * what a sync of one locale noticed, gathered across every locale for the report

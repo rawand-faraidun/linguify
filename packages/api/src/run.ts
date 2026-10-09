@@ -1,20 +1,43 @@
 import {
 	applyWrite,
 	type OperationContext,
+	type OperationResult,
 	type PlanOptions,
 	planWrite,
+	type Report,
 	readCatalogue,
 	serializeCatalogue,
-	staleCatalogue
+	staleCatalogue,
+	type WritePlan
 } from '@linguify/core'
-import type {
-	Catalogue,
-	LoadedConfig,
-	MutationOptions,
-	MutationResult,
-	OperationResult,
-	WritePlan
-} from '@linguify/types'
+import type { Catalogue, LoadedConfig, Revision } from '@linguify/types'
+import type { z } from 'zod'
+import type { mutationOptions } from './contracts'
+
+/**
+ * the options every mutation accepts, on top of its own input — the API's own, so read off its contract
+ * rather than declared a second time
+ */
+export type MutationOptions = z.output<typeof mutationOptions>
+
+/**
+ * what every mutation returns
+ */
+export type MutationResult = {
+	report: Report
+	plan: WritePlan
+
+	/**
+	 * the revision after the write, or the unchanged one under `dryRun`
+	 */
+	revision: Revision
+
+	/**
+	 * whether the plan was carried out — `false` under `dryRun`; an empty plan is carried out by writing
+	 * nothing
+	 */
+	applied: boolean
+}
 
 /**
  * a project, loaded for one call

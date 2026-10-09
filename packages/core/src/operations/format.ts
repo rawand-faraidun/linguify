@@ -1,6 +1,7 @@
 import { compareKeyPaths, sortTree } from '@linguify/keys'
-import type { Catalogue, Locale, OperationResult, TranslationTree } from '@linguify/types'
+import type { Catalogue, Locale, TranslationTree } from '@linguify/types'
 import type { OperationContext } from './context'
+import type { OperationResult } from './report'
 
 /**
  * sorts every locale's keys at every depth, and the descriptions by key path — the only operation that

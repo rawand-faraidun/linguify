@@ -1,10 +1,26 @@
 import { isAbsolute, relative, sep } from 'node:path'
 import { errorCodes, lineEnding, windowsLineEnding } from '@linguify/constants'
-import type { LoadedConfig, Revision, WritePlan } from '@linguify/types'
+import type { LoadedConfig, Revision } from '@linguify/types'
 import type { FileContent, FileSnapshot } from '../engine'
 import { ConflictError, UnexpectedError } from '../errors'
 import { removeFile, writeFile } from '../utils'
 import { readCatalogue } from './read'
+
+/**
+ * one file a write plan creates or replaces
+ */
+export type PlannedWrite = {
+	file: string
+	content: string
+}
+
+/**
+ * every file a change needs written or deleted; `--dry-run` prints it instead of applying it
+ */
+export type WritePlan = {
+	write: PlannedWrite[]
+	delete: string[]
+}
 
 /**
  * {@link planWrite} options

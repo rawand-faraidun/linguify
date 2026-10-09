@@ -14,6 +14,34 @@ const keyPathReasons: Record<KeyPathProblem, string> = {
 }
 
 /**
+ * says why a key path cannot be used in any project — the rules that need no config
+ *
+ * @note `requireKeyPath` adds the ones that depend on the project; the API's contracts use this one, so
+ * a bad path is refused before any project is read, with the same words
+ *
+ * @param path - a key path
+ *
+ * @returns the reason, or `undefined` when the path is usable
+ */
+export const findKeyPathReason = (path: KeyPath): string | undefined => {
+	const problem = findKeyPathProblem(path)
+	return problem === undefined ? undefined : keyPathReasons[problem]
+}
+
+/**
+ * says why a name cannot be a namespace in any project
+ *
+ * @param name - a namespace name
+ *
+ * @returns the reason, or `undefined` when the name is usable
+ */
+export const findNamespaceNameReason = (name: NamespaceName): string | undefined =>
+	findKeyPathReason(name) ??
+	(splitKeyPath(name).length > 1
+		? `it contains \`${keySeparator}\`, which separates the namespace from the key`
+		: undefined)
+
+/**
  * makes sure a locale is one the config lists
  *
  * @param context - the operation context
@@ -68,13 +96,7 @@ export const requireDescriptions = ({ config }: OperationContext): void => {
  */
 export const requireNamespaceName = (context: OperationContext, name: NamespaceName): void => {
 	requireNamespaces(context)
-	const problem = findKeyPathProblem(name)
-	const reason =
-		problem !== undefined
-			? keyPathReasons[problem]
-			: splitKeyPath(name).length > 1
-				? `it contains \`${keySeparator}\`, which separates the namespace from the key`
-				: undefined
+	const reason = findNamespaceNameReason(name)
 	if (reason === undefined) return
 	throw new ValidationError(`\`${name}\` cannot be a namespace: ${reason}`, {
 		code: errorCodes.invalidInput,
@@ -94,16 +116,14 @@ export const requireNamespaceName = (context: OperationContext, name: NamespaceN
  * @throws {@link ValidationError} `INVALID_INPUT`, saying why
  */
 export const requireKeyPath = ({ namespaced, capabilities }: OperationContext, path: KeyPath): void => {
-	const problem = findKeyPathProblem(path)
 	const segments = splitKeyPath(path)
 	const reason =
-		problem !== undefined
-			? keyPathReasons[problem]
-			: namespaced && segments.length < 2
-				? 'it names only a namespace — a key is the namespace, then the key: `common.save`'
-				: !capabilities.nesting && segments.length > (namespaced ? 2 : 1)
-					? "this project's format cannot nest keys"
-					: undefined
+		findKeyPathReason(path) ??
+		(namespaced && segments.length < 2
+			? 'it names only a namespace — a key is the namespace, then the key: `common.save`'
+			: !capabilities.nesting && segments.length > (namespaced ? 2 : 1)
+				? "this project's format cannot nest keys"
+				: undefined)
 	if (reason === undefined) return
 	throw new ValidationError(`\`${path}\` is not a usable key path: ${reason}`, {
 		code: errorCodes.invalidInput,

@@ -1,10 +1,19 @@
 import { changeKinds, errorCodes } from '@linguify/constants'
-import type { Catalogue, Locale, OperationResult, RenameNamespaceInput, TranslationTree } from '@linguify/types'
+import type { Catalogue, Locale, NamespaceName, TranslationTree } from '@linguify/types'
 import { ConflictError } from '../../errors'
 import type { OperationContext } from '../context'
 import { requireNamespaceName } from '../guards'
 import { invalid, moveDescriptions, renameInPlace } from '../key/shared'
+import type { OperationResult } from '../report'
 import { findNamespaceHolders, namespaceNotFound } from './shared'
+
+/**
+ * `namespace rename`'s input — renames it in every locale
+ */
+export type RenameNamespaceInput = {
+	from: NamespaceName
+	to: NamespaceName
+}
 
 /**
  * renames a namespace in every locale that has it, with the descriptions of its keys

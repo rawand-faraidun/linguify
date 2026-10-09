@@ -5,6 +5,11 @@ import { toApiError, toTransportError } from './errors'
 
 const t = initTRPC.context<Context>().create({
 	/**
+	 * never send a stack trace: tRPC adds one unless `NODE_ENV` is `production`, which a CLI user's shell
+	 * never sets — every studio and webview error would carry the machine's file paths
+	 */
+	isDev: false,
+	/**
 	 * copies the linguify error's code, message and details into every error response, so surfaces branch
 	 * on `data.linguify.code`, never on text
 	 */

@@ -1,8 +1,16 @@
 import { changeKinds, warningCodes } from '@linguify/constants'
-import type { AddNamespaceInput, Catalogue, Locale, OperationResult, TranslationTree } from '@linguify/types'
+import type { Catalogue, Locale, NamespaceName, TranslationTree } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireNamespaceName } from '../guards'
+import type { OperationResult } from '../report'
 import { findNamespaceHolders } from './shared'
+
+/**
+ * `namespace add`'s input
+ */
+export type AddNamespaceInput = {
+	name: NamespaceName
+}
 
 /**
  * adds an empty namespace to every locale

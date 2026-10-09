@@ -1,7 +1,8 @@
 import { errorCodes } from '@linguify/constants'
-import { type LinguifyError, toLinguifyError, ValidationError } from '@linguify/core'
+import { LinguifyError, toLinguifyError, ValidationError } from '@linguify/core'
 import type { ErrorCode } from '@linguify/types'
 import { TRPCError } from '@trpc/server'
+import { getHTTPStatusCodeFromError } from '@trpc/server/http'
 
 /**
  * the tRPC code — and so the HTTP status — each linguify error code is sent with
@@ -45,7 +46,9 @@ type InputIssue = {
  * recovers the linguify error behind anything a procedure call threw
  *
  * @note an input the procedure's schema refused becomes `INVALID_INPUT`, with each problem's path — so a
- * surface can point at the field
+ * surface can point at the field. A request tRPC itself refused — malformed JSON, an unknown procedure,
+ * a query sent as a mutation — is `INVALID_INPUT` too: a caller's mistake, not `UNEXPECTED`, which
+ * means a bug
  *
  * @param error - what the call threw, or what tRPC wrapped it in
  *
@@ -64,8 +67,17 @@ export const toApiError = (error: unknown): LinguifyError => {
 			{ code: errorCodes.invalidInput, details: { issues: listed }, cause: error.cause }
 		)
 	}
+	if (error.cause instanceof LinguifyError) return error.cause
+	if (getHTTPStatusCodeFromError(error) < serverErrorStatus) {
+		return new ValidationError(error.message, { code: errorCodes.invalidInput, cause: error })
+	}
 	return toLinguifyError(error.cause ?? error)
 }
+
+/**
+ * the first HTTP status that blames the server rather than the request
+ */
+const serverErrorStatus = 500
 
 /**
  * @param error - a linguify error

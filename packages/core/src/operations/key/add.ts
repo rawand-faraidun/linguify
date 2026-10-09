@@ -1,10 +1,36 @@
 import { changeKinds, emptyTranslation, errorCodes, warningCodes } from '@linguify/constants'
 import { findConflicts, findDuplicate, setTranslation, splitNamespace } from '@linguify/keys'
-import type { AddKeyInput, Catalogue, Locale, OperationResult, TranslationTree } from '@linguify/types'
+import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
 import { requireDescriptions, requireKeyPath } from '../guards'
+import type { OperationResult } from '../report'
 import { collectGivenText, notAssignable } from './shared'
+
+/**
+ * `key add`'s input
+ */
+export type AddKeyInput = {
+	path: KeyPath
+
+	/**
+	 * the default locale's text; `""` when omitted
+	 */
+	value?: string | undefined
+
+	/**
+	 * text for other locales; a locale left out gets `""`, or the default locale's text under
+	 * `keys.fillWithDefault`
+	 */
+	translations?: Record<Locale, string> | undefined
+
+	description?: string | undefined
+
+	/**
+	 * create the key's namespace when it does not exist, instead of failing
+	 */
+	createNamespace?: boolean | undefined
+}
 
 /**
  * adds a key to every locale
