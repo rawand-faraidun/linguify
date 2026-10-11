@@ -1,4 +1,4 @@
-import { access } from 'node:fs/promises'
+import { access, stat } from 'node:fs/promises'
 import { dirname, extname, join, resolve } from 'node:path'
 import {
 	configFileExtension,
@@ -53,10 +53,30 @@ export type LoadConfigOptions = {
  * is not valid JSON, is empty, or fails the schema
  */
 export const loadConfig = async ({ cwd, config, editor, flag }: LoadConfigOptions): Promise<LoadedConfig> => {
+	await requireFolder(resolve(cwd))
 	const { file, content } = await readProjectConfig(resolve(cwd), config)
 	const resolved = withLegacyHint(() => resolveConfig({ editor, project: content, flag }), content)
 	const root = dirname(file)
 	return { ...resolved, file, root, localesDirectory: resolve(root, resolved.config.path) }
+}
+
+/**
+ * makes sure the working folder exists and is a folder
+ *
+ * @note without it, a mistyped `--cwd` reads as "no config found in it or its parents", which sends the
+ * user looking for a config rather than at the path
+ *
+ * @param cwd - the absolute working folder
+ *
+ * @throws {@link ConfigError} `CONFIG_NOT_FOUND` when nothing is there, or a file is
+ */
+const requireFolder = async (cwd: string): Promise<void> => {
+	const found = await stat(cwd).catch(() => undefined)
+	if (found?.isDirectory()) return
+	throw new ConfigError(`The folder ${cwd} ${found === undefined ? 'does not exist' : 'is a file, not a folder'}`, {
+		code: errorCodes.configNotFound,
+		details: { cwd }
+	})
 }
 
 /**

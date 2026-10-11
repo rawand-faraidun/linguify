@@ -1,4 +1,4 @@
-import { configLayers, configPathSeparator, errorCodes, rootPathLabel } from '@linguify/constants'
+import { configLayerNames, configPathSeparator, errorCodes, rootPathLabel } from '@linguify/constants'
 import type { ConfigLayer, ErrorDetails } from '@linguify/types'
 import type { z } from 'zod'
 import { ConfigError } from '../errors'
@@ -14,16 +14,6 @@ export type ConfigIssue = {
 	 * the layers that supplied the value at `path`, when the config was merged from several
 	 */
 	layers?: ConfigLayer[]
-}
-
-/**
- * how each layer is named in error messages
- */
-export const layerNames: Record<ConfigLayer, string> = {
-	[configLayers.default]: 'defaults',
-	[configLayers.editor]: 'editor settings',
-	[configLayers.project]: 'project config',
-	[configLayers.flag]: 'command-line flags'
 }
 
 /**
@@ -50,7 +40,7 @@ export const toConfigIssue = (issue: z.core.$ZodIssue): ConfigIssue => ({
 export const invalidConfig = (title: string, issues: ConfigIssue[], details: ErrorDetails = {}): ConfigError => {
 	const lines = issues.map(issue => {
 		const origin =
-			issue.layers === undefined ? '' : ` (from ${issue.layers.map(layer => layerNames[layer]).join(', ')})`
+			issue.layers === undefined ? '' : ` (from ${issue.layers.map(layer => configLayerNames[layer]).join(', ')})`
 		return `  ${issue.path || rootPathLabel}${origin}: ${issue.message}`
 	})
 	return new ConfigError([`${title}:`, ...lines].join('\n'), {

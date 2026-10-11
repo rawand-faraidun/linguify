@@ -1,7 +1,7 @@
-import { configLayerOrder, configLayers, configPathSeparator } from '@linguify/constants'
+import { configLayerNames, configLayerOrder, configLayers, configPathSeparator } from '@linguify/constants'
 import type { ConfigLayer, ConfigLayerInputs, ResolvedConfig } from '@linguify/types'
 import { collectLeafPaths, type Equal, type Expect, isPlainObject, mergeDeep } from '../utils'
-import { type ConfigIssue, invalidConfig, layerNames, toConfigIssue } from './issues'
+import { type ConfigIssue, invalidConfig, toConfigIssue } from './issues'
 import { configObject, configSchema } from './schema'
 
 /**
@@ -66,7 +66,7 @@ const supplyLayers = (inputs: ConfigLayerInputs): SuppliedLayer[] =>
 
 			const checked = configObject.safeParse(content)
 			if (!checked.success) {
-				throw invalidConfig(`Invalid ${layerNames[layer]}`, checked.error.issues.map(toConfigIssue), { layer })
+				throw invalidConfig(`Invalid ${configLayerNames[layer]}`, checked.error.issues.map(toConfigIssue), { layer })
 			}
 			return [{ layer, content: expandDescription(content as Record<string, unknown>) }]
 		})

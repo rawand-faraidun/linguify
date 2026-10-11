@@ -156,6 +156,16 @@ export const configLayerOrder = [
 ] as const
 
 /**
+ * how each layer is named to a person — in error messages, `linguify config` and the studio
+ */
+export const configLayerNames = {
+	[configLayers.default]: 'defaults',
+	[configLayers.editor]: 'editor settings',
+	[configLayers.project]: 'project config',
+	[configLayers.flag]: 'command-line flags'
+} as const
+
+/**
  * separates the segments of a config path — `studio.port`, `options.indentation` — in sources and
  * error messages
  */
