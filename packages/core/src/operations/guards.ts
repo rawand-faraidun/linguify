@@ -1,4 +1,4 @@
-import { errorCodes, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
+import { errorCodes, exampleKeyPath, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
 import { findKeyPathProblem, splitKeyPath } from '@linguify/keys'
 import type { KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
 import { NotFoundError, ValidationError } from '../errors'
@@ -120,7 +120,7 @@ export const requireKeyPath = ({ namespaced, capabilities }: OperationContext, p
 	const reason =
 		findKeyPathReason(path) ??
 		(namespaced && segments.length < 2
-			? 'it names only a namespace — a key is the namespace, then the key: `common.save`'
+			? `it names only a namespace — a key is the namespace, then the key: \`${exampleKeyPath}\``
 			: !capabilities.nesting && segments.length > (namespaced ? 2 : 1)
 				? "this project's format cannot nest keys"
 				: undefined)

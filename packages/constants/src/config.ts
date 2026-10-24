@@ -55,16 +55,19 @@ export const legacyConfigKeys: readonly string[] = ['localesPath', 'defaultLocal
 export const schemaFileName = 'schema.json'
 
 /**
- * `$schema` values `init` writes into a new config
+ * the folder a project's installed packages live in — where `init` looks for linguify's schema
+ */
+export const installedPackagesFolder = 'node_modules'
+
+/**
+ * the `$schema` `init` writes when linguify is not installed in the project
  *
- * @note `local` is preferred when linguify is installed in the project: it works offline and always
- * matches the installed version. `remote` is pinned to the major version, so a later major's schema
+ * @note when it is installed, `init` writes the path to the installed schema instead — relative to the
+ * config, so a monorepo whose `node_modules` sits higher up still resolves it — which works offline and
+ * matches the installed version. This one is pinned to the major version, so a later major's schema
  * never flags a valid config as wrong
  */
-export const schemaLocations = {
-	local: `./node_modules/${appName}/${schemaFileName}`,
-	remote: `https://unpkg.com/${appName}@2/${schemaFileName}`
-} as const
+export const remoteSchema = `https://unpkg.com/${appName}@2/${schemaFileName}`
 
 /**
  * what a locale code may contain: letters, digits, `-` and `_` — `en`, `ckb`, `pt-BR`, `zh_Hant`

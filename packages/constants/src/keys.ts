@@ -7,6 +7,16 @@
 export const keySeparator = '.'
 
 /**
+ * the key examples, hints and messages show: its namespace, its name and its default text
+ */
+export const exampleKey = { namespace: 'common', name: 'save', text: 'Save' } as const
+
+/**
+ * {@link exampleKey}'s full path, namespace first — `common.save`
+ */
+export const exampleKeyPath = `${exampleKey.namespace}${keySeparator}${exampleKey.name}`
+
+/**
  * the value a locale gets for a key it has no translation for
  *
  * @note empty rather than absent, so the key exists in every locale and `diff` reports it as empty

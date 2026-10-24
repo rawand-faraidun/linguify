@@ -5,6 +5,7 @@ import type {
 	Equal,
 	Expect,
 	ExportInput,
+	InitInput,
 	ListKeysInput,
 	RemoveKeysInput,
 	RemoveNamespaceInput,
@@ -15,6 +16,7 @@ import type {
 } from '@linguify/core'
 import type { z } from 'zod'
 import type { diffInput } from './diff'
+import type { initInput } from './init'
 import type { exportInput } from './io'
 import type { addKeyInput, removeKeysInput, renameKeyInput, setKeyInput } from './key'
 import type { listKeysInput } from './list'
@@ -42,5 +44,6 @@ export type ContractsMatchInputs = [
 	Expect<Equal<z.output<typeof listKeysInput>, ListKeysInput>>,
 	Expect<Equal<z.output<typeof diffInput>, DiffInput>>,
 	Expect<Equal<z.output<typeof syncInput>, SyncInput>>,
-	Expect<Equal<z.output<typeof exportInput>, ExportInput>>
+	Expect<Equal<z.output<typeof exportInput>, ExportInput>>,
+	Expect<Equal<z.output<typeof initInput>, InitInput>>
 ]

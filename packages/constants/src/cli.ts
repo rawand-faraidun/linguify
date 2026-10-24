@@ -9,6 +9,10 @@ export const cliFlags = {
 	help: { flags: '-h, --help', description: 'Print this help' },
 	config: { flags: '-c, --config <file>', description: 'Use this config file instead of searching for one' },
 	cwd: { flags: '--cwd <folder>', description: 'Run as if started in this folder' },
+	yes: {
+		flags: '-y, --yes',
+		description: 'Take the defaults and confirm instead of asking — what a script or CI passes'
+	},
 	json: {
 		flags: '--json',
 		description: 'Print one JSON object — `{ ok, data }` or `{ ok, error }` — and never ask anything'

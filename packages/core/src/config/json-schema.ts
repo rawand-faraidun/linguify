@@ -1,4 +1,4 @@
-import { configJsonSchema, defaultEngineId, schemaLocations } from '@linguify/constants'
+import { configJsonSchema, defaultEngineId, remoteSchema } from '@linguify/constants'
 import { z } from 'zod'
 import { listEngines } from '../engine'
 import { configObject } from './schema'
@@ -24,7 +24,7 @@ export const generateConfigJsonSchema = (): JsonSchema => {
 
 	return {
 		$schema: configJsonSchema.draftUri,
-		$id: schemaLocations.remote,
+		$id: remoteSchema,
 		title: configJsonSchema.title,
 		...base,
 		properties: {

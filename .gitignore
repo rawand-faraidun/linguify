@@ -1,5 +1,6 @@
 # Local project config
 linguify.config.json
+/locales/
 
 # dependencies
 node_modules/

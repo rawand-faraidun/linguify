@@ -3,6 +3,7 @@ import { appDescription, appName, cliFlags, cliHelpCommand } from '@linguify/con
 import { Command } from 'commander'
 import packageJson from '../package.json' with { type: 'json' }
 import { configCommand } from './commands/config'
+import { initCommand } from './commands/init'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
 
@@ -30,7 +31,7 @@ const program = addGlobalOptions(
 		.configureOutput(json ? { outputError: () => {}, writeErr: () => {} } : { outputError: () => {} })
 )
 
-for (const command of [configCommand]) program.addCommand(command.copyInheritedSettings(program))
+for (const command of [initCommand, configCommand]) program.addCommand(command.copyInheritedSettings(program))
 
 try {
 	await program.parseAsync()

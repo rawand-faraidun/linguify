@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { cliFlags } from '@linguify/constants'
 import type { Command } from 'commander'
 
@@ -30,3 +31,17 @@ export const addGlobalOptions = (program: Command): Command =>
  * @returns the global flags as given
  */
 export const readGlobalOptions = (command: Command): GlobalOptions => command.optsWithGlobals<GlobalOptions>()
+
+/**
+ * @param command - the running command
+ *
+ * @returns the folder the command works in, absolute: `--cwd` when given, else where it was started
+ */
+export const projectFolder = (command: Command): string => resolve(readGlobalOptions(command).cwd ?? process.cwd())
+
+/**
+ * @param flags - a flag's definition — `-y, --yes`
+ *
+ * @returns its long form, as a message names it — `--yes`
+ */
+export const longFlag = (flags: string): string => flags.split(' ').find(part => part.startsWith('--')) ?? flags

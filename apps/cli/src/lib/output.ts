@@ -4,6 +4,7 @@ import { type LinguifyError, ValidationError } from '@linguify/core'
 import type { Command } from 'commander'
 import { CommanderError } from 'commander'
 import { readGlobalOptions } from './options'
+import { Cancelled } from './prompt'
 import { renderError } from './render/error'
 import { renderJson } from './render/json'
 
@@ -17,7 +18,8 @@ const noCommand = 'commander.help'
  *
  * @note an error is printed, never thrown: it sets a failing `process.exitCode`, so the process ends on
  * its own once everything is written. Under `--json` the error goes to stdout like a result, so a
- * script reads exactly one object either way
+ * script reads exactly one object either way. A person cancelling a question ends it with exit 1 and
+ * nothing more — the prompt has said so
  *
  * @param command - the running command
  * @param work - what the command does
@@ -29,7 +31,8 @@ export const respond = async <T>(command: Command, work: () => Promise<T>, rende
 		const result = await work()
 		process.stdout.write(json ? renderJson({ ok: true, data: result }) : render(result))
 	} catch (error) {
-		fail(toApiError(error), json)
+		if (error instanceof Cancelled) process.exitCode = exitCodes.failure
+		else fail(toApiError(error), json)
 	}
 }
 

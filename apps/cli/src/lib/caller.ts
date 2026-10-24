@@ -1,8 +1,7 @@
-import { resolve } from 'node:path'
 import { createCaller } from '@linguify/api'
 import type { ConfigInput } from '@linguify/types'
 import type { Command } from 'commander'
-import { readGlobalOptions } from './options'
+import { projectFolder, readGlobalOptions } from './options'
 
 /**
  * calls the API in-process for the project the global flags point at — the same procedures the studio
@@ -15,6 +14,9 @@ import { readGlobalOptions } from './options'
  * @returns the caller
  */
 export const callerFor = (command: Command, flag?: ConfigInput) => {
-	const { cwd = process.cwd(), config } = readGlobalOptions(command)
-	return createCaller({ cwd: resolve(cwd), config, ...(flag === undefined ? {} : { flag }) })
+	return createCaller({
+		cwd: projectFolder(command),
+		config: readGlobalOptions(command).config,
+		...(flag === undefined ? {} : { flag })
+	})
 }

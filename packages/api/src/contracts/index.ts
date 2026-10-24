@@ -1,4 +1,5 @@
 export * from './diff'
+export * from './init'
 export * from './io'
 export * from './key'
 export * from './list'

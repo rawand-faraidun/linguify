@@ -3,6 +3,7 @@ import { catalogueRouter } from './catalogue'
 import { configRouter } from './config'
 import { diffProcedure } from './diff'
 import { formatProcedure } from './format'
+import { initProcedure } from './init'
 import { exportProcedure, importProcedure } from './io'
 import { keyRouter } from './key'
 import { listRouter } from './list'
@@ -13,6 +14,7 @@ import { syncProcedure } from './sync'
  * every procedure, by resource — each path is the CLI command it serves: `list.keys` is `linguify list keys`
  */
 export const appRouter = router({
+	init: initProcedure,
 	config: configRouter,
 	catalogue: catalogueRouter,
 	list: listRouter,
