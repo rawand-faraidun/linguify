@@ -37,6 +37,13 @@ export type PlanOptions = {
 	 * on Windows checks files out with `\r\n`, and `format --check` must not fail every file there
 	 */
 	anyLineEnding?: boolean
+
+	/**
+	 * the files the catalogue serialised to before the change; a file that serialises the same way after
+	 * it is not written, whatever it looks like on disk — a change rewrites only the files it changed,
+	 * and leaves reformatting the rest to `format`
+	 */
+	previous?: readonly FileContent[]
 }
 
 /**
@@ -53,8 +60,9 @@ export type PlanOptions = {
 export const planWrite = (
 	read: readonly FileSnapshot[],
 	next: readonly FileContent[],
-	{ create = true, anyLineEnding = false }: PlanOptions = {}
+	{ create = true, anyLineEnding = false, previous }: PlanOptions = {}
 ): WritePlan => {
+	const serialisedBefore = new Map(previous?.map(file => [file.path, file.content]))
 	const before = new Map(
 		read.map(({ path, content }) => [
 			path,
@@ -66,6 +74,7 @@ export const planWrite = (
 		write: next
 			.filter(file => before.get(file.path) !== file.content)
 			.filter(file => create || typeof before.get(file.path) === 'string')
+			.filter(file => serialisedBefore.get(file.path) !== file.content)
 			.map(file => ({ file: file.path, content: file.content })),
 		delete: read.filter(file => file.content !== null && !kept.has(file.path)).map(file => file.path)
 	}

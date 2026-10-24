@@ -1,5 +1,7 @@
 import {
 	applyWrite,
+	type FileContent,
+	LinguifyError,
 	type OperationContext,
 	type OperationResult,
 	type PlanOptions,
@@ -68,11 +70,32 @@ export type Planning = PlanOptions & {
 const nothing: WritePlan = { write: [], delete: [] }
 
 /**
+ * @param loaded - the loaded config
+ * @param catalogue - the catalogue as read
+ *
+ * @returns the files it serialises to, as the plan's `previous` — or nothing when it cannot be serialised
+ * as it is: a namespace the layout cannot hold, which the change may be the very repair of. The plan then
+ * writes every file the change serialises, as it did before `previous` existed
+ *
+ * @throws anything that is not a linguify error — a bug, not a project in a bad state
+ */
+const serialisedAsRead = (loaded: LoadedConfig, catalogue: Catalogue): { previous?: FileContent[] } => {
+	try {
+		return { previous: serializeCatalogue(loaded, catalogue) }
+	} catch (error) {
+		if (error instanceof LinguifyError) return {}
+		throw error
+	}
+}
+
+/**
  * the one place a mutation reads, plans and writes: read → operation → plan → apply, or stop at the
  * plan under `dryRun`
  *
  * @note a report with no changes writes nothing — single-file serialising gives every configured locale
- * a file, so planning a no-op would still create a missing locale's file. `expectedRevision` is checked
+ * a file, so planning a no-op would still create a missing locale's file. A change writes only the files
+ * it changed: one that serialises the same before and after is left as it is on disk, however it is
+ * formatted — reformatting is `format`'s, which plans `always`. `expectedRevision` is checked
  * before anything else, so a stale edit is refused even as a dry run
  *
  * @param project - the loaded project
@@ -99,9 +122,13 @@ export const run = async <Input>(
 		throw staleCatalogue(expectedRevision, reading.revision)
 	}
 	const { catalogue, report } = mutation(operation, reading.catalogue, input)
-	const plan =
-		always || report.changes.length > 0
-			? planWrite(reading.files, serializeCatalogue(loaded, catalogue), planOptions)
+	const plan = always
+		? planWrite(reading.files, serializeCatalogue(loaded, catalogue), planOptions)
+		: report.changes.length > 0
+			? planWrite(reading.files, serializeCatalogue(loaded, catalogue), {
+					...planOptions,
+					...serialisedAsRead(loaded, reading.catalogue)
+				})
 			: nothing
 	if (dryRun) return { report, plan, revision: reading.revision, applied: false }
 	return { report, plan, revision: await applyWrite(loaded, plan, reading.revision), applied: true }
