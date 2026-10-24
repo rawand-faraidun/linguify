@@ -1,4 +1,3 @@
-import { relative } from 'node:path'
 import { exportInput, importInput, mutationOptions } from '@linguify/api'
 import { cliDryRunNote, cliInputFlags, ioFormats } from '@linguify/constants'
 import type { IoFormat } from '@linguify/types'
@@ -7,7 +6,7 @@ import { callerFor } from '../lib/caller'
 import { helpFor, projectFolder } from '../lib/options'
 import { respond } from '../lib/output'
 import { renderMutation } from '../lib/render/mutation'
-import { counted, dim } from '../lib/render/text'
+import { counted, dim, shownPath } from '../lib/render/text'
 
 /**
  * every format a table can be written in, for the help — `csv, tsv, json or xlsx`
@@ -38,7 +37,7 @@ export const exportCommand = new Command('export')
 			command,
 			() => callerFor(command).export({ format: options.format, path: options.path, dryRun: options.dryRun }),
 			({ path, rows, written }) => {
-				const where = relative(projectFolder(command), path) || path
+				const where = shownPath(projectFolder(command), path)
 				const what = `${counted(rows, 'key')} to ${where}`
 				return written ? `${dim('exported')}  ${what}\n` : `${dim('would export')}  ${what}\n\n${dim(cliDryRunNote)}\n`
 			}

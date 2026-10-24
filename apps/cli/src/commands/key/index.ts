@@ -17,6 +17,7 @@ import { collectTranslation, helpFor, longFlag, projectFolder, translationsFrom 
 import { respond } from '../../lib/output'
 import { canAsk, confirmChange } from '../../lib/prompt'
 import { renderMutation } from '../../lib/render/mutation'
+import { printable } from '../../lib/render/text'
 
 /**
  * the options `key add` and `key set` share
@@ -94,7 +95,7 @@ const addKey = async (
 			)
 		}
 		if (options.dryRun === true) notes.push(`${missing}: the run will ask before creating it`)
-		else await confirmChange(`${missing}. Create it?`)
+		else await confirmChange(`${printable(missing)}. Create it?`)
 		return caller.key.add({ ...input, createNamespace: true })
 	}
 }
@@ -148,7 +149,7 @@ const renameCommand = new Command('rename')
 const removeCommand = new Command('remove')
 	.description('Remove keys, or whole groups, from every locale, with their descriptions')
 	.argument('<paths...>', helpFor(removeKeysInput.shape.paths))
-	.option(cliFlags.yes.flags, cliFlags.yes.description)
+	.option(cliFlags.confirm.flags, cliFlags.confirm.description)
 	.option(cliInputFlags.dryRun, helpFor(mutationOptions.shape.dryRun))
 	.action((paths: KeyPath[], options: { yes?: boolean; dryRun?: boolean }, command: Command) => {
 		// set once the changes were shown before the question, so they are not listed twice

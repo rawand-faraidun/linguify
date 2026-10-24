@@ -9,6 +9,7 @@ import {
 	localeCodePattern,
 	reservedKeySegments,
 	studioPortRange,
+	unprintableCharacter,
 	viewModes
 } from '@linguify/constants'
 import type { Config, ConfigInput, EngineOptions } from '@linguify/types'
@@ -39,6 +40,7 @@ const descriptionObject = z.strictObject({
 	name: z
 		.string()
 		.regex(fileNamePattern, 'Must be a plain file name inside `path`: no `/` or `\\`, and not `.` or `..`')
+		.refine(name => !unprintableCharacter.test(name), 'Must not contain a control character')
 		.refine(
 			name => name !== configFileName,
 			`Must not be \`${configFileName}\`: writing descriptions would overwrite the config`
@@ -57,6 +59,7 @@ export const configObject = z.strictObject({
 	path: z
 		.string()
 		.min(1)
+		.refine(path => !unprintableCharacter.test(path), 'Must not contain a control character')
 		.default(configDefaults.path)
 		.describe('Where the locale files live, relative to the config file'),
 	locales: z

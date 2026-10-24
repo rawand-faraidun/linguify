@@ -1,11 +1,10 @@
-import { relative } from 'node:path'
 import type { MutationResult } from '@linguify/api'
 import { appName, cliFlags, exitCodes } from '@linguify/constants'
 import { Command } from 'commander'
 import { callerFor } from '../lib/caller'
 import { projectFolder } from '../lib/options'
 import { respond } from '../lib/output'
-import { dim } from '../lib/render/text'
+import { dim, shownPath } from '../lib/render/text'
 
 /**
  * `linguify format`
@@ -38,7 +37,7 @@ export const formatCommand = new Command('format')
 const renderFormat = ({ plan, applied }: MutationResult, cwd: string): string => {
 	if (plan.write.length === 0) return `${dim('Every file is formatted')}\n`
 	const verb = applied ? 'formatted' : 'needs formatting'
-	const files = plan.write.map(({ file }) => `${dim(verb)}  ${relative(cwd, file) || file}`)
+	const files = plan.write.map(({ file }) => `${dim(verb)}  ${shownPath(cwd, file)}`)
 	const closing = applied
 		? []
 		: ['', dim(`Run \`${appName} ${formatCommand.name()}\` to format ${plan.write.length === 1 ? 'it' : 'them'}`)]

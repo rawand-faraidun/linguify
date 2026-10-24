@@ -7,6 +7,14 @@
 export const keySeparator = '.'
 
 /**
+ * the characters a terminal acts on instead of showing: control characters, and the bidi controls that
+ * reorder what follows them — U+202E shows `abc` as `cba`
+ *
+ * @note the zero-width joiner and non-joiner are not among them: Kurdish and other scripts need them
+ */
+export const unprintableCharacter = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/u
+
+/**
  * the key examples, hints and messages show: its namespace, its name and its default text
  */
 export const exampleKey = { namespace: 'common', name: 'save', text: 'Save' } as const

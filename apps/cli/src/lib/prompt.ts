@@ -49,7 +49,7 @@ export const answered = <T>(value: T | typeof CANCEL_SYMBOL): T => {
 export const requireSomeoneToConfirm = (command: Command, refusal: string): void => {
 	if (canAsk(command)) return
 	throw new ValidationError(
-		`${refusal}, and there is no one here to confirm it. Pass ${longFlag(cliFlags.yes.flags)} to go ahead`,
+		`${refusal}, and there is no one here to confirm it. Pass ${longFlag(cliFlags.confirm.flags)} to go ahead`,
 		{ code: errorCodes.confirmationRequired }
 	)
 }

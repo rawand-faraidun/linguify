@@ -1,10 +1,9 @@
-import { relative } from 'node:path'
 import { styleText } from 'node:util'
 import type { MutationResult } from '@linguify/api'
 import { changeKinds, cliDryRunNote } from '@linguify/constants'
 import type { ChangeKind, KeyChange, Report } from '@linguify/core'
 import type { TextStyle } from './table'
-import { columnWidth, dim, padToWidth, printable } from './text'
+import { columnWidth, dim, padToWidth, printable, shownPath } from './text'
 
 /**
  * how each kind of change is coloured at a terminal
@@ -31,15 +30,14 @@ export const renderMutation = (
 	cwd: string,
 	options: { notes?: string[]; changesShown?: boolean } = {}
 ): string => {
-	const shown = (file: string) => relative(cwd, file) || file
 	const verb = applied ? { write: 'wrote', delete: 'deleted' } : { write: 'would write', delete: 'would delete' }
 	const verbWidth = Math.max(
 		...(plan.write.length > 0 ? [columnWidth(verb.write)] : []),
 		...(plan.delete.length > 0 ? [columnWidth(verb.delete)] : [])
 	)
 	const files = [
-		...plan.write.map(({ file }) => `${dim(padToWidth(verb.write, verbWidth))}  ${shown(file)}`),
-		...plan.delete.map(file => `${dim(padToWidth(verb.delete, verbWidth))}  ${shown(file)}`)
+		...plan.write.map(({ file }) => `${dim(padToWidth(verb.write, verbWidth))}  ${shownPath(cwd, file)}`),
+		...plan.delete.map(file => `${dim(padToWidth(verb.delete, verbWidth))}  ${shownPath(cwd, file)}`)
 	]
 	const closing = applied ? [] : [dim(cliDryRunNote)]
 	const notes = (options.notes ?? []).map(note => dim(note))

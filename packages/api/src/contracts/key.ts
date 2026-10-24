@@ -1,12 +1,12 @@
 import { exampleKeyPath } from '@linguify/constants'
 import { z } from 'zod'
-import { keyPath, translations } from './shared'
+import { keyPath, newKeyPath, translations } from './shared'
 
 /**
  * `key add`
  */
 export const addKeyInput = z.strictObject({
-	path: keyPath.describe(
+	path: newKeyPath.describe(
 		`Full dotted key path; with namespaces on, its first segment is the namespace — \`${exampleKeyPath}\``
 	),
 	value: z.string().optional().describe('The default locale\'s text; `""` when left out'),
@@ -41,7 +41,7 @@ export const setKeyInput = z.strictObject({
  */
 export const renameKeyInput = z.strictObject({
 	from: keyPath.describe('The key or group to rename'),
-	to: keyPath.describe('Its new path — in the same group, keeping its place, or anywhere else')
+	to: newKeyPath.describe('Its new path — in the same group, keeping its place, or anywhere else')
 })
 
 /**

@@ -7,6 +7,7 @@ import { confirmedChange } from '../../lib/confirm'
 import { helpFor, projectFolder } from '../../lib/options'
 import { respond } from '../../lib/output'
 import { renderMutation } from '../../lib/render/mutation'
+import { printable } from '../../lib/render/text'
 
 /**
  * `linguify namespace add`
@@ -45,7 +46,7 @@ const renameCommand = new Command('rename')
 const removeCommand = new Command('remove')
 	.description('Remove a namespace from every locale, with every key in it')
 	.argument('<name>', helpFor(removeNamespaceInput.shape.name))
-	.option(cliFlags.yes.flags, cliFlags.yes.description)
+	.option(cliFlags.confirm.flags, cliFlags.confirm.description)
 	.option(cliInputFlags.dryRun, helpFor(mutationOptions.shape.dryRun))
 	.action((name: NamespaceName, options: { yes?: boolean; dryRun?: boolean }, command: Command) => {
 		// set once the changes were shown before the question, so they are not listed twice
@@ -59,7 +60,7 @@ const removeCommand = new Command('remove')
 					options,
 					{
 						refusal: 'namespace remove deletes a namespace and every key in it from every locale',
-						question: `Remove the namespace \`${name}\`, with every key in it?`
+						question: `Remove the namespace \`${printable(name)}\`, with every key in it?`
 					},
 					shown
 				),

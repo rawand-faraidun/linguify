@@ -1,4 +1,3 @@
-import { relative } from 'node:path'
 import { styleText } from 'node:util'
 import { locale } from '@linguify/api'
 import {
@@ -18,6 +17,7 @@ import { callerFor } from '../lib/caller'
 import { longFlag, projectFolder } from '../lib/options'
 import { respond } from '../lib/output'
 import { answered, type Cancelled, canAsk } from '../lib/prompt'
+import { shownPath } from '../lib/render/text'
 
 /**
  * `linguify init`
@@ -140,13 +140,13 @@ const splitLocales = (value: string): string[] =>
  */
 const renderInit = ({ file, created, kept, config }: InitResult, cwd: string): string => {
 	const style = { stream: process.stdout }
-	const shown = (path: string) => relative(cwd, path) || path
 	const example = config.options.namespaces === false ? exampleKey.name : exampleKeyPath
 	return [
-		`${styleText('green', 'created', style)}  ${shown(file)}`,
-		...created.map(path => `${styleText('green', 'created', style)}  ${shown(path)}`),
+		`${styleText('green', 'created', style)}  ${shownPath(cwd, file)}`,
+		...created.map(path => `${styleText('green', 'created', style)}  ${shownPath(cwd, path)}`),
 		...kept.map(
-			path => `${styleText('dim', 'kept', style)}     ${shown(path)} ${styleText('dim', '(already there)', style)}`
+			path =>
+				`${styleText('dim', 'kept', style)}     ${shownPath(cwd, path)} ${styleText('dim', '(already there)', style)}`
 		),
 		'',
 		`Next, add a key: ${appName} key add ${example} --value "${exampleKey.text}"`,

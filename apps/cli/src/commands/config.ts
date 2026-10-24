@@ -4,6 +4,7 @@ import { configLayerNames, configLayers, configPathSeparator } from '@linguify/c
 import { Command } from 'commander'
 import { callerFor } from '../lib/caller'
 import { respond } from '../lib/output'
+import { printable } from '../lib/render/text'
 
 /**
  * what `config.get` returns
@@ -26,7 +27,12 @@ export const configCommand = new Command('config')
 const renderConfig = ({ config, sources, file, localesDirectory }: ConfigView): string => {
 	const rows = leaves(config).map(([path, value]) => {
 		const layer = sources[path] ?? configLayers.default
-		return { path, value, layer: configLayerNames[layer], defaulted: layer === configLayers.default }
+		return {
+			path: printable(path),
+			value: printable(value),
+			layer: configLayerNames[layer],
+			defaulted: layer === configLayers.default
+		}
 	})
 	const width = (column: 'path' | 'value') => Math.max(column.length, ...rows.map(row => row[column].length))
 	const [pathWidth, valueWidth] = [width('path'), width('value')]
@@ -34,8 +40,8 @@ const renderConfig = ({ config, sources, file, localesDirectory }: ConfigView): 
 	const line = (path: string, value: string, layer: string) =>
 		`${path.padEnd(pathWidth)}  ${value.padEnd(valueWidth)}  ${layer}`
 	return [
-		`${styleText('bold', 'config', style)}   ${file}`,
-		`${styleText('bold', 'locales', style)}  ${localesDirectory}`,
+		`${styleText('bold', 'config', style)}   ${printable(file)}`,
+		`${styleText('bold', 'locales', style)}  ${printable(localesDirectory)}`,
 		'',
 		styleText('dim', line('path', 'value', 'set by'), style),
 		...rows.map(row => {

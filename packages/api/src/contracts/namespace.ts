@@ -1,11 +1,11 @@
 import { z } from 'zod'
-import { namespaceName } from './shared'
+import { namespaceName, newNamespaceName } from './shared'
 
 /**
  * `namespace add`
  */
 export const addNamespaceInput = z.strictObject({
-	name: namespaceName.describe('The new namespace; an existing one is a warning and changes nothing')
+	name: newNamespaceName.describe('The new namespace; an existing one is a warning and changes nothing')
 })
 
 /**
@@ -13,7 +13,7 @@ export const addNamespaceInput = z.strictObject({
  */
 export const renameNamespaceInput = z.strictObject({
 	from: namespaceName.describe('The namespace to rename'),
-	to: namespaceName.describe('Its new name')
+	to: newNamespaceName.describe('Its new name')
 })
 
 /**

@@ -1,4 +1,4 @@
-import { localeCodePattern, reservedKeySegments } from '@linguify/constants'
+import { localeCodePattern, reservedKeySegments, unprintableCharacter } from '@linguify/constants'
 import { findKeyPathReason, findNamespaceNameReason } from '@linguify/core'
 import { z } from 'zod'
 
@@ -10,6 +10,15 @@ export const keyPath = z.string().superRefine((path, context) => {
 	const reason = findKeyPathReason(path)
 	if (reason !== undefined) context.addIssue({ code: 'custom', message: `Not a usable key path: ${reason}` })
 })
+
+/**
+ * a key path a change creates — never one holding a character a terminal acts on; an existing key with
+ * one stays reachable through {@link keyPath}, so it can still be renamed or removed
+ */
+export const newKeyPath = keyPath.refine(
+	path => !unprintableCharacter.test(path),
+	'Not a usable key path: it contains a control character'
+)
 
 /**
  * a namespace name — one usable key segment
@@ -61,3 +70,11 @@ export const mutationOptions = z.strictObject({
 		.optional()
 		.describe('The revision the caller last read; the write is refused if the files changed since')
 })
+
+/**
+ * a namespace name a change creates — never one holding a character a terminal acts on
+ */
+export const newNamespaceName = namespaceName.refine(
+	name => !unprintableCharacter.test(name),
+	'Not a usable namespace name: it contains a control character'
+)

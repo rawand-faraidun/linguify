@@ -11,13 +11,17 @@ export const cliFlags = {
 	cwd: { flags: '--cwd <folder>', description: 'Run as if started in this folder' },
 	yes: {
 		flags: '-y, --yes',
-		description: 'Take the defaults and confirm instead of asking — what a script or CI passes'
+		description: 'Take the defaults instead of asking — what a script or CI passes'
 	},
 	json: {
 		flags: '--json',
 		description: 'Print one JSON object — `{ ok, data }` or `{ ok, error }` — and never ask anything'
 	},
 	table: { flags: '-t, --table', description: 'Show the result as a table, one column per locale' },
+	confirm: {
+		flags: '-y, --yes',
+		description: 'Go ahead without asking for confirmation — what a script or CI passes'
+	},
 	createNamespace: {
 		flags: '-y, --yes',
 		description: "Create the key's namespace if it does not exist, without asking"

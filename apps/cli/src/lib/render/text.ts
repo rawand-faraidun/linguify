@@ -1,16 +1,17 @@
+import { relative } from 'node:path'
 import { styleText } from 'node:util'
-import { cliFieldSeparator, cliTextMarkers } from '@linguify/constants'
+import { cliFieldSeparator, cliTextMarkers, unprintableCharacter } from '@linguify/constants'
 import stringWidth from 'string-width'
 
 /**
- * every control character — a terminal acts on them instead of showing them
+ * every character a terminal acts on instead of showing
  */
-const controlCharacters = /\p{Cc}/gu
+const unprintable = new RegExp(unprintableCharacter.source, 'gu')
 
 /**
- * every control character but the line break
+ * the same, but the line break
  */
-const controlCharactersButLineBreak = /(?!\n)\p{Cc}/gu
+const unprintableButLineBreak = new RegExp(`(?!\\n)${unprintableCharacter.source}`, 'gu')
 
 /**
  * how the common control characters are written out
@@ -21,13 +22,13 @@ const escapes: Record<string, string> = { '\n': '\\n', '\r': '\\r', '\t': '\\t' 
  * @param text - a translation or key, as it is in the files
  * @param lineBreaks - keep line breaks as line breaks, for a table cell that can hold several lines
  *
- * @returns it safe to print: each control character written out — `\n`, `\u001b` — so a translation
- * can neither move the cursor nor recolour the terminal, nor break a one-per-line listing; format
- * characters, such as the zero-width non-joiner Kurdish uses, are left as they are
+ * @returns it safe to print: each control character and bidi control written out — `\n`, `\u001b`,
+ * `\u202e` — so a translation can neither move the cursor, recolour or retitle the terminal, show text
+ * reversed, nor break a one-per-line listing; the zero-width joiner and non-joiner are left as they are
  */
 export const printable = (text: string, lineBreaks = false): string =>
 	(lineBreaks ? text.replace(/\r\n?/g, '\n') : text).replace(
-		lineBreaks ? controlCharactersButLineBreak : controlCharacters,
+		lineBreaks ? unprintableButLineBreak : unprintable,
 		character => escapes[character] ?? `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`
 	)
 
@@ -105,3 +106,11 @@ export const padToWidth = (text: string, width: number): string =>
  * way in every project
  */
 export const fields = (...values: string[]): string => values.join(cliFieldSeparator)
+
+/**
+ * @param cwd - the folder paths are shown from
+ * @param file - an absolute path
+ *
+ * @returns it relative to the folder, written out safely — a folder or file name can hold anything
+ */
+export const shownPath = (cwd: string, file: string): string => printable(relative(cwd, file) || file)
