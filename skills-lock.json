@@ -36,6 +36,12 @@
       "computedHash": "0cc581cb29e36fe8d5582a7050fa2dea21e788e8034ef295ab8bc852f404f6a4",
       "wellKnownDigest": "sha256:9d3dffd6eaf34fbe49eaffb331bfe3b261f1297cd050da42db2055a5588871df"
     },
+    "requesting-code-review": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/requesting-code-review/SKILL.md",
+      "computedHash": "b095ac8c980339436b41de9989328f3f288f2e2a70452df28452bbeb6531d604"
+    },
     "resolving-merge-conflicts": {
       "source": "skills.sh",
       "sourceUrl": "https://skills.sh/p/s981fKiV0W75V3so",
@@ -70,6 +76,18 @@
       "sourceType": "well-known",
       "computedHash": "5d6e3099e1e1daf500c89dcc36d01e4055ca6ed71a7a2e473f339fb3117cbd15",
       "wellKnownDigest": "sha256:b405a1cf9f35d855dbc5fbe324a84efd339ed0342c018d5ecaebc0b11b287f87"
+    },
+    "test-driven-development": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/test-driven-development/SKILL.md",
+      "computedHash": "3cfe4ebb6fa7288f668d87880d279c8e48f7a92b63415e296857060f5ce22e05"
+    },
+    "verification-before-completion": {
+      "source": "obra/superpowers",
+      "sourceType": "github",
+      "skillPath": "skills/verification-before-completion/SKILL.md",
+      "computedHash": "b529822bdac4b197b180fe12225cff86b930b65910435103c10622df7f041651"
     },
     "writing-plans": {
       "source": "skills.sh",
