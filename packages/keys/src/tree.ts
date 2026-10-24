@@ -149,6 +149,122 @@ export const removeNode = (
 }
 
 /**
+ * removes what is at many paths at once — the same result as {@link removeNode} for each in turn, in one
+ * walk of the tree
+ *
+ * @note removing path after path copied the parent group once per path; removing thousands of keys
+ * from a large locale took seconds. Here each group is copied at most once, and a group nothing is
+ * removed from is kept as it is
+ *
+ * @param tree - one locale's tree
+ * @param paths - usable key paths; one that is not in the tree changes nothing
+ * @param options - `keepTopLevel` keeps an emptied first-level group, as with {@link removeNode}
+ *
+ * @returns a new tree, or the same tree when nothing is at any of the paths
+ */
+export const removeNodes = (
+	tree: TranslationTree,
+	paths: Iterable<KeyPath>,
+	{ keepTopLevel = false }: RemoveNodeOptions = {}
+): TranslationTree => {
+	const targets: PathTrie = new Map()
+	for (const path of paths) {
+		let level = targets
+		const segments = splitKeyPath(path)
+		for (const [index, segment] of segments.entries()) {
+			const last = index === segments.length - 1
+			const next = level.get(segment)
+			if (next === true) break
+			if (last) {
+				level.set(segment, true)
+				break
+			}
+			const deeper: PathTrie = next ?? new Map()
+			level.set(segment, deeper)
+			level = deeper
+		}
+	}
+	return removeAll(tree, targets, keepTopLevel)
+}
+
+/**
+ * the paths to remove, by segment: `true` where a path ends, the next level where it goes on
+ */
+type PathTrie = Map<string, true | PathTrie>
+
+/**
+ * @param tree - a group
+ * @param targets - what to remove from it
+ * @param keepEmptied - keep a child group the removal empties
+ *
+ * @returns the group without them, or the same group when nothing was there to remove
+ */
+const removeAll = (tree: TranslationTree, targets: PathTrie, keepEmptied: boolean): TranslationTree => {
+	let changed = false
+	const entries: [string, TranslationNode][] = []
+	for (const [segment, node] of Object.entries(tree)) {
+		const target = targets.get(segment)
+		if (target === true) {
+			changed = true
+			continue
+		}
+		if (target === undefined || typeof node === 'string') {
+			entries.push([segment, node])
+			continue
+		}
+		const inner = removeAll(node, target, false)
+		if (inner === node) {
+			entries.push([segment, node])
+			continue
+		}
+		changed = true
+		if (Object.keys(inner).length > 0 || keepEmptied) entries.push([segment, inner])
+	}
+	return changed ? Object.fromEntries(entries) : tree
+}
+
+/**
+ * writes a translation at a path into a tree the caller owns, creating the groups on the way
+ *
+ * @note mutates `tree` — for a batch of writes to one copy, where {@link setTranslation} would copy the
+ * key's whole group again for every write. Order is kept as with {@link setNode}: an existing key stays
+ * where it is, a new one goes at the bottom of its level. Written as own properties, so even a reserved
+ * segment could never reach an object's prototype
+ *
+ * @param tree - one locale's tree, owned by the caller — a copy, never a tree read elsewhere
+ * @param path - a usable key path that is free or already a translation
+ * @param text - the translation
+ *
+ * @throws `TypeError` when the path holds nested keys or runs through a translation
+ */
+export const assignTranslation = (tree: TranslationTree, path: KeyPath, text: string): void => {
+	const segments = splitKeyPath(path)
+	let level = tree
+	for (const [index, segment] of segments.entries()) {
+		const current = Object.hasOwn(level, segment) ? level[segment] : undefined
+		if (index === segments.length - 1) {
+			if (typeof current === 'object')
+				throw new TypeError(`\`${path}\` holds nested keys; a translation would replace them`)
+			define(level, segment, text)
+			return
+		}
+		if (typeof current === 'string') throw new TypeError(`\`${segment}\` is a translation; it cannot hold nested keys`)
+		const next: TranslationTree = current ?? {}
+		if (current === undefined) define(level, segment, next)
+		level = next
+	}
+}
+
+/**
+ * @param tree - a group
+ * @param segment - a key
+ * @param node - its value
+ */
+const define = (tree: TranslationTree, segment: string, node: TranslationNode): void => {
+	Object.defineProperty(tree, segment, { value: node, enumerable: true, writable: true, configurable: true })
+}
+
+/**
  * @param tree - a tree
  * @param segment - one of its keys
  *

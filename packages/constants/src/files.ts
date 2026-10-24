@@ -68,6 +68,14 @@ export const fileErrorCodes = {
 } as const
 
 /**
+ * how many files a write puts on disk at once
+ *
+ * @note each atomic write waits for its fsync; one at a time, a multi-file sync of hundreds of files
+ * spent most of its time waiting, while unbounded, a large project would open every file at once
+ */
+export const parallelFileWrites = 16
+
+/**
  * how a catalogue's revision is computed from the files it was read from
  */
 export const revisionHashing = {

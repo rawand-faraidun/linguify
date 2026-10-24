@@ -1,5 +1,5 @@
 import { isAbsolute, relative, sep } from 'node:path'
-import { errorCodes, lineEnding, windowsLineEnding } from '@linguify/constants'
+import { errorCodes, lineEnding, parallelFileWrites, windowsLineEnding } from '@linguify/constants'
 import type { LoadedConfig, Revision } from '@linguify/types'
 import type { FileContent, FileSnapshot } from '../engine'
 import { ConflictError, UnexpectedError } from '../errors'
@@ -131,7 +131,11 @@ export const applyWrite = async (
 		const written = new Set(plan.write.map(({ file }) => file.toLowerCase()))
 		const renamed = plan.delete.filter(file => written.has(file.toLowerCase()))
 		for (const file of renamed) await removeFile(file)
-		for (const { file, content } of plan.write) await writeFile(file, content)
+		for (let start = 0; start < plan.write.length; start += parallelFileWrites) {
+			await Promise.all(
+				plan.write.slice(start, start + parallelFileWrites).map(({ file, content }) => writeFile(file, content))
+			)
+		}
 		for (const file of plan.delete) if (!renamed.includes(file)) await removeFile(file)
 		return (await readCatalogue(loaded)).revision
 	})

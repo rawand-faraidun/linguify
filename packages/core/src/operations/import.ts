@@ -1,6 +1,6 @@
 import { changeKinds, emptyTranslation, errorCodes, ioColumns } from '@linguify/constants'
-import { findConflicts, findDuplicate, readTranslation, setTranslation } from '@linguify/keys'
-import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
+import { assignTranslation, findConflicts, findDuplicate, readTranslation } from '@linguify/keys'
+import type { Catalogue, Descriptions, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, type LinguifyError, NotFoundError, ValidationError } from '../errors'
 import { importInvalid, type Table } from '../io'
 import { getOwn } from '../utils'
@@ -62,10 +62,18 @@ export const importCatalogue = (
 	const { config } = context
 	const rows = readRows(context, table, file)
 
-	let { locales, descriptions } = catalogue
+	// one copy of each tree and of the descriptions, written row by row: copying them again for every row
+	// made a large import grow with the square of its size. Each row still sees the rows before it
+	const locales = Object.fromEntries(
+		config.locales.map((locale): [Locale, TranslationTree] => [
+			locale,
+			structuredClone(catalogue.locales[locale] ?? {})
+		])
+	)
+	const descriptions: Descriptions = { ...catalogue.descriptions }
+	const current: Catalogue = { locales, descriptions }
 	const changes: KeyChange[] = []
 	for (const { rowNumber, key, texts, description } of rows) {
-		const current: Catalogue = { locales, descriptions }
 		const exists = findDuplicate(current, key).length > 0
 		const conflicts = findConflicts(current, key).filter(({ locale }) => !exists || texts.has(locale))
 		const [conflict, ...rest] = conflicts
@@ -76,14 +84,18 @@ export const importCatalogue = (
 			const text = texts.get(locale) ?? (exists ? undefined : fallback)
 			return text !== undefined && (!exists || readTranslation(locales[locale] ?? {}, key) !== text)
 		})
-		locales = Object.fromEntries(
-			config.locales.map((locale): [Locale, TranslationTree] => {
-				const tree = locales[locale] ?? {}
-				return [locale, changed.includes(locale) ? setTranslation(tree, key, texts.get(locale) ?? fallback) : tree]
-			})
-		)
+		for (const locale of changed) {
+			const tree = locales[locale]
+			if (tree !== undefined) assignTranslation(tree, key, texts.get(locale) ?? fallback)
+		}
 		const described = description !== '' && getOwn(descriptions, key) !== description
-		if (described) descriptions = { ...descriptions, [key]: description }
+		if (described)
+			Object.defineProperty(descriptions, key, {
+				value: description,
+				enumerable: true,
+				writable: true,
+				configurable: true
+			})
 		if (changed.length > 0 || described) {
 			changes.push({
 				kind: exists ? changeKinds.updated : changeKinds.added,
@@ -93,7 +105,7 @@ export const importCatalogue = (
 			})
 		}
 	}
-	return { catalogue: { locales, descriptions }, report: { changes, warnings: [] } }
+	return { catalogue: current, report: { changes, warnings: [] } }
 }
 
 /**

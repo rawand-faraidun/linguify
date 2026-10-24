@@ -1,6 +1,6 @@
 import { changeKinds, warningCodes } from '@linguify/constants'
-import { joinKeyPath, readNode, removeNode, splitKeyPath } from '@linguify/keys'
-import type { Catalogue, KeyPath, TranslationTree } from '@linguify/types'
+import { joinKeyPath, readNode, removeNodes, splitKeyPath } from '@linguify/keys'
+import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireKeyPath } from '../guards'
 import type { KeyChange, OperationResult, Warning } from '../report'
@@ -34,31 +34,13 @@ export const removeKeys = (
 	catalogue: Catalogue,
 	{ paths }: RemoveKeysInput
 ): OperationResult => {
-	const { config } = context
 	if (paths.length === 0) throw invalid('Nothing to remove: give at least one key path')
 	for (const path of paths) requireKeyPath(context, path)
 
-	let { locales } = catalogue
-	const changes: KeyChange[] = []
-	const warnings: Warning[] = []
-	for (const path of new Set(paths)) {
-		const holders = config.locales.filter(locale => readNode(locales[locale] ?? {}, path) !== undefined)
-		if (holders.length === 0) {
-			warnings.push({
-				code: warningCodes.keyNotFound,
-				path,
-				message: `\`${path}\` does not exist in any locale; skipped`
-			})
-			continue
-		}
-		locales = Object.fromEntries(
-			config.locales.map((locale): [string, TranslationTree] => [
-				locale,
-				removeNode(locales[locale] ?? {}, path, { keepTopLevel: context.namespaced })
-			])
-		)
-		changes.push({ kind: changeKinds.removed, path, locales: holders })
-	}
+	const unique = [...new Set(paths)]
+	const { locales, changes, warnings } = overlapping(unique)
+		? removeOneByOne(context, catalogue.locales, unique)
+		: removeAtOnce(context, catalogue.locales, unique)
 
 	const removed = new Set(changes.map(({ path }) => path))
 	const described = new Set<KeyPath>()
@@ -95,4 +77,104 @@ const findRemovedAncestor = (key: KeyPath, removed: ReadonlySet<KeyPath>): KeyPa
 		if (removed.has(path)) return path
 	}
 	return undefined
+}
+
+/**
+ * what removing the paths did to the trees
+ */
+type Removal = {
+	locales: Record<Locale, TranslationTree>
+	changes: KeyChange[]
+	warnings: Warning[]
+}
+
+/**
+ * @param path - a key path that no locale has
+ *
+ * @returns the warning that it was skipped
+ */
+const skipped = (path: KeyPath): Warning => ({
+	code: warningCodes.keyNotFound,
+	path,
+	message: `\`${path}\` does not exist in any locale; skipped`
+})
+
+/**
+ * removes paths none of which lies inside another, in one walk of each locale's tree
+ *
+ * @param context - the operation context
+ * @param trees - every locale's tree
+ * @param paths - the paths, each once
+ *
+ * @returns the trees without them, a change per path found, a warning per path not found
+ */
+const removeAtOnce = (
+	{ config, namespaced }: OperationContext,
+	trees: Record<Locale, TranslationTree>,
+	paths: KeyPath[]
+): Removal => {
+	const changes: KeyChange[] = []
+	const warnings: Warning[] = []
+	for (const path of paths) {
+		const holders = config.locales.filter(locale => readNode(trees[locale] ?? {}, path) !== undefined)
+		if (holders.length === 0) warnings.push(skipped(path))
+		else changes.push({ kind: changeKinds.removed, path, locales: holders })
+	}
+	const gone = changes.map(({ path }) => path)
+	const locales = Object.fromEntries(
+		config.locales.map((locale): [Locale, TranslationTree] => [
+			locale,
+			removeNodes(trees[locale] ?? {}, gone, { keepTopLevel: namespaced })
+		])
+	)
+	return { locales, changes, warnings }
+}
+
+/**
+ * removes paths one after another, each seeing what the ones before it left — a path inside one
+ * already removed is not found, and a group an earlier removal emptied may be gone
+ *
+ * @param context - the operation context
+ * @param trees - every locale's tree
+ * @param paths - the paths, each once
+ *
+ * @returns the trees without them, a change per path found, a warning per path not found
+ */
+const removeOneByOne = (
+	{ config, namespaced }: OperationContext,
+	trees: Record<Locale, TranslationTree>,
+	paths: KeyPath[]
+): Removal => {
+	let locales = trees
+	const changes: KeyChange[] = []
+	const warnings: Warning[] = []
+	for (const path of paths) {
+		const holders = config.locales.filter(locale => readNode(locales[locale] ?? {}, path) !== undefined)
+		if (holders.length === 0) {
+			warnings.push(skipped(path))
+			continue
+		}
+		locales = Object.fromEntries(
+			config.locales.map((locale): [Locale, TranslationTree] => [
+				locale,
+				removeNodes(locales[locale] ?? {}, [path], { keepTopLevel: namespaced })
+			])
+		)
+		changes.push({ kind: changeKinds.removed, path, locales: holders })
+	}
+	return { locales, changes, warnings }
+}
+
+/**
+ * @param paths - key paths, each once
+ *
+ * @returns whether one of them lies inside another — `common` and `common.save` — when their order
+ * decides the outcome, so they must be removed one by one
+ */
+const overlapping = (paths: KeyPath[]): boolean => {
+	const all = new Set(paths)
+	return paths.some(path => {
+		const segments = splitKeyPath(path)
+		return segments.slice(1).some((_, index) => all.has(joinKeyPath(segments.slice(0, index + 1))))
+	})
 }

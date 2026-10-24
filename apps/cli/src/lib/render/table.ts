@@ -37,7 +37,7 @@ const graphemes = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 export const renderTable = (head: string[], rows: Cell[][]): string => {
 	const widths = fitColumns(
 		[head.map(text => ({ text })), ...rows],
-		process.stdout.isTTY ? process.stdout.columns : undefined
+		process.stdout.isTTY && process.stdout.columns > 0 ? process.stdout.columns : undefined
 	)
 	const rule = ([left, crossing, right]: readonly [string, string, string]) =>
 		`${left}${widths.map(width => cliTableBorders.horizontal.repeat(width + 2)).join(crossing)}${right}`
@@ -109,25 +109,41 @@ const wrapCell = (text: string, width: number): string[] => text.split('\n').fla
  *
  * @returns it in lines no wider than that: broken at spaces, dropping the space at each break; a word
  * wider than a whole line is broken between its characters, so no text is ever cut off
+ *
+ * @note each piece is measured once and the widths added up — measuring the line again after every
+ * word made a table of thousands of keys take seconds
  */
 const wrapLine = (text: string, width: number): string[] => {
+	if (columnWidth(text) <= width) return [text]
 	const lines: string[] = []
 	let current = ''
+	let used = 0
 	for (const token of text.split(/(\s+)/)) {
 		if (token === '') continue
-		if (columnWidth(current + token) <= width) {
+		const tokenWidth = columnWidth(token)
+		if (used + tokenWidth <= width) {
 			current += token
+			used += tokenWidth
 			continue
 		}
 		if (current !== '') lines.push(current.trimEnd())
 		current = ''
+		used = 0
 		if (/^\s+$/.test(token)) continue
+		if (tokenWidth <= width) {
+			current = token
+			used = tokenWidth
+			continue
+		}
 		for (const { segment } of graphemes.segment(token)) {
-			if (current !== '' && columnWidth(current + segment) > width) {
+			const segmentWidth = columnWidth(segment)
+			if (current !== '' && used + segmentWidth > width) {
 				lines.push(current)
 				current = ''
+				used = 0
 			}
 			current += segment
+			used += segmentWidth
 		}
 	}
 	return [...lines, current]
