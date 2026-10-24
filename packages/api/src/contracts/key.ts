@@ -29,7 +29,10 @@ export const setKeyInput = z.strictObject({
 	path: keyPath.describe('The key to change; it must exist in some locale — `key set` never creates one'),
 	value: z.string().optional().describe("The default locale's new text"),
 	translations: translations.optional().describe('New text for other locales, by locale code'),
-	all: z.boolean().optional().describe('Give `value` to every locale, except those given their own text'),
+	all: z
+		.boolean()
+		.optional()
+		.describe("Give the default locale's new text to every locale, except those given their own"),
 	description: z.string().optional().describe('The new description; `""` removes it')
 })
 

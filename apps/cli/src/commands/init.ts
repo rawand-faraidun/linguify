@@ -12,12 +12,12 @@ import {
 	fileStructures
 } from '@linguify/constants'
 import { getEngine, type InitInput, type InitResult, ValidationError } from '@linguify/core'
-import { type CANCEL_SYMBOL, cancel, confirm, intro, isCancel, select, text } from '@clack/prompts'
+import { confirm, intro, select, text } from '@clack/prompts'
 import { Command } from 'commander'
 import { callerFor } from '../lib/caller'
 import { longFlag, projectFolder } from '../lib/options'
 import { respond } from '../lib/output'
-import { Cancelled, canAsk } from '../lib/prompt'
+import { answered, type Cancelled, canAsk } from '../lib/prompt'
 
 /**
  * `linguify init`
@@ -111,19 +111,6 @@ const ask = async (command: Command): Promise<InitInput> => {
 			})
 		)
 	return { path, locales, default: defaultLocale, options: { fileStructure, namespaces } }
-}
-
-/**
- * @param value - a prompt's answer
- *
- * @returns it, unless the person cancelled
- *
- * @throws {@link Cancelled} when they did — after saying that nothing was written
- */
-const answered = <T>(value: T | typeof CANCEL_SYMBOL): T => {
-	if (!isCancel(value)) return value
-	cancel('Cancelled — nothing was written')
-	throw new Cancelled()
 }
 
 /**

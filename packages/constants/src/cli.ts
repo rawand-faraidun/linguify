@@ -17,7 +17,11 @@ export const cliFlags = {
 		flags: '--json',
 		description: 'Print one JSON object — `{ ok, data }` or `{ ok, error }` — and never ask anything'
 	},
-	table: { flags: '-t, --table', description: 'Show the result as a table, one column per locale' }
+	table: { flags: '-t, --table', description: 'Show the result as a table, one column per locale' },
+	createNamespace: {
+		flags: '-y, --yes',
+		description: "Create the key's namespace if it does not exist, without asking"
+	}
 } as const
 
 /**
@@ -26,8 +30,18 @@ export const cliFlags = {
  */
 export const cliInputFlags = {
 	locale: '-l, --locale <code>',
-	removeUnused: '--remove-unused'
+	removeUnused: '--remove-unused',
+	dryRun: '--dry-run',
+	value: '--value <text>',
+	translation: '-t, --translation <locale=text>',
+	description: '--desc <text>',
+	all: '-a, --all'
 } as const
+
+/**
+ * what separates the locale from its text in `-t ckb=پاشەکەوتکردن`
+ */
+export const cliTranslationSeparator = '='
 
 /**
  * what separates the columns of piped output — a tab, so `cut -f` and `awk -F'\t'` split it, even

@@ -5,6 +5,7 @@ export type { Context } from './context'
 export * from './contracts'
 export { toApiError } from './errors'
 export { type AppRouter, appRouter } from './router'
+export type { MutationResult } from './run'
 
 /**
  * calls procedures in-process, with no server — the CLI and the extension host

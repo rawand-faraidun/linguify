@@ -5,7 +5,7 @@ import type { LocaleDiff } from '@linguify/core'
 import type { KeyPath, Locale } from '@linguify/types'
 import { Command } from 'commander'
 import { callerFor } from '../lib/caller'
-import { longFlag, readGlobalOptions } from '../lib/options'
+import { helpFor, longFlag, readGlobalOptions } from '../lib/options'
 import { respond } from '../lib/output'
 import { type Cell, renderTable, type TextStyle } from '../lib/render/table'
 import { atTerminal, columnWidth, counted, dim, fields, padToWidth, printable, summary } from '../lib/render/text'
@@ -30,7 +30,7 @@ const kindColours = { missing: 'red', extra: 'yellow', empty: 'dim' } as const s
  */
 export const diffCommand = new Command('diff')
 	.description('Compare each locale with the default: the keys it is missing, has extra, or has empty')
-	.option(cliInputFlags.locale, diffInput.shape.locale.description)
+	.option(cliInputFlags.locale, helpFor(diffInput.shape.locale))
 	.option(cliFlags.table.flags, cliFlags.table.description)
 	.action((options: { locale?: Locale; table?: boolean }, command: Command) => {
 		const caller = callerFor(command)

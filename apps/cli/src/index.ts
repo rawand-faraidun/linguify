@@ -5,6 +5,7 @@ import packageJson from '../package.json' with { type: 'json' }
 import { configCommand } from './commands/config'
 import { diffCommand } from './commands/diff'
 import { initCommand } from './commands/init'
+import { keyCommand } from './commands/key'
 import { listCommand } from './commands/list'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
@@ -56,7 +57,7 @@ const inherit = (command: Command, parent: Command): Command => {
 	return command
 }
 
-for (const command of [initCommand, configCommand, diffCommand, listCommand])
+for (const command of [initCommand, configCommand, keyCommand, diffCommand, listCommand])
 	program.addCommand(inherit(command, program))
 
 try {

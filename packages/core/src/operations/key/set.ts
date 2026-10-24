@@ -60,7 +60,7 @@ export const setKey = (context: OperationContext, catalogue: Catalogue, input: S
 	requireKeyPath(context, path)
 	const given = collectGivenText(context, input)
 	if (input.all === true) {
-		if (value === undefined) throw invalid('`all` gives every locale the value, so it needs one')
+		if (value === undefined) throw invalid('There is no value to give every locale')
 		for (const locale of config.locales) if (!given.has(locale)) given.set(locale, value)
 	}
 	if (description !== undefined) requireDescriptions(context)

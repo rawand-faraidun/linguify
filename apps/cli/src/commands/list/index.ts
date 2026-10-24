@@ -4,6 +4,7 @@ import type { LocaleList } from '@linguify/core'
 import type { KeyRow, Locale, NamespaceName } from '@linguify/types'
 import { Command } from 'commander'
 import { callerFor } from '../../lib/caller'
+import { helpFor } from '../../lib/options'
 import { respond } from '../../lib/output'
 import { type Cell, renderTable } from '../../lib/render/table'
 import {
@@ -40,7 +41,7 @@ const namespacesCommand = new Command('namespaces')
  */
 const keysCommand = new Command('keys')
 	.description("Print every key, the default locale's first, so a key only another locale has shows too")
-	.option(cliInputFlags.locale, listKeysInput.shape.locale.description)
+	.option(cliInputFlags.locale, helpFor(listKeysInput.shape.locale))
 	.option(cliFlags.table.flags, cliFlags.table.description)
 	.action((options: { locale?: Locale; table?: boolean }, command: Command) => {
 		const caller = callerFor(command)

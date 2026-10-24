@@ -54,7 +54,7 @@ export const translations = z
  * what every mutation accepts on top of its own input
  */
 export const mutationOptions = z.strictObject({
-	dryRun: z.boolean().optional().describe('Work out what would change and return the plan, writing nothing'),
+	dryRun: z.boolean().optional().describe('Work out what would change, and write nothing'),
 	expectedRevision: z
 		.string()
 		.min(1)
