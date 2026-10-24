@@ -43,13 +43,20 @@ export const cliInputFlags = {
 	value: '--value <text>',
 	translation: '-t, --translation <locale=text>',
 	description: '--desc <text>',
-	all: '-a, --all'
+	all: '-a, --all',
+	format: '-f, --format <format>',
+	path: '-p, --path <file>'
 } as const
 
 /**
  * what separates the locale from its text in `-t ckb=پاشەکەوتکردن`
  */
 export const cliTranslationSeparator = '='
+
+/**
+ * what closes the output of a `--dry-run`
+ */
+export const cliDryRunNote = 'Dry run — nothing was written'
 
 /**
  * what separates the columns of piped output — a tab, so `cut -f` and `awk -F'\t'` split it, even

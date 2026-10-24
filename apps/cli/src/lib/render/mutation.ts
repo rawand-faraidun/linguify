@@ -1,7 +1,7 @@
 import { relative } from 'node:path'
 import { styleText } from 'node:util'
 import type { MutationResult } from '@linguify/api'
-import { changeKinds } from '@linguify/constants'
+import { changeKinds, cliDryRunNote } from '@linguify/constants'
 import type { ChangeKind, KeyChange, Report } from '@linguify/core'
 import type { TextStyle } from './table'
 import { columnWidth, dim, padToWidth, printable } from './text'
@@ -41,7 +41,7 @@ export const renderMutation = (
 		...plan.write.map(({ file }) => `${dim(padToWidth(verb.write, verbWidth))}  ${shown(file)}`),
 		...plan.delete.map(file => `${dim(padToWidth(verb.delete, verbWidth))}  ${shown(file)}`)
 	]
-	const closing = applied ? [] : [dim('Dry run — nothing was written')]
+	const closing = applied ? [] : [dim(cliDryRunNote)]
 	const notes = (options.notes ?? []).map(note => dim(note))
 	const sections = [options.changesShown === true ? [] : [...changeLines(report), ...notes], files, closing].filter(
 		section => section.length > 0

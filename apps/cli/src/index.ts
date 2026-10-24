@@ -6,6 +6,7 @@ import { configCommand } from './commands/config'
 import { diffCommand } from './commands/diff'
 import { formatCommand } from './commands/format'
 import { initCommand } from './commands/init'
+import { exportCommand, importCommand } from './commands/io'
 import { keyCommand } from './commands/key'
 import { listCommand } from './commands/list'
 import { namespaceCommand } from './commands/namespace'
@@ -68,6 +69,8 @@ for (const command of [
 	syncCommand,
 	formatCommand,
 	diffCommand,
+	exportCommand,
+	importCommand,
 	listCommand
 ])
 	program.addCommand(inherit(command, program))

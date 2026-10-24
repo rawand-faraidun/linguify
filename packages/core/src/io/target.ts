@@ -35,10 +35,13 @@ export const resolveIoTarget = (
 ): IoTarget => {
 	const named = path === undefined ? undefined : formatOfFile(path)
 	if (format !== undefined && named !== undefined && format !== named) {
-		throw new ValidationError(`\`${path}\` is a ${named} file, but the format asked for is ${format}`, {
-			code: errorCodes.invalidInput,
-			details: { path, format }
-		})
+		throw new ValidationError(
+			`\`${path}\` is ${named === ioFormats.xlsx ? 'an' : 'a'} ${named} file, but the format asked for is ${format}`,
+			{
+				code: errorCodes.invalidInput,
+				details: { path, format }
+			}
+		)
 	}
 	const resolved = format ?? named ?? io.format
 	return { format: resolved, path: path ?? `${ioFileBaseName}.${resolved}` }
