@@ -3,6 +3,7 @@ import { appDescription, appName, cliFlags, cliHelpCommand, fileErrorCodes } fro
 import { Command } from 'commander'
 import packageJson from '../package.json' with { type: 'json' }
 import { configCommand } from './commands/config'
+import { diffCommand } from './commands/diff'
 import { initCommand } from './commands/init'
 import { listCommand } from './commands/list'
 import { addGlobalOptions } from './lib/options'
@@ -55,7 +56,8 @@ const inherit = (command: Command, parent: Command): Command => {
 	return command
 }
 
-for (const command of [initCommand, configCommand, listCommand]) program.addCommand(inherit(command, program))
+for (const command of [initCommand, configCommand, diffCommand, listCommand])
+	program.addCommand(inherit(command, program))
 
 try {
 	await program.parseAsync()

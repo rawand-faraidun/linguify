@@ -11,6 +11,7 @@ import {
 	columnWidth,
 	counted,
 	dim,
+	fields,
 	markerFor,
 	padToWidth,
 	printable,
@@ -99,8 +100,8 @@ const renderNamespaces = (namespaces: NamespaceName[]): string =>
  * @param rows - every key
  * @param locale - the one locale whose text to show, if one was asked for
  *
- * @returns one key per line — with a locale, each key's text beside it; at a terminal, a missing or
- * empty one marked
+ * @returns one key per line — with a locale, each key's text beside it: at a terminal aligned, a missing
+ * or empty one marked; piped, after a tab, nothing for a missing or empty one
  */
 const renderKeys = (rows: KeyRow[], locale: Locale | undefined): string => {
 	const nothingYet = `No keys yet — \`${appName} key add <path>\` adds one`
@@ -112,7 +113,9 @@ const renderKeys = (rows: KeyRow[], locale: Locale | undefined): string => {
 	const missing = texts.filter(text => text === undefined).length
 	const empty = texts.filter(text => text === '').length
 	return listing(
-		keys.map((key, index) => `${padToWidth(key, width)}  ${showText(texts[index])}`.trimEnd()),
+		keys.map((key, index) =>
+			atTerminal() ? `${padToWidth(key, width)}  ${showText(texts[index])}` : fields(key, showText(texts[index]))
+		),
 		[
 			`${counted(rows.length, 'key')} in ${locale}`,
 			...(missing > 0 ? [`${missing} missing`] : []),
@@ -139,7 +142,7 @@ const renderKeyTable = (rows: KeyRow[], locales: Locale[]): string => {
 			...locales.map((locale): Cell => {
 				const text = row.values[locale]
 				const marker = markerFor(text)
-				return marker === undefined ? { text: printable(text ?? '', true) } : { text: marker, dim: true }
+				return marker === undefined ? { text: printable(text ?? '', true) } : { text: marker, style: 'dim' }
 			})
 		])
 	)

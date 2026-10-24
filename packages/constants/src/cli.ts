@@ -25,8 +25,15 @@ export const cliFlags = {
  * in its contract
  */
 export const cliInputFlags = {
-	locale: '-l, --locale <code>'
+	locale: '-l, --locale <code>',
+	removeUnused: '--remove-unused'
 } as const
+
+/**
+ * what separates the columns of piped output — a tab, so `cut -f` and `awk -F'\t'` split it, even
+ * around a key that contains a space
+ */
+export const cliFieldSeparator = '\t'
 
 /**
  * what stands in a cell, dimmed, where a locale has no text to show

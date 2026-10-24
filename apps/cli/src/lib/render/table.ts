@@ -1,6 +1,11 @@
 import { styleText } from 'node:util'
 import { cliTableBorders, cliTableMinimumColumnWidth } from '@linguify/constants'
-import { columnWidth, dim, padToWidth } from './text'
+import { columnWidth, padToWidth } from './text'
+
+/**
+ * a style `styleText` applies — `dim`, `red`
+ */
+export type TextStyle = Parameters<typeof styleText>[0]
 
 /**
  * one cell of a table: its text, as plain text — styled only once it is wrapped, so wrapping never cuts
@@ -10,9 +15,9 @@ export type Cell = {
 	text: string
 
 	/**
-	 * show it dimmed — a marker, not a translation
+	 * how to show it at a terminal — dimmed for a marker rather than a translation
 	 */
-	dim?: boolean
+	style?: TextStyle
 }
 
 /**
@@ -42,14 +47,8 @@ export const renderTable = (head: string[], rows: Cell[][]): string => {
 		return Array.from({ length: height }, (_, index) => {
 			const shown = wrapped.map((lines, column) => {
 				const text = lines[index] ?? ''
-				const styled =
-					text === ''
-						? text
-						: bold
-							? styleText('bold', text, { stream: process.stdout })
-							: cells[column]?.dim
-								? dim(text)
-								: text
+				const style = bold ? 'bold' : cells[column]?.style
+				const styled = text === '' || style === undefined ? text : styleText(style, text, { stream: process.stdout })
 				return ` ${padToWidth(styled, widths[column] ?? 0)} `
 			})
 			return `${cliTableBorders.vertical}${shown.join(cliTableBorders.vertical)}${cliTableBorders.vertical}`

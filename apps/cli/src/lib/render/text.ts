@@ -1,5 +1,5 @@
 import { styleText } from 'node:util'
-import { cliTextMarkers } from '@linguify/constants'
+import { cliFieldSeparator, cliTextMarkers } from '@linguify/constants'
 import stringWidth from 'string-width'
 
 /**
@@ -97,3 +97,11 @@ export const columnWidth = (text: string): number => stringWidth(text)
  */
 export const padToWidth = (text: string, width: number): string =>
 	`${text}${' '.repeat(Math.max(0, width - columnWidth(text)))}`
+
+/**
+ * @param values - one line's columns
+ *
+ * @returns them as one line of piped output: tab-separated and unpadded, so the columns split the same
+ * way in every project
+ */
+export const fields = (...values: string[]): string => values.join(cliFieldSeparator)
