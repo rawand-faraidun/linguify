@@ -8,14 +8,15 @@ import {
 	toApiError
 } from '@linguify/api'
 import { cliFlags, cliInputFlags, errorCodes } from '@linguify/constants'
-import { ConflictError, NotFoundError } from '@linguify/core'
+import { NotFoundError } from '@linguify/core'
 import type { KeyPath } from '@linguify/types'
 import { Command } from 'commander'
 import { callerFor } from '../../lib/caller'
+import { confirmedChange } from '../../lib/confirm'
 import { collectTranslation, helpFor, longFlag, projectFolder, translationsFrom } from '../../lib/options'
 import { respond } from '../../lib/output'
-import { canAsk, confirmChange, requireSomeoneToConfirm } from '../../lib/prompt'
-import { renderChanges, renderMutation } from '../../lib/render/mutation'
+import { canAsk, confirmChange } from '../../lib/prompt'
+import { renderMutation } from '../../lib/render/mutation'
 
 /**
  * the options `key add` and `key set` share
@@ -154,54 +155,17 @@ const removeCommand = new Command('remove')
 		const shown = { changes: false }
 		return respond(
 			command,
-			() => removeKeys(command, paths, options, shown),
+			() =>
+				confirmedChange(
+					command,
+					flags => callerFor(command).key.remove({ paths, ...flags }),
+					options,
+					{ refusal: 'key remove deletes keys from every locale', question: 'Remove the keys listed above?' },
+					shown
+				),
 			result => renderMutation(result, projectFolder(command), { changesShown: shown.changes })
 		)
 	})
-
-/**
- * removes keys, asking first — after showing what would go — unless `--yes` or `--dry-run`; when there
- * is nothing to remove, nothing is asked
- *
- * @note the removal is checked against the revision the preview was made from, so files changed while
- * the person was deciding are refused rather than overwritten
- *
- * @param command - the running command
- * @param paths - the keys or groups to remove
- * @param options - `--yes` and `--dry-run`
- * @param shown - set when the changes were shown before the question
- *
- * @returns what was removed, or would be
- *
- * @throws {@link ValidationError} `CONFIRMATION_REQUIRED` when there is no one to confirm and no `--yes`
- * @throws {@link ConflictError} `STALE_CATALOGUE` when the files changed while the person decided
- */
-const removeKeys = async (
-	command: Command,
-	paths: KeyPath[],
-	options: { yes?: boolean; dryRun?: boolean },
-	shown: { changes: boolean }
-): Promise<MutationResult> => {
-	const caller = callerFor(command)
-	if (options.yes === true || options.dryRun === true) return caller.key.remove({ paths, dryRun: options.dryRun })
-
-	requireSomeoneToConfirm(command, 'key remove deletes keys from every locale')
-	const preview = await caller.key.remove({ paths, dryRun: true })
-	if (preview.report.changes.length === 0) return caller.key.remove({ paths, expectedRevision: preview.revision })
-	process.stdout.write(renderChanges(preview.report))
-	shown.changes = true
-	await confirmChange('Remove the keys listed above?')
-	try {
-		return await caller.key.remove({ paths, expectedRevision: preview.revision })
-	} catch (error) {
-		const problem = toApiError(error)
-		if (problem.code !== errorCodes.staleCatalogue) throw error
-		throw new ConflictError(
-			'The translation files changed while you were deciding, so nothing was removed. Run the command again to see what it would remove now',
-			{ code: problem.code, ...(problem.details === undefined ? {} : { details: problem.details }) }
-		)
-	}
-}
 
 /**
  * `linguify key` — `add`, `set`, `rename` or `remove`

@@ -7,6 +7,7 @@ import { diffCommand } from './commands/diff'
 import { initCommand } from './commands/init'
 import { keyCommand } from './commands/key'
 import { listCommand } from './commands/list'
+import { namespaceCommand } from './commands/namespace'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
 
@@ -57,7 +58,7 @@ const inherit = (command: Command, parent: Command): Command => {
 	return command
 }
 
-for (const command of [initCommand, configCommand, keyCommand, diffCommand, listCommand])
+for (const command of [initCommand, configCommand, keyCommand, namespaceCommand, diffCommand, listCommand])
 	program.addCommand(inherit(command, program))
 
 try {
