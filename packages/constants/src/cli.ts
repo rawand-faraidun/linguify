@@ -16,7 +16,53 @@ export const cliFlags = {
 	json: {
 		flags: '--json',
 		description: 'Print one JSON object — `{ ok, data }` or `{ ok, error }` — and never ask anything'
-	}
+	},
+	table: { flags: '-t, --table', description: 'Show the result as a table, one column per locale' }
+} as const
+
+/**
+ * the flags that mirror an input field, as commander reads them; their help is that field's description
+ * in its contract
+ */
+export const cliInputFlags = {
+	locale: '-l, --locale <code>'
+} as const
+
+/**
+ * what stands in a cell, dimmed, where a locale has no text to show
+ */
+export const cliTextMarkers = {
+	/**
+	 * the locale lacks the key
+	 */
+	missing: '(missing)',
+
+	/**
+	 * the locale has the key, with empty text
+	 */
+	empty: '(empty)',
+
+	/**
+	 * beside the default locale, in `list locales`
+	 */
+	default: '(default)'
+} as const
+
+/**
+ * the narrowest a `--table` column's text is squeezed to when the table is wider than the terminal
+ */
+export const cliTableMinimumColumnWidth = 8
+
+/**
+ * the characters `--table` draws its lines with: each rule's left end, crossing and right end, the
+ * horizontal line, and the vertical one between cells
+ */
+export const cliTableBorders = {
+	top: ['┌', '┬', '┐'],
+	underHead: ['├', '┼', '┤'],
+	bottom: ['└', '┴', '┘'],
+	horizontal: '─',
+	vertical: '│'
 } as const
 
 /**

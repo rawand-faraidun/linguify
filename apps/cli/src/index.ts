@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-import { appDescription, appName, cliFlags, cliHelpCommand } from '@linguify/constants'
+import { appDescription, appName, cliFlags, cliHelpCommand, fileErrorCodes } from '@linguify/constants'
 import { Command } from 'commander'
 import packageJson from '../package.json' with { type: 'json' }
 import { configCommand } from './commands/config'
 import { initCommand } from './commands/init'
+import { listCommand } from './commands/list'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
 
@@ -12,6 +13,14 @@ import { respondToParseError } from './lib/output'
  * flags are known
  */
 const json = process.argv.includes(cliFlags.json.flags)
+
+/**
+ * a reader that stops reading early — `linguify list keys | head -1`, or a pipe that has already closed —
+ * is not an error: what is left goes nowhere, quietly, instead of ending in a stack trace
+ */
+process.stdout.on('error', error => {
+	if (!('code' in error) || error.code !== fileErrorCodes.brokenPipe) throw error
+})
 
 /**
  * the root command; every subcommand registers onto it and inherits its settings
@@ -31,7 +40,22 @@ const program = addGlobalOptions(
 		.configureOutput(json ? { outputError: () => {}, writeErr: () => {} } : { outputError: () => {} })
 )
 
-for (const command of [initCommand, configCommand]) program.addCommand(command.copyInheritedSettings(program))
+/**
+ * gives a command, and every command under it, the root's settings — commander copies them only to
+ * commands it creates itself
+ *
+ * @param command - a command
+ * @param parent - the command it goes under
+ *
+ * @returns the command
+ */
+const inherit = (command: Command, parent: Command): Command => {
+	command.copyInheritedSettings(parent)
+	for (const child of command.commands) inherit(child, command)
+	return command
+}
+
+for (const command of [initCommand, configCommand, listCommand]) program.addCommand(inherit(command, program))
 
 try {
 	await program.parseAsync()
