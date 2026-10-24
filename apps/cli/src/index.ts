@@ -4,10 +4,12 @@ import { Command } from 'commander'
 import packageJson from '../package.json' with { type: 'json' }
 import { configCommand } from './commands/config'
 import { diffCommand } from './commands/diff'
+import { formatCommand } from './commands/format'
 import { initCommand } from './commands/init'
 import { keyCommand } from './commands/key'
 import { listCommand } from './commands/list'
 import { namespaceCommand } from './commands/namespace'
+import { syncCommand } from './commands/sync'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
 
@@ -58,7 +60,16 @@ const inherit = (command: Command, parent: Command): Command => {
 	return command
 }
 
-for (const command of [initCommand, configCommand, keyCommand, namespaceCommand, diffCommand, listCommand])
+for (const command of [
+	initCommand,
+	configCommand,
+	keyCommand,
+	namespaceCommand,
+	syncCommand,
+	formatCommand,
+	diffCommand,
+	listCommand
+])
 	program.addCommand(inherit(command, program))
 
 try {

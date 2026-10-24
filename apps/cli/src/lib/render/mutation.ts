@@ -66,27 +66,29 @@ export const renderChanges = (report: Report): string => `${changeLines(report).
 const changeLines = ({ warnings, changes }: Report): string[] => {
 	const style = { stream: process.stdout }
 	const kindWidth = Math.max(...Object.values(changeKinds).map(columnWidth))
+	const places = changes.map(where)
+	const placeWidth = Math.max(0, ...places.map(columnWidth))
 	return [
 		...warnings.map(({ message }) => `${styleText('yellow', 'warning', style)}  ${printable(message)}`),
 		...(changes.length === 0
 			? warnings.length > 0
 				? []
 				: [dim('Nothing changed')]
-			: changes.map(
-					change =>
-						`${padToWidth(styleText(kindStyles[change.kind], change.kind, style), kindWidth)}  ${describe(change)}`
-				))
+			: changes.map((change, index) => {
+					const kind = padToWidth(styleText(kindStyles[change.kind], change.kind, style), kindWidth)
+					const reached = [...change.locales, ...(change.description === true ? ['description'] : [])]
+					const place = places[index] ?? ''
+					return reached.length === 0
+						? `${kind}  ${place}`
+						: `${kind}  ${padToWidth(place, placeWidth)}  ${dim(reached.join(', '))}`
+				}))
 	]
 }
 
 /**
  * @param change - one key changed
  *
- * @returns its path — `from → to` for a rename — then, dimmed, the locales it reached and `description`
- * when that changed too
+ * @returns its path, written out safely — `from → to` for a rename
  */
-const describe = ({ path, from, locales, description }: KeyChange): string => {
-	const reached = [...locales, ...(description === true ? ['description'] : [])]
-	const where = from === undefined ? printable(path) : `${printable(from)} → ${printable(path)}`
-	return reached.length === 0 ? where : `${where}  ${dim(reached.join(', '))}`
-}
+const where = ({ path, from }: KeyChange): string =>
+	from === undefined ? printable(path) : `${printable(from)} → ${printable(path)}`

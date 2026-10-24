@@ -21,6 +21,14 @@ export const cliFlags = {
 	createNamespace: {
 		flags: '-y, --yes',
 		description: "Create the key's namespace if it does not exist, without asking"
+	},
+	keepUnused: {
+		flags: '--no-remove-unused',
+		description: 'Keep the keys the default locale no longer has; overrides `sync.removeUnused`'
+	},
+	check: {
+		flags: '--check',
+		description: 'Write nothing: list the files that need formatting, and exit 1 if any do — for CI'
 	}
 } as const
 
