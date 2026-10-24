@@ -12,4 +12,4 @@ allowBuilds:
 catalog:
   '@types/node': ^24.19.0
   typescript: ^6.0.3
-  zod: ^4.6.5
+  zod: ^4.6.7
