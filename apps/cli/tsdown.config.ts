@@ -13,5 +13,5 @@ export default defineConfig({
 	target: 'node24',
 	outDir: 'dist',
 	fixedExtension: false,
-	deps: { alwaysBundle: [/^@linguify\//, ...bundledPackages] }
+	deps: { alwaysBundle: [/^@linguify\//, ...bundledPackages], onlyBundle: bundledPackages }
 })
