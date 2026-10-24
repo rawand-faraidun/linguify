@@ -1,4 +1,4 @@
 {
 	"extends": "@linguify/tsconfig/node",
-	"include": ["src", "scripts"]
+	"include": ["src", "scripts", "tsdown.config.ts"]
 }

@@ -11,11 +11,11 @@
 		"@linguify/constants": "workspace:*",
 		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
-		"cosmiconfig": "^10.0.1",
-		"papaparse": "^5.7.0",
-		"read-excel-file": "^9.3.10",
-		"write-excel-file": "^4.1.1",
-		"write-file-atomic": "^7.0.1",
+		"cosmiconfig": "catalog:",
+		"papaparse": "catalog:",
+		"read-excel-file": "catalog:",
+		"write-excel-file": "catalog:",
+		"write-file-atomic": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {

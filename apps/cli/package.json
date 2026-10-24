@@ -1,16 +1,35 @@
 {
 	"name": "linguify",
 	"version": "1.4.1",
+	"description": "Developer-first translation file manager.",
 	"type": "module",
+	"bin": {
+		"linguify": "./dist/index.js"
+	},
+	"files": [
+		"dist",
+		"schema.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
 	"scripts": {
-		"build": "pnpm schema",
+		"build": "pnpm schema && tsdown && pnpm notices",
+		"notices": "tsx scripts/write-notices.ts",
 		"schema": "tsx scripts/generate-schema.ts",
 		"typecheck": "tsc"
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.8.1",
 		"commander": "^15.0.0",
-		"string-width": "^8.3.0"
+		"cosmiconfig": "catalog:",
+		"flat": "catalog:",
+		"papaparse": "catalog:",
+		"read-excel-file": "catalog:",
+		"string-width": "^8.3.0",
+		"write-excel-file": "catalog:",
+		"write-file-atomic": "catalog:",
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/api": "workspace:*",
@@ -21,6 +40,29 @@
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",
+		"tsdown": "^0.23.0",
 		"typescript": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"keywords": [
+		"i18n",
+		"localize",
+		"translation"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rawand Faraidun",
+		"email": "201.rawand@gmail.com",
+		"url": "https://github.com/rawand-faraidun"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rawand-faraidun/linguify.git"
+	},
+	"homepage": "https://github.com/rawand-faraidun/linguify#readme",
+	"bugs": {
+		"url": "https://github.com/rawand-faraidun/linguify/issues"
 	}
 }

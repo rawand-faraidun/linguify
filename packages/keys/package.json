@@ -10,7 +10,7 @@
 	"dependencies": {
 		"@linguify/constants": "workspace:*",
 		"@linguify/types": "workspace:*",
-		"flat": "^6.0.1"
+		"flat": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

@@ -73,6 +73,11 @@ export const listCommand = new Command('list')
 	.addCommand(keysCommand)
 
 /**
+ * what a person sees, instead of an empty listing, in a project with no keys
+ */
+const noKeysYet = `No keys yet — \`${appName} key add <path>\` adds one`
+
+/**
  * @param list - the locales and the default
  *
  * @returns one locale per line — at a terminal, the default marked
@@ -105,9 +110,8 @@ const renderNamespaces = (namespaces: NamespaceName[]): string =>
  * or empty one marked; piped, after a tab, nothing for a missing or empty one
  */
 const renderKeys = (rows: KeyRow[], locale: Locale | undefined): string => {
-	const nothingYet = `No keys yet — \`${appName} key add <path>\` adds one`
 	const keys = rows.map(row => printable(row.key))
-	if (locale === undefined) return listing(keys, [counted(rows.length, 'key')], nothingYet)
+	if (locale === undefined) return listing(keys, [counted(rows.length, 'key')], noKeysYet)
 
 	const width = Math.max(0, ...keys.map(columnWidth))
 	const texts = rows.map(row => row.values[locale])
@@ -122,7 +126,7 @@ const renderKeys = (rows: KeyRow[], locale: Locale | undefined): string => {
 			...(missing > 0 ? [`${missing} missing`] : []),
 			...(empty > 0 ? [`${empty} empty`] : [])
 		],
-		nothingYet
+		noKeysYet
 	)
 }
 
@@ -131,9 +135,11 @@ const renderKeys = (rows: KeyRow[], locale: Locale | undefined): string => {
  * @param locales - the locales to show a column for
  *
  * @returns a table — the key, its description when any key has one, then each locale's text, a missing
- * or empty one marked; a table is for reading, so it keeps its markers even when piped
+ * or empty one marked; a table is for reading, so it keeps its markers even when piped. With no keys, at
+ * a terminal what to do next; piped, nothing
  */
 const renderKeyTable = (rows: KeyRow[], locales: Locale[]): string => {
+	if (rows.length === 0) return atTerminal() ? `${dim(noKeysYet)}\n` : ''
 	const described = rows.some(row => row.description !== undefined)
 	return renderTable(
 		['key', ...(described ? ['description'] : []), ...locales],
