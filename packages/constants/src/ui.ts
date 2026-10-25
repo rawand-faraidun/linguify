@@ -21,6 +21,32 @@ export const viewModes = {
 } as const
 
 /**
+ * what a row of the translation table is — and the start of its id, so a namespace section, a tree
+ * group and a key never share one, whatever their names
+ */
+export const rowKinds = {
+	/**
+	 * a namespace, holding its keys
+	 */
+	section: 'section',
+
+	/**
+	 * a key path segment holding nested keys, in the tree view
+	 */
+	group: 'group',
+
+	/**
+	 * one key, with its text in every locale
+	 */
+	key: 'key'
+} as const
+
+/**
+ * between a row's kind and its path in the row's id — `section:common`, `key:common.save`
+ */
+export const rowIdSeparator = ':'
+
+/**
  * the studio's colour themes
  */
 export const themes = {
