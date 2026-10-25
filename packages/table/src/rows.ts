@@ -1,6 +1,6 @@
-import { rowIdSeparator, rowKinds } from '@linguify/constants'
-import { splitNamespace } from '@linguify/keys'
-import type { KeyPath, KeyRow, Locale, NamespaceName } from '@linguify/types'
+import { rowIdSeparator, rowKinds, viewModes } from '@linguify/constants'
+import { joinKeyPath, splitKeyPath, splitNamespace } from '@linguify/keys'
+import type { EngineCapabilities, KeyPath, KeyRow, Locale, NamespaceName, ViewMode } from '@linguify/types'
 
 /**
  * a namespace in the table: a collapsible section holding its keys
@@ -39,9 +39,33 @@ export type KeyTableRow = {
 }
 
 /**
+ * a key path segment holding nested keys, in the tree view
+ */
+export type GroupRow = {
+	kind: typeof rowKinds.group
+	id: string
+
+	/**
+	 * the group's full path — `common.menu`
+	 */
+	path: KeyPath
+
+	/**
+	 * what the key column shows: the group's own segment — `menu`
+	 */
+	label: string
+
+	/**
+	 * how many keys the group holds, at any depth
+	 */
+	keys: number
+	subRows: TableRow[]
+}
+
+/**
  * any row of the translation table
  */
-export type TableRow = SectionRow | KeyTableRow
+export type TableRow = SectionRow | GroupRow | KeyTableRow
 
 /**
  * how rows are built
@@ -59,8 +83,7 @@ export type RowOptions = {
  *
  * @returns its id — `key:common.save`
  */
-export const rowId = (kind: TableRow['kind'] | typeof rowKinds.group, path: string): string =>
-	`${kind}${rowIdSeparator}${path}`
+export const rowId = (kind: TableRow['kind'], path: string): string => `${kind}${rowIdSeparator}${path}`
 
 /**
  * builds the flat view: one row per key, in a section per namespace
@@ -105,3 +128,101 @@ const keyRow = ({ key, description, values }: KeyRow, label: string): KeyTableRo
 	...(description === undefined ? {} : { description }),
 	values
 })
+
+/**
+ * builds the tree view: nested keys collapse by path segment, inside a section per namespace
+ *
+ * @note a key row shows its last segment, a group its own; groups and keys keep the order they first
+ * come in. A path that is a key in one locale and holds nested keys in another — a conflict `sync`
+ * reports — has both rows, the group and the key, which never share an id
+ *
+ * @param rows - every key, as `list keys` gives them
+ * @param options - whether the project has namespaces
+ *
+ * @returns the sections, each holding its groups and keys — or, without namespaces, the top level
+ */
+export const buildTreeRows = (rows: KeyRow[], { namespaced }: RowOptions): TableRow[] => {
+	const root: Branch = new Map()
+	for (const row of rows) {
+		const segments = splitKeyPath(row.key)
+		let level = root
+		for (const [index, segment] of segments.slice(0, -1).entries()) {
+			const path = joinKeyPath(segments.slice(0, index + 1))
+			const id = rowId(rowKinds.group, path)
+			const entry = level.get(id)
+			const branch: Branch = entry !== undefined && 'branch' in entry ? entry.branch : new Map()
+			if (entry === undefined) level.set(id, { path, label: segment, branch })
+			level = branch
+		}
+		level.set(rowId(rowKinds.key, row.key), { row, label: segments.at(-1) ?? row.key })
+	}
+	const top = toRows(root)
+	if (!namespaced) return top
+	return top.map(row =>
+		row.kind === rowKinds.group
+			? {
+					kind: rowKinds.section,
+					id: rowId(rowKinds.section, row.path),
+					namespace: row.path,
+					keys: row.keys,
+					subRows: row.subRows
+				}
+			: row
+	)
+}
+
+/**
+ * one level of the tree as it is built: by row id, a group's own level or a key
+ */
+type Branch = Map<string, { path: KeyPath; label: string; branch: Branch } | { row: KeyRow; label: string }>
+
+/**
+ * @param branch - one level of the tree
+ *
+ * @returns its rows, groups holding theirs
+ */
+const toRows = (branch: Branch): TableRow[] =>
+	[...branch.values()].map(entry => {
+		if ('row' in entry) return keyRow(entry.row, entry.label)
+		const subRows = toRows(entry.branch)
+		return {
+			kind: rowKinds.group,
+			id: rowId(rowKinds.group, entry.path),
+			path: entry.path,
+			label: entry.label,
+			keys: subRows.reduce((sum, row) => sum + (row.kind === rowKinds.key ? 1 : row.keys), 0),
+			subRows
+		}
+	})
+
+/**
+ * builds the rows of a view mode
+ *
+ * @note compact has the flat view's rows: what it hides — every locale but the default — is shown
+ * inside an expanded key row, never as rows of its own
+ *
+ * @param mode - the view mode
+ * @param rows - every key, as `list keys` gives them
+ * @param options - whether the project has namespaces
+ *
+ * @returns the rows to hand to the table
+ */
+export const buildRows = (mode: ViewMode, rows: KeyRow[], options: RowOptions): TableRow[] =>
+	mode === viewModes.tree ? buildTreeRows(rows, options) : buildFlatRows(rows, options)
+
+/**
+ * @param capabilities - what the project's format can express
+ *
+ * @returns the view modes the project can use — the tree needs keys that nest
+ */
+export const availableViewModes = ({ nesting }: Pick<EngineCapabilities, 'nesting'>): ViewMode[] =>
+	Object.values(viewModes).filter(mode => mode !== viewModes.tree || nesting)
+
+/**
+ * @param mode - the view mode asked for — `studio.defaultView`, or a remembered choice
+ * @param capabilities - what the project's format can express
+ *
+ * @returns that mode when the project can use it, else the flat view
+ */
+export const usableViewMode = (mode: ViewMode, capabilities: Pick<EngineCapabilities, 'nesting'>): ViewMode =>
+	availableViewModes(capabilities).includes(mode) ? mode : viewModes.flat
