@@ -64,7 +64,12 @@ export const fileErrorCodes = {
 	/**
 	 * the reader at the other end of a pipe has stopped reading
 	 */
-	brokenPipe: 'EPIPE'
+	brokenPipe: 'EPIPE',
+
+	/**
+	 * the port a server asked for is taken
+	 */
+	addressInUse: 'EADDRINUSE'
 } as const
 
 /**

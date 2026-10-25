@@ -21,9 +21,12 @@
 	},
 	"dependencies": {
 		"@clack/prompts": "^1.8.1",
+		"@hono/node-server": "catalog:",
 		"commander": "^15.0.0",
 		"cosmiconfig": "catalog:",
 		"flat": "catalog:",
+		"hono": "catalog:",
+		"open": "^11.0.4",
 		"papaparse": "catalog:",
 		"read-excel-file": "catalog:",
 		"string-width": "^8.3.0",

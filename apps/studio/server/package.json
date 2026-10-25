@@ -8,8 +8,12 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
+		"@hono/node-server": "catalog:",
 		"@linguify/api": "workspace:*",
-		"@linguify/constants": "workspace:*"
+		"@linguify/constants": "workspace:*",
+		"@linguify/core": "workspace:*",
+		"@trpc/server": "catalog:",
+		"hono": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

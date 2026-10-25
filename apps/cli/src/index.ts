@@ -10,6 +10,7 @@ import { exportCommand, importCommand } from './commands/io'
 import { keyCommand } from './commands/key'
 import { listCommand } from './commands/list'
 import { namespaceCommand } from './commands/namespace'
+import { studioCommand } from './commands/studio'
 import { syncCommand } from './commands/sync'
 import { addGlobalOptions } from './lib/options'
 import { respondToParseError } from './lib/output'
@@ -71,6 +72,7 @@ for (const command of [
 	diffCommand,
 	exportCommand,
 	importCommand,
+	studioCommand,
 	listCommand
 ])
 	program.addCommand(inherit(command, program))

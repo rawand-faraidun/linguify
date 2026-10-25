@@ -10,9 +10,12 @@ allowBuilds:
   esbuild: true
 
 catalog:
+  '@hono/node-server': ^2.1.4
+  '@trpc/server': ^11.19.0
   '@types/node': ^24.19.0
   cosmiconfig: ^10.0.1
   flat: ^6.0.1
+  hono: ^4.13.13
   papaparse: ^5.7.0
   read-excel-file: ^9.3.10
   typescript: ^6.0.3

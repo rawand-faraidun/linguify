@@ -30,6 +30,9 @@ export const cliFlags = {
 		flags: '--no-remove-unused',
 		description: 'Keep the keys the default locale no longer has; overrides `sync.removeUnused`'
 	},
+	port: { flags: '-p, --port <number>', description: 'The port the studio binds; overrides `studio.port`' },
+	open: { flags: '--open', description: 'Open a browser once the studio is listening; overrides `studio.open`' },
+	noOpen: { flags: '--no-open', description: 'Do not open a browser; overrides `studio.open`' },
 	check: {
 		flags: '--check',
 		description: 'Write nothing: list the files that need formatting, and exit 1 if any do — for CI'
