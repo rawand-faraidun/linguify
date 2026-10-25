@@ -359,7 +359,7 @@ importers:
         specifier: workspace:*
         version: link:../types
       '@tanstack/table-core':
-        specifier: ^9.2.8
+        specifier: 9.2.8
         version: 9.2.8
     devDependencies:
       '@linguify/biome-config':

@@ -35,9 +35,16 @@ export type LocaleCounts = {
 	 * keys the default has and this locale has empty
 	 */
 	empty: number
+
+	/**
+	 * keys this locale has and the default does not — what `sync --remove-unused` removes
+	 */
+	extra: number
 }
 
 /**
+ * whether a key still needs translating in a locale
+ *
  * @param row - one key
  * @param locale - a locale other than the default
  * @param defaultLocale - the locale every other is compared against
@@ -49,7 +56,19 @@ export const isUntranslated = ({ values }: KeyRow, locale: Locale, defaultLocale
 	Object.hasOwn(values, defaultLocale) && (!Object.hasOwn(values, locale) || values[locale] === '')
 
 /**
- * counts, per locale, the keys still to translate
+ * whether a key is extra in a locale
+ *
+ * @param row - one key
+ * @param locale - a locale other than the default
+ * @param defaultLocale - the locale every other is compared against
+ *
+ * @returns whether the locale has it and the default does not — `diff`'s extra
+ */
+export const isExtra = ({ values }: KeyRow, locale: Locale, defaultLocale: Locale): boolean =>
+	Object.hasOwn(values, locale) && !Object.hasOwn(values, defaultLocale)
+
+/**
+ * counts, per locale, the keys still to translate, and the keys the default no longer has
  *
  * @note counted over every key, never the filtered ones — the counters say how much is left to
  * translate, which a search must not change. The default locale is what the others are measured
@@ -59,7 +78,7 @@ export const isUntranslated = ({ values }: KeyRow, locale: Locale, defaultLocale
  * @param locales - every configured locale
  * @param defaultLocale - the locale every other is compared against
  *
- * @returns each other locale's missing and empty keys
+ * @returns each other locale's missing, empty and extra keys — `diff`'s three counts
  */
 export const countUntranslated = (
 	rows: readonly KeyRow[],
@@ -70,10 +89,11 @@ export const countUntranslated = (
 		locales
 			.filter(locale => locale !== defaultLocale)
 			.map((locale): [Locale, LocaleCounts] => {
-				const counts = { missing: 0, empty: 0 }
+				const counts = { missing: 0, empty: 0, extra: 0 }
 				for (const { values } of rows) {
-					if (!Object.hasOwn(values, defaultLocale)) continue
-					if (!Object.hasOwn(values, locale)) counts.missing++
+					if (!Object.hasOwn(values, defaultLocale)) {
+						if (Object.hasOwn(values, locale)) counts.extra++
+					} else if (!Object.hasOwn(values, locale)) counts.missing++
 					else if (values[locale] === '') counts.empty++
 				}
 				return [locale, counts]
@@ -81,6 +101,8 @@ export const countUntranslated = (
 	)
 
 /**
+ * narrows the keys to what the filter lets through
+ *
  * @param rows - every key
  * @param filter - the search, the locales still to translate in, the namespaces
  * @param defaultLocale - the locale every other is compared against

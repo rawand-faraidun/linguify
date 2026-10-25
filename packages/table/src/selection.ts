@@ -14,6 +14,8 @@ export type Selection = ReadonlySet<KeyPath>
 export type SelectionState = Values<typeof selectionStates>
 
 /**
+ * the keys a row stands for
+ *
  * @param row - a row
  *
  * @returns every key the row is or holds, at any depth
@@ -22,6 +24,8 @@ export const keysOf = (row: TableRow): KeyPath[] =>
 	row.kind === rowKinds.key ? [row.key] : row.subRows.flatMap(keysOf)
 
 /**
+ * how much of a row is selected
+ *
  * @param selection - the keys selected
  * @param row - a row
  *
@@ -34,6 +38,8 @@ export const selectionState = (selection: Selection, row: TableRow): SelectionSt
 }
 
 /**
+ * ticks or unticks a row
+ *
  * @param selection - the keys selected
  * @param row - the row a person ticked or unticked
  *
@@ -49,6 +55,8 @@ export const toggleSelection = (selection: Selection, row: TableRow): Selection 
 }
 
 /**
+ * ticks or unticks every row shown
+ *
  * @param selection - the keys selected
  * @param rows - the rows the table shows, every level — after a filter, only those it lets through
  *
@@ -63,6 +71,8 @@ export const toggleAll = (selection: Selection, rows: readonly TableRow[]): Sele
 }
 
 /**
+ * drops keys that no longer exist from a selection
+ *
  * @param selection - the keys selected
  * @param rows - the rows the table shows now, every level
  *

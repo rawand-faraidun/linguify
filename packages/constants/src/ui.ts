@@ -42,6 +42,11 @@ export const rowKinds = {
 } as const
 
 /**
+ * between a row's kind and its path in the row's id — `section:common`, `key:common.save`
+ */
+export const rowIdSeparator = ':'
+
+/**
  * how much of a row is selected — a section or group is `some` while only part of its keys are, which a
  * checkbox shows as a dash
  */
@@ -52,11 +57,6 @@ export const selectionStates = {
 } as const
 
 /**
- * between a row's kind and its path in the row's id — `section:common`, `key:common.save`
- */
-export const rowIdSeparator = ':'
-
-/**
  * the table's sort orders — on screen only; sorting never touches the files
  */
 export const sortDirections = {
@@ -65,10 +65,11 @@ export const sortDirections = {
 } as const
 
 /**
- * the column a table sorts by when it is not a locale's text
+ * what a table sorts by: the key path, or a locale's text
  */
 export const sortColumns = {
-	key: 'key'
+	key: 'key',
+	locale: 'locale'
 } as const
 
 /**

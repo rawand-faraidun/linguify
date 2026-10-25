@@ -28,16 +28,26 @@ export const rowOptions = {
 }
 
 /**
+ * whether a row can open in a view mode: a section or a group always; a key only in compact view, where
+ * opening it shows the locales the view hides — inside the row itself, so it adds no row of its own
+ *
+ * @param mode - the view mode
+ * @param row - a row
+ *
+ * @returns whether it can open
+ */
+export const canExpand = (mode: ViewMode, row: TableRow): boolean =>
+	row.kind !== rowKinds.key || mode === viewModes.compact
+
+/**
+ * the row options for a view mode — {@link rowOptions}, and in every mode the one rule of
+ * {@link canExpand}
+ *
  * @param mode - the view mode
  *
- * @returns the row options for it — in compact view a key row expands too, to show the locales the
- * view hides inside the row itself, so it still adds no row of its own
+ * @returns the options to hand to TanStack Table
  */
-export const rowOptionsFor = (mode: ViewMode) =>
-	mode === viewModes.compact
-		? {
-				...rowOptions,
-				getRowCanExpand: (row: { original: TableRow; subRows: unknown[] }) =>
-					row.original.kind === rowKinds.key || row.subRows.length > 0
-			}
-		: rowOptions
+export const rowOptionsFor = (mode: ViewMode) => ({
+	...rowOptions,
+	getRowCanExpand: (row: { original: TableRow }) => canExpand(mode, row.original)
+})

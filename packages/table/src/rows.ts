@@ -78,6 +78,8 @@ export type RowOptions = {
 }
 
 /**
+ * a row's id
+ *
  * @param kind - what the row is
  * @param path - its namespace, group path or key path
  *
@@ -96,7 +98,7 @@ export const rowId = (kind: TableRow['kind'], path: string): string => `${kind}$
  *
  * @returns the sections, each holding its keys — or, without namespaces, the keys themselves
  */
-export const buildFlatRows = (rows: KeyRow[], { namespaced }: RowOptions): TableRow[] => {
+export const buildFlatRows = (rows: readonly KeyRow[], { namespaced }: RowOptions): TableRow[] => {
 	if (!namespaced) return rows.map(row => keyRow(row, row.key))
 	const sections = new Map<NamespaceName, KeyTableRow[]>()
 	for (const row of rows) {
@@ -141,7 +143,7 @@ const keyRow = ({ key, description, values }: KeyRow, label: string): KeyTableRo
  *
  * @returns the sections, each holding its groups and keys — or, without namespaces, the top level
  */
-export const buildTreeRows = (rows: KeyRow[], { namespaced }: RowOptions): TableRow[] => {
+export const buildTreeRows = (rows: readonly KeyRow[], { namespaced }: RowOptions): TableRow[] => {
 	const root: Branch = new Map()
 	for (const row of rows) {
 		const segments = splitKeyPath(row.key)
@@ -207,10 +209,12 @@ const toRows = (branch: Branch): TableRow[] =>
  *
  * @returns the rows to hand to the table
  */
-export const buildRows = (mode: ViewMode, rows: KeyRow[], options: RowOptions): TableRow[] =>
+export const buildRows = (mode: ViewMode, rows: readonly KeyRow[], options: RowOptions): TableRow[] =>
 	mode === viewModes.tree ? buildTreeRows(rows, options) : buildFlatRows(rows, options)
 
 /**
+ * the view modes a project can use
+ *
  * @param capabilities - what the project's format can express
  *
  * @returns the view modes the project can use — the tree needs keys that nest
@@ -219,6 +223,8 @@ export const availableViewModes = ({ nesting }: Pick<EngineCapabilities, 'nestin
 	Object.values(viewModes).filter(mode => mode !== viewModes.tree || nesting)
 
 /**
+ * the view mode to show
+ *
  * @param mode - the view mode asked for — `studio.defaultView`, or a remembered choice
  * @param capabilities - what the project's format can express
  *

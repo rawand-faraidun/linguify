@@ -11,7 +11,7 @@
 		"@linguify/constants": "workspace:*",
 		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
-		"@tanstack/table-core": "^9.2.8"
+		"@tanstack/table-core": "9.2.8"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",

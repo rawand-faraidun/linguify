@@ -1,5 +1,7 @@
 import { rowKinds } from '@linguify/constants'
+import type { ViewMode } from '@linguify/types'
 import type { TableRow } from './rows'
+import { canExpand } from './table'
 
 /**
  * which rows are open: a baseline for every row, and the rows a person opened or closed against it
@@ -31,14 +33,18 @@ export const collapsedExpansion: Expansion = { all: false, overrides: {} }
 export const expandedExpansion: Expansion = { all: true, overrides: {} }
 
 /**
+ * whether a row is open
+ *
  * @param expansion - which rows are open
  * @param id - a row's id
  *
- * @returns whether that row is open
+ * @returns its override, else the baseline
  */
 export const isExpanded = ({ all, overrides }: Expansion, id: string): boolean => overrides[id] ?? all
 
 /**
+ * opens or closes one row
+ *
  * @param expansion - which rows are open
  * @param id - a row's id
  * @param open - open it or close it; the opposite of what it is when left out
@@ -51,24 +57,25 @@ export const toggleExpansion = (expansion: Expansion, id: string, open = !isExpa
 }
 
 /**
+ * the expansion as TanStack Table reads it
+ *
  * @param expansion - which rows are open
  * @param rows - the rows the table shows, every level
- * @param expandable - whether a row can open — in compact view a key row can, elsewhere only sections
- * and groups
+ * @param mode - the view mode, which decides which rows can open ({@link canExpand})
  *
- * @returns the expansion as TanStack Table reads it: `true` for all open with no exceptions, else a
- * record of every open row — the only way TanStack can hold "all open but these"
+ * @returns `true` for all open with no exceptions, else a record of every open row at every depth —
+ * the only way TanStack can hold "all open but these"
  */
 export const toExpandedState = (
 	expansion: Expansion,
 	rows: readonly TableRow[],
-	expandable: (row: TableRow) => boolean = row => row.kind !== rowKinds.key
+	mode: ViewMode
 ): true | Record<string, boolean> => {
 	if (expansion.all && Object.keys(expansion.overrides).length === 0) return true
 	const state: Record<string, boolean> = {}
 	const visit = (level: readonly TableRow[]) => {
 		for (const row of level) {
-			if (expandable(row) && isExpanded(expansion, row.id)) state[row.id] = true
+			if (canExpand(mode, row) && isExpanded(expansion, row.id)) state[row.id] = true
 			if (row.kind !== rowKinds.key) visit(row.subRows)
 		}
 	}
