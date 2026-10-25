@@ -42,6 +42,16 @@ export const rowKinds = {
 } as const
 
 /**
+ * how much of a row is selected — a section or group is `some` while only part of its keys are, which a
+ * checkbox shows as a dash
+ */
+export const selectionStates = {
+	all: 'all',
+	some: 'some',
+	none: 'none'
+} as const
+
+/**
  * between a row's kind and its path in the row's id — `section:common`, `key:common.save`
  */
 export const rowIdSeparator = ':'
