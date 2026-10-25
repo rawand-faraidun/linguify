@@ -57,6 +57,21 @@ export const selectionStates = {
 export const rowIdSeparator = ':'
 
 /**
+ * the table's sort orders — on screen only; sorting never touches the files
+ */
+export const sortDirections = {
+	ascending: 'ascending',
+	descending: 'descending'
+} as const
+
+/**
+ * the column a table sorts by when it is not a locale's text
+ */
+export const sortColumns = {
+	key: 'key'
+} as const
+
+/**
  * the studio's colour themes
  */
 export const themes = {
