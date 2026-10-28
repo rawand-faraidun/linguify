@@ -1,5 +1,19 @@
 {
 	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
 	"root": false,
-	"extends": ["@linguify/biome-config/base", "@linguify/biome-config/web"]
+	"extends": ["@linguify/biome-config/base", "@linguify/biome-config/web"],
+	"overrides": [
+		{
+			"includes": ["src/components/**", "src/lib/utils.ts"],
+			"formatter": {
+				"enabled": false
+			},
+			"linter": {
+				"enabled": false
+			},
+			"assist": {
+				"enabled": false
+			}
+		}
+	]
 }
