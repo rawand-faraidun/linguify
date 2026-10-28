@@ -17,6 +17,7 @@ catalog:
   cosmiconfig: ^10.0.1
   flat: ^6.0.1
   hono: ^4.13.13
+  lucide-react: ^1.56.0
   papaparse: ^5.7.0
   react: ^19.3.0
   react-dom: ^19.3.0

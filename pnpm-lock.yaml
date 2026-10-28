@@ -27,6 +27,9 @@ catalogs:
     hono:
       specifier: ^4.13.13
       version: 4.13.13
+    lucide-react:
+      specifier: ^1.56.0
+      version: 1.56.0
     papaparse:
       specifier: ^5.7.0
       version: 5.7.0
@@ -192,6 +195,9 @@ importers:
       '@trpc/tanstack-react-query':
         specifier: ^11.19.0
         version: 11.19.0(@tanstack/react-query@5.104.2(react@19.3.0))(@trpc/client@11.19.0(@trpc/server@11.19.0(typescript@6.0.3))(typescript@6.0.3))(@trpc/server@11.19.0(typescript@6.0.3))(react@19.3.0)(typescript@6.0.3)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.56.0(@types/react@19.3.0)(react@19.3.0)
       react:
         specifier: 'catalog:'
         version: 19.3.0
@@ -451,7 +457,7 @@ importers:
         specifier: ^0.4.0
         version: 0.4.0
       lucide-react:
-        specifier: ^1.56.0
+        specifier: 'catalog:'
         version: 1.56.0(@types/react@19.3.0)(react@19.3.0)
       next-themes:
         specifier: ^0.4.6

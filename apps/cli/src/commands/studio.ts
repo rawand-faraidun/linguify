@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { cliFlags, studioAssetsDir } from '@linguify/constants'
+import { cliFlags, studioAssetsDir, studioText } from '@linguify/constants'
 import { startStudio } from '@linguify/studio-server'
 import type { ConfigInput } from '@linguify/types'
 import { Command, InvalidArgumentError } from 'commander'
@@ -54,7 +54,7 @@ export const studioCommand = new Command('studio')
 					await open(studio.url).catch(() => undefined)
 				return { url: studio.url }
 			},
-			({ url }) => `Linguify studio is running at ${url}\n${atTerminal() ? `${dim('Press Ctrl+C to stop')}\n` : ''}`
+			({ url }) => `${studioText.title} is running at ${url}\n${atTerminal() ? `${dim('Press Ctrl+C to stop')}\n` : ''}`
 		)
 	)
 

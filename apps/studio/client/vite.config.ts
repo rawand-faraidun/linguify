@@ -1,4 +1,4 @@
-import { storageKeys, studioDefaultPort, studioHost, studioRoutes } from '@linguify/constants'
+import { storageKeys, studioDefaultPort, studioHost, studioRoutes, studioText } from '@linguify/constants'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
@@ -9,22 +9,24 @@ import { defineConfig, type Plugin } from 'vite'
 const studio = `http://${studioHost}:${studioDefaultPort}`
 
 /**
- * sets the theme's class before the page paints, from the stored choice or the system — without it,
- * dark mode would flash light until React mounts
+ * the page's head: its title, and the theme set before the page paints, from the stored choice or the
+ * system — without it, dark mode would flash light until React mounts, and scrollbars and form controls
+ * would keep the system's colours until then
  */
-const themeBeforePaint: Plugin = {
-	name: 'linguify-theme-before-paint',
+const studioHead: Plugin = {
+	name: 'linguify-studio-head',
 	transformIndexHtml: () => [
+		{ tag: 'title', injectTo: 'head', children: studioText.title },
 		{
 			tag: 'script',
 			injectTo: 'head-prepend',
-			children: `try{const t=localStorage.getItem(${JSON.stringify(storageKeys.theme)});if(t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch{}`
+			children: `try{const t=localStorage.getItem(${JSON.stringify(storageKeys.theme)}),d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches),r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light'}catch{}`
 		}
 	]
 }
 
 export default defineConfig({
-	plugins: [react(), tailwindcss(), themeBeforePaint],
+	plugins: [react(), tailwindcss(), studioHead],
 	server: {
 		proxy: {
 			// the studio answers only to its own origin, so the forwarded request carries it

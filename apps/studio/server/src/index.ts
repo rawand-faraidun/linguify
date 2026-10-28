@@ -8,7 +8,8 @@ import {
 	studioHost,
 	studioLoopbackName,
 	studioResponseHeaders,
-	studioRoutes
+	studioRoutes,
+	studioText
 } from '@linguify/constants'
 import { ConflictError } from '@linguify/core'
 import { serve } from '@hono/node-server'
@@ -145,5 +146,4 @@ export const startStudio = ({ cwd, config, port, assets }: StudioOptions): Promi
 /**
  * what the studio shows until the client is built
  */
-const placeholderPage =
-	'<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Linguify studio</title></head><body><h1>Linguify studio</h1><p>The studio is running. Its client is not built yet.</p></body></html>'
+const placeholderPage = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${studioText.title}</title></head><body><h1>${studioText.title}</h1><p>The studio is running. Its client is not built yet.</p></body></html>`

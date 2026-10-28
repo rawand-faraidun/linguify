@@ -62,3 +62,15 @@ export const studioRoutes = {
  * the folder inside the cli's `dist` that holds the built studio client
  */
 export const studioAssetsDir = 'studio'
+
+/**
+ * the studio's words on screen
+ */
+export const studioText = {
+	title: 'Linguify studio',
+	loading: 'Loading…',
+	theme: 'Theme',
+	readAt: 'Read from disk at',
+	freshness: 'Avoid editing the files by hand while the studio runs; if you do, refresh. A new port needs a restart.',
+	refresh: 'Refresh'
+} as const

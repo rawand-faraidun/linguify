@@ -9,6 +9,9 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'n
  * @note a class, not a media query: shadcn's tokens switch on `dark` on the root element, which lets a
  * person's choice override the system's
  *
+ * @note the theme is applied before paint by the page's own script; the one next-themes renders is marked
+ * as data — rendered on the client it would never run, and React 19 warns about any executable script it renders
+ *
  * @param props - the content to theme
  *
  * @returns the provider
@@ -21,6 +24,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => (
 		storageKey={storageKeys.theme}
 		themes={[themes.light, themes.dark]}
 		disableTransitionOnChange
+		scriptProps={{ type: 'application/json' }}
 	>
 		{children}
 	</NextThemesProvider>
@@ -46,8 +50,9 @@ export const useTheme = (): {
 }
 
 /**
- * @param value - a theme name as stored
+ * @param value - a theme name, as stored or as a control reports it
  *
  * @returns whether it is one of the studio's themes
  */
-const isTheme = (value: string | undefined): value is Theme => Object.values(themes).some(theme => theme === value)
+export const isTheme = (value: string | undefined): value is Theme =>
+	Object.values(themes).some(theme => theme === value)

@@ -82,6 +82,15 @@ export const themes = {
 } as const
 
 /**
+ * how each colour theme is named on screen
+ */
+export const themeLabels = {
+	[themes.light]: 'Light',
+	[themes.dark]: 'Dark',
+	[themes.system]: 'System'
+} as const
+
+/**
  * browser storage keys, namespaced so they never collide with another app on the same origin
  */
 export const storageKeys = {
