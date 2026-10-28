@@ -1,0 +1,5 @@
+@import "@linguify/ui/globals.css";
+
+@source "../../../../packages/ui/src";
+@source "../../../../packages/table/src";
+@source "../../../../packages/constants/src";

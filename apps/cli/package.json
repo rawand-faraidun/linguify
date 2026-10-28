@@ -15,6 +15,7 @@
 	],
 	"scripts": {
 		"build": "pnpm schema && tsdown && pnpm notices",
+		"dev": "tsx watch src/index.ts studio --no-open --cwd ../..",
 		"notices": "tsx scripts/write-notices.ts",
 		"schema": "tsx scripts/generate-schema.ts",
 		"typecheck": "tsc"
