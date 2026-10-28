@@ -8,7 +8,7 @@
 		"./components/*": "./src/components/*.tsx",
 		"./hooks/*": "./src/hooks/*.ts",
 		"./lib/*": "./src/lib/*.ts",
-		"./theme": "./src/lib/theme.tsx"
+		"./theme": "./src/theme.tsx"
 	},
 	"scripts": {
 		"typecheck": "tsc"
@@ -32,7 +32,6 @@
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@types/react": "^19.3.0",
-		"@types/react-dom": "^19.3.0",
 		"tailwindcss": "^4.3.3",
 		"typescript": "catalog:"
 	}

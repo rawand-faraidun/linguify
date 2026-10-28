@@ -6,9 +6,8 @@ import { ThemeProvider as NextThemesProvider, useTheme as useNextTheme } from 'n
 /**
  * gives everything inside it the studio's colour theme
  *
- * @note the theme is a `dark` class on the root element — what shadcn's tokens switch on — and the
- * person's choice is remembered in the browser under `storageKeys.theme`; until they choose, it follows
- * the system, and switching never animates the whole page
+ * @note a class, not a media query: shadcn's tokens switch on `dark` on the root element, which lets a
+ * person's choice override the system's
  *
  * @param props - the content to theme
  *
@@ -33,7 +32,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => (
  * @returns `theme` — what the person picked, `system` until they pick; `resolvedTheme` — what is shown,
  * light or dark; `setTheme`
  */
-export const useTheme = (): { theme: Theme; resolvedTheme: Theme; setTheme: (theme: Theme) => void } => {
+export const useTheme = (): {
+	theme: Theme
+	resolvedTheme: Exclude<Theme, typeof themes.system>
+	setTheme: (theme: Theme) => void
+} => {
 	const { theme, resolvedTheme, setTheme } = useNextTheme()
 	return {
 		theme: isTheme(theme) ? theme : themes.system,

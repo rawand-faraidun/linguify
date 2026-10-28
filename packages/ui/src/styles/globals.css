@@ -73,14 +73,14 @@
 	--destructive: oklch(0.577 0.245 27.325);
 	--border: oklch(0.922 0 0);
 	--input: oklch(0.922 0 0);
-	--ring: oklch(0.708 0 0);
+	--ring: oklch(0.556 0 0);
 	--chart-1: oklch(0.87 0 0);
 	--chart-2: oklch(0.556 0 0);
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
-	--radius: 0;
-	--missing: oklch(0.666 0.179 58.318);
+	--radius: 0rem;
+	--missing: oklch(0.555 0.163 48.998);
 	--missing-foreground: oklch(0.985 0 0);
 	--extra: oklch(0.546 0.245 262.881);
 	--extra-foreground: oklch(0.985 0 0);
