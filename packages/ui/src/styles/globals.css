@@ -1,12 +1,20 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "@fontsource/ibm-plex-sans-arabic/400.css";
+@import "@fontsource/ibm-plex-sans-arabic/500.css";
+@import "@fontsource/ibm-plex-sans-arabic/600.css";
+@import "@fontsource/ibm-plex-sans-arabic/700.css";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
 	--font-heading: var(--font-sans);
-	--font-sans: "IBM Plex Sans Variable", sans-serif;
+	--font-sans: "IBM Plex Sans Arabic", sans-serif;
+	--color-missing: var(--missing);
+	--color-missing-foreground: var(--missing-foreground);
+	--color-extra: var(--extra);
+	--color-extra-foreground: var(--extra-foreground);
 	--color-sidebar-ring: var(--sidebar-ring);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -71,7 +79,11 @@
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
-	--radius: 0.625rem;
+	--radius: 0;
+	--missing: oklch(0.666 0.179 58.318);
+	--missing-foreground: oklch(0.985 0 0);
+	--extra: oklch(0.546 0.245 262.881);
+	--extra-foreground: oklch(0.985 0 0);
 	--sidebar: oklch(0.985 0 0);
 	--sidebar-foreground: oklch(0.145 0 0);
 	--sidebar-primary: oklch(0.205 0 0);
@@ -106,6 +118,10 @@
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
+	--missing: oklch(0.828 0.189 84.429);
+	--missing-foreground: oklch(0.205 0 0);
+	--extra: oklch(0.707 0.165 254.624);
+	--extra-foreground: oklch(0.205 0 0);
 	--sidebar: oklch(0.205 0 0);
 	--sidebar-foreground: oklch(0.985 0 0);
 	--sidebar-primary: oklch(0.488 0.243 264.376);

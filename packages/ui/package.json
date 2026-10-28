@@ -13,6 +13,7 @@
 		"typecheck": "tsc"
 	},
 	"dependencies": {
+		"@fontsource/ibm-plex-sans-arabic": "^5.3.0",
 		"@linguify/constants": "workspace:*",
 		"class-variance-authority": "^0.7.1",
 		"cn": "^0.4.0",
