@@ -1,7 +1,10 @@
 {
 	"extends": "@linguify/tsconfig/web",
 	"compilerOptions": {
-		"types": []
+		"types": [],
+		"paths": {
+			"@linguify/ui/*": ["./src/*"]
+		}
 	},
 	"include": ["src"]
 }
