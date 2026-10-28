@@ -70,7 +70,23 @@ export const studioText = {
 	title: 'Linguify studio',
 	loading: 'Loading…',
 	theme: 'Theme',
+	view: 'View',
+	expandAll: 'Expand all',
+	collapseAll: 'Collapse all',
+	key: 'Key',
+	description: 'Description',
+	defaultLocale: 'default',
+	keyCount: { one: 'key', other: 'keys' },
+	translations: 'Translations',
+	noKeys: 'No keys yet.',
+	absent: 'not in this locale',
+	blank: 'blank text',
 	readAt: 'Read from disk at',
 	freshness: 'Avoid editing the files by hand while the studio runs; if you do, refresh. A new port needs a restart.',
 	refresh: 'Refresh'
 } as const
+
+/**
+ * the language the studio's words are in — for the page, and for counting in them
+ */
+export const studioLanguage = 'en'

@@ -3,6 +3,7 @@ import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
 import { useIsFetching, useQueryClient } from '@tanstack/react-query'
 import { RefreshCwIcon } from 'lucide-react'
+import { focusRingClass } from './classes'
 
 /**
  * the quiet footer: when the files were read, what to do after editing them by hand, and a refresh
@@ -37,7 +38,7 @@ export const Freshness = ({ readAt }: { readAt: number }) => {
 			<Button
 				variant="ghost"
 				size="sm"
-				className="ms-auto focus-visible:ring-ring"
+				className={cn('ms-auto', focusRingClass)}
 				aria-disabled={fetching}
 				onClick={() => {
 					if (!fetching) void queryClient.refetchQueries({ type: 'active' })

@@ -22,6 +22,18 @@ export type RowSource = {
 }
 
 /**
+ * the locales in the order the table shows them
+ *
+ * @param source - the locales and the default
+ *
+ * @returns the default first, then the others in config order
+ */
+export const localeOrder = (source: Pick<RowSource, 'locales' | 'default'>): Locale[] => [
+	source.default,
+	...source.locales.filter(locale => locale !== source.default)
+]
+
+/**
  * one row per key in a catalogue — what `list keys` gives, built in the browser from `catalogue.get`
  *
  * @note the same rows, in the same order, as core's: the default locale's keys first, then those only
@@ -33,8 +45,10 @@ export type RowSource = {
  * @returns the rows
  */
 export const rowsFromCatalogue = (catalogue: Catalogue, source: RowSource): KeyRow[] => {
-	const order = [source.default, ...source.locales.filter(locale => locale !== source.default)]
-	const flat = order.map(locale => ({ locale, translations: flattenTree(catalogue.locales[locale] ?? {}) }))
+	const flat = localeOrder(source).map(locale => ({
+		locale,
+		translations: flattenTree(catalogue.locales[locale] ?? {})
+	}))
 	const keys = new Set(flat.flatMap(({ translations }) => Object.keys(translations)))
 	return [...keys].map(key => {
 		const values = Object.fromEntries(

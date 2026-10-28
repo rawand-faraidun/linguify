@@ -2,6 +2,7 @@ import type { AppRouter } from '@linguify/api'
 import { studioRoutes } from '@linguify/constants'
 import { QueryClient } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { inferRouterOutputs } from '@trpc/server'
 import { createTRPCContext } from '@trpc/tanstack-react-query'
 
 /**
@@ -23,3 +24,8 @@ export const queryClient = new QueryClient({
  * `TRPCProvider` and `useTRPC` — the API as TanStack Query options
  */
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>()
+
+/**
+ * what each API call answers, as the client receives it
+ */
+export type ApiOutputs = inferRouterOutputs<AppRouter>

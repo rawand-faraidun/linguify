@@ -33,6 +33,27 @@ export const collapsedExpansion: Expansion = { all: false, overrides: {} }
 export const expandedExpansion: Expansion = { all: true, overrides: {} }
 
 /**
+ * every section and group open, every key closed — where the compact view starts, showing each key's
+ * default text and hiding the rest until a key is opened
+ *
+ * @param rows - the rows the table shows, every level
+ *
+ * @returns that expansion
+ */
+export const sectionsExpansion = (rows: readonly TableRow[]): Expansion => {
+	const overrides: Record<string, boolean> = {}
+	const visit = (level: readonly TableRow[]) => {
+		for (const row of level) {
+			if (row.kind === rowKinds.key) continue
+			overrides[row.id] = true
+			visit(row.subRows)
+		}
+	}
+	visit(rows)
+	return { all: false, overrides }
+}
+
+/**
  * whether a row is open
  *
  * @param expansion - which rows are open

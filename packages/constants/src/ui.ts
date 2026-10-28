@@ -91,6 +91,71 @@ export const themeLabels = {
 } as const
 
 /**
+ * how each view mode is named on screen
+ */
+export const viewModeLabels = {
+	[viewModes.flat]: 'Flat',
+	[viewModes.tree]: 'Tree',
+	[viewModes.compact]: 'Compact'
+} as const
+
+/**
+ * how a translation table marks one key's text in one locale, when its text alone would not say enough
+ */
+export const tableMarks = {
+	/**
+	 * the default has the key and this locale does not — still to translate
+	 */
+	missing: 'missing',
+
+	/**
+	 * the default has the key and this locale has it blank — still to translate
+	 */
+	empty: 'empty',
+
+	/**
+	 * this locale has the key and the default does not — what `sync --remove-unused` removes
+	 */
+	extra: 'extra',
+
+	/**
+	 * this locale lacks the key, and nothing expects it to have it: it is the default, or the default
+	 * lacks it too
+	 */
+	absent: 'absent',
+
+	/**
+	 * blank text nothing measures against: the default's own, or an extra key's
+	 */
+	blank: 'blank'
+} as const
+
+/**
+ * how each mark reads on screen
+ */
+export const tableMarkLabels = {
+	[tableMarks.missing]: 'missing',
+	[tableMarks.empty]: 'empty',
+	[tableMarks.extra]: 'extra',
+	[tableMarks.absent]: '—',
+	[tableMarks.blank]: 'empty'
+} as const
+
+/**
+ * the classes each mark is drawn with: still to translate in the `missing` token, extra in the `extra`
+ * token, the rest muted
+ *
+ * @note in constants so the studio and the extension draw them alike
+ */
+export const tableMarkClasses = {
+	[tableMarks.missing]: 'bg-missing text-missing-foreground',
+	[tableMarks.empty]: 'bg-missing text-missing-foreground',
+	[tableMarks.extra]: 'bg-extra text-extra-foreground',
+	[tableMarks.absent]: 'text-muted-foreground',
+	[tableMarks.blank]: 'text-muted-foreground'
+} as const
+
+/**
  * browser storage keys, namespaced so they never collide with another app on the same origin
  */
 export const storageKeys = {

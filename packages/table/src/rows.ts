@@ -213,6 +213,14 @@ export const buildRows = (mode: ViewMode, rows: readonly KeyRow[], options: RowO
 	mode === viewModes.tree ? buildTreeRows(rows, options) : buildFlatRows(rows, options)
 
 /**
+ * @param value - a view mode's name, as stored or as a control reports it
+ *
+ * @returns whether it is one of the table's view modes
+ */
+export const isViewMode = (value: string | null | undefined): value is ViewMode =>
+	Object.values(viewModes).some(mode => mode === value)
+
+/**
  * the view modes a project can use
  *
  * @param capabilities - what the project's format can express

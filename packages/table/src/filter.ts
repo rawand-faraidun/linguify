@@ -1,5 +1,6 @@
+import { tableMarks } from '@linguify/constants'
 import { splitNamespace } from '@linguify/keys'
-import type { KeyRow, Locale, NamespaceName } from '@linguify/types'
+import type { KeyRow, Locale, NamespaceName, TableMark } from '@linguify/types'
 
 /**
  * what the table is narrowed to; every part left out lets every key through
@@ -68,6 +69,23 @@ export const isExtra = ({ values }: KeyRow, locale: Locale, defaultLocale: Local
 	Object.hasOwn(values, locale) && !Object.hasOwn(values, defaultLocale)
 
 /**
+ * how a table marks a key's text in a locale — the same rules `diff` and the counters use
+ *
+ * @param row - one key
+ * @param locale - any locale, the default included
+ * @param defaultLocale - the locale every other is compared against
+ *
+ * @returns its mark, or nothing when its text says it all
+ */
+export const cellMark = (row: KeyRow, locale: Locale, defaultLocale: Locale): TableMark | undefined => {
+	const text = Object.hasOwn(row.values, locale) ? row.values[locale] : undefined
+	if (text === undefined) return isUntranslated(row, locale, defaultLocale) ? tableMarks.missing : tableMarks.absent
+	if (isExtra(row, locale, defaultLocale)) return tableMarks.extra
+	if (text !== '') return undefined
+	return locale !== defaultLocale && isUntranslated(row, locale, defaultLocale) ? tableMarks.empty : tableMarks.blank
+}
+
+/**
  * counts, per locale, the keys still to translate, and the keys the default no longer has
  *
  * @note counted over every key, never the filtered ones — the counters say how much is left to
@@ -90,11 +108,9 @@ export const countUntranslated = (
 			.filter(locale => locale !== defaultLocale)
 			.map((locale): [Locale, LocaleCounts] => {
 				const counts = { missing: 0, empty: 0, extra: 0 }
-				for (const { values } of rows) {
-					if (!Object.hasOwn(values, defaultLocale)) {
-						if (Object.hasOwn(values, locale)) counts.extra++
-					} else if (!Object.hasOwn(values, locale)) counts.missing++
-					else if (values[locale] === '') counts.empty++
+				for (const row of rows) {
+					const mark = cellMark(row, locale, defaultLocale)
+					if (mark === tableMarks.missing || mark === tableMarks.empty || mark === tableMarks.extra) counts[mark]++
 				}
 				return [locale, counts]
 			})
