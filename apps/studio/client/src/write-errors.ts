@@ -15,7 +15,7 @@ import { toast } from 'sonner'
  * @param refresh - reads every shown query again
  */
 export const reportWriteError = (error: Error, refresh: () => void) => {
-	const linguify = isTRPCClientError<AppRouter>(error) ? error.data?.linguify : undefined
+	const linguify = linguifyError(error)
 	const lasting = { duration: Number.POSITIVE_INFINITY, closeButton: true }
 	if (linguify?.code === errorCodes.staleCatalogue) {
 		toast.warning(studioText.staleTitle, {
@@ -38,11 +38,24 @@ export const reportWriteError = (error: Error, refresh: () => void) => {
 }
 
 /**
+ * @param error - what a call threw
+ *
+ * @returns the linguify error the API put in it — nothing when no answer came
+ */
+const linguifyError = (error: unknown) =>
+	error instanceof Error && isTRPCClientError<AppRouter>(error) ? error.data?.linguify : undefined
+
+/**
  * @param error - what a write threw
  *
  * @returns whether it was refused because the files changed on disk since they were read
  */
-export const isStaleWrite = (error: unknown): boolean =>
-	error instanceof Error &&
-	isTRPCClientError<AppRouter>(error) &&
-	error.data?.linguify.code === errorCodes.staleCatalogue
+export const isStaleWrite = (error: unknown): boolean => linguifyError(error)?.code === errorCodes.staleCatalogue
+
+/**
+ * @param error - what a call threw
+ *
+ * @returns what to tell a person: linguify's own message — or, when no answer came, that it may not have
+ * finished
+ */
+export const errorMessage = (error: unknown): string => linguifyError(error)?.message ?? studioText.writeUnsure

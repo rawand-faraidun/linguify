@@ -11,6 +11,7 @@ export const exportInput = z.strictObject({
 		.describe("csv, tsv, json or xlsx; else the path's extension decides, else `io.format`"),
 	path: z
 		.string()
+		.trim()
 		.min(1)
 		.optional()
 		.describe('Where to write, from the working directory; `translations.<format>` by default')
@@ -26,6 +27,7 @@ export const importInput = z.strictObject({
 		.describe("csv, tsv, json or xlsx; else the path's extension decides, else `io.format`"),
 	path: z
 		.string()
+		.trim()
 		.min(1)
 		.optional()
 		.describe('What to read, from the working directory; `translations.<format>` by default')

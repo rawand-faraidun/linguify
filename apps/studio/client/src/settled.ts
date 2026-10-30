@@ -16,8 +16,3 @@ export const useSettled = (value: string, after: number): string => {
 	}, [value, after])
 	return settled
 }
-
-/**
- * how long typing pauses before what stands in its way is said aloud, in milliseconds
- */
-export const saying = 500

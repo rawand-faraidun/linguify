@@ -1,5 +1,6 @@
 import { type KeyboardEvent, memo, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
+	compositionKeyCode,
 	rowKinds,
 	selectionStates,
 	sortColumns,
@@ -674,7 +675,7 @@ const Editable = ({
 				onFocus={event => event.currentTarget.select()}
 				onChange={event => setDraft(event.target.value)}
 				onKeyDown={event => {
-					const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === imeKeyCode
+					const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
 					if (composing) return
 					if (event.key === 'Enter' && !event.shiftKey) {
 						event.preventDefault()
@@ -695,12 +696,6 @@ const Editable = ({
 		</>
 	)
 }
-
-/**
- * the key code a browser gives a key press that ends a composition — Safari's Enter after an input method
- * commits its text, which must not save
- */
-const imeKeyCode = 229
 
 /**
  * the ids of the words an editable text points to

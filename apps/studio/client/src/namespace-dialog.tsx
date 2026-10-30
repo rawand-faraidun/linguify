@@ -1,5 +1,5 @@
 import { type FormEvent, useRef, useState } from 'react'
-import { keyPathProblemText, namespaceActions, studioText } from '@linguify/constants'
+import { compositionKeyCode, keyPathProblemText, namespaceActions, studioDelays, studioText } from '@linguify/constants'
 import { checkNamespaceName, type NamespaceAction } from '@linguify/table'
 import type { Catalogue, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -16,7 +16,7 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { focusRingClass, inputFocusClass } from './classes'
 import { fill } from './format'
-import { saying, useSettled } from './settled'
+import { useSettled } from './settled'
 import { StaleNotice } from './stale-notice'
 import { isStaleWrite } from './write-errors'
 
@@ -67,7 +67,7 @@ export const NamespaceDialog = ({
 			? [fill(studioText.duplicate, { locales: check.taken.join(studioText.listSeparator) })]
 			: [])
 	]
-	const spoken = useSettled(notes[0] ?? '', saying)
+	const spoken = useSettled(notes[0] ?? '', studioDelays.saying)
 	const submit = async (event: FormEvent) => {
 		event.preventDefault()
 		if (pending) return
@@ -103,7 +103,7 @@ export const NamespaceDialog = ({
 			<DialogContent
 				showCloseButton={false}
 				onEscapeKeyDown={event => {
-					if (event.isComposing || event.keyCode === imeKeyCode) event.preventDefault()
+					if (event.isComposing || event.keyCode === compositionKeyCode) event.preventDefault()
 				}}
 				onCloseAutoFocus={event => {
 					event.preventDefault()
@@ -189,9 +189,3 @@ export const NamespaceDialog = ({
  * the id of what stands in the name's way, which the field points to
  */
 const namespaceNotesId = 'namespace-notes'
-
-/**
- * the key code a browser gives a key press that ends a composition — Safari's Escape as an input method
- * commits its text, which must not close the dialog
- */
-const imeKeyCode = 229

@@ -1,5 +1,13 @@
 import { type FormEvent, useMemo, useRef, useState } from 'react'
-import { exampleKeyPath, keyConflictText, keyPathProblemText, newKeyNotes, studioText } from '@linguify/constants'
+import {
+	compositionKeyCode,
+	exampleKeyPath,
+	keyConflictText,
+	keyPathProblemText,
+	newKeyNotes,
+	studioDelays,
+	studioText
+} from '@linguify/constants'
 import { checkNewKeyForm, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
 import type { Catalogue, KeyPath, Locale } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -8,7 +16,7 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { fieldWidthClass, focusRingClass, inputFocusClass, textWidthClass } from './classes'
 import { fill } from './format'
-import { saying, useSettled } from './settled'
+import { useSettled } from './settled'
 
 /**
  * the id of the form that adds a key, which the button opening it controls
@@ -78,7 +86,7 @@ export const AddKey = ({
 	const pathBlocked = pathNotes.some(stopsAdd)
 	const ready = check.ready && !saving
 	const blocking = shown.find(stopsAdd)
-	const spoken = useSettled(blocking === undefined ? '' : noteText(blocking), saying)
+	const spoken = useSettled(blocking === undefined ? '' : noteText(blocking), studioDelays.saying)
 	const submit = async (event: FormEvent) => {
 		event.preventDefault()
 		if (saving) return
@@ -114,7 +122,7 @@ export const AddKey = ({
 			aria-busy={saving}
 			onSubmit={submit}
 			onKeyDown={event => {
-				const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === imeKeyCode
+				const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
 				if (event.key === 'Escape' && !composing) close()
 			}}
 			className="flex shrink-0 flex-wrap items-start gap-3 border-b p-4"
@@ -267,12 +275,6 @@ const noteText = (note: NewKeyNote): string => {
 			return studioText.defaultRequired
 	}
 }
-
-/**
- * the key code a browser gives a key press that ends a composition — Safari's Escape or Enter as an input
- * method commits its text
- */
-const imeKeyCode = 229
 
 /**
  * the ids of what the form's fields point to

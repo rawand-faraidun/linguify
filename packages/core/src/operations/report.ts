@@ -1,15 +1,4 @@
-import type { changeKinds, warningCodes } from '@linguify/constants'
-import type { Catalogue, KeyPath, Locale, Values } from '@linguify/types'
-
-/**
- * what an operation did to a key
- */
-export type ChangeKind = Values<typeof changeKinds>
-
-/**
- * a code carried by every warning
- */
-export type WarningCode = Values<typeof warningCodes>
+import type { Catalogue, ChangeKind, KeyPath, Locale, WarningCode } from '@linguify/types'
 
 /**
  * one key an operation touched

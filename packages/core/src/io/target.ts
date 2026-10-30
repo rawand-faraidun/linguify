@@ -1,5 +1,5 @@
 import { extname } from 'node:path'
-import { errorCodes, ioFileBaseName, ioFormats } from '@linguify/constants'
+import { errorCodes, ioDefaultPaths, ioFormats } from '@linguify/constants'
 import type { Config, IoFormat } from '@linguify/types'
 import { ValidationError } from '../errors'
 
@@ -44,7 +44,7 @@ export const resolveIoTarget = (
 		)
 	}
 	const resolved = format ?? named ?? io.format
-	return { format: resolved, path: path ?? `${ioFileBaseName}.${resolved}` }
+	return { format: resolved, path: path ?? ioDefaultPaths[resolved] }
 }
 
 /**

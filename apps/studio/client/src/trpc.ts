@@ -2,7 +2,7 @@ import type { AppRouter } from '@linguify/api'
 import { studioRoutes } from '@linguify/constants'
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
-import type { inferRouterOutputs } from '@trpc/server'
+import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createTRPCContext } from '@trpc/tanstack-react-query'
 import { reportWriteError } from './write-errors'
 
@@ -41,3 +41,8 @@ export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>()
  * what each API call answers, as the client receives it
  */
 export type ApiOutputs = inferRouterOutputs<AppRouter>
+
+/**
+ * what each API call takes, as the client sends it
+ */
+export type ApiInputs = inferRouterInputs<AppRouter>

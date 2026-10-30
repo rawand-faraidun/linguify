@@ -53,6 +53,7 @@ import { DeleteKeys } from './delete-keys'
 import { Filters, searchId } from './filters'
 import { countKeys, fill } from './format'
 import { NamespaceDialog } from './namespace-dialog'
+import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
 import { focusTableStop, rowSelector, selectedRow, TranslationTable, translationsId } from './translation-table'
 import type { ApiOutputs } from './trpc'
@@ -351,6 +352,11 @@ export const Workspace = memo(
 						<PlusIcon data-icon="inline-start" />
 						{studioText.addKey}
 					</Button>
+					<ProjectActions
+						defaults={{ removeUnused: config.config.sync.removeUnused, format: config.config.io.format }}
+						cwd={config.cwd}
+						onDone={setSaid}
+					/>
 					{config.namespaced && (
 						<Button
 							ref={addNamespaceButton}

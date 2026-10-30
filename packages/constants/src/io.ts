@@ -64,3 +64,13 @@ export const ioColumns = {
 	key: 'key',
 	description: 'description'
 } as const
+
+/**
+ * the file each table format is written to and read from when none is named — `translations.csv`
+ */
+export const ioDefaultPaths = {
+	[ioFormats.csv]: `${ioFileBaseName}.${ioFormats.csv}`,
+	[ioFormats.tsv]: `${ioFileBaseName}.${ioFormats.tsv}`,
+	[ioFormats.json]: `${ioFileBaseName}.${ioFormats.json}`,
+	[ioFormats.xlsx]: `${ioFileBaseName}.${ioFormats.xlsx}`
+} as const

@@ -1,5 +1,6 @@
 import { appName } from './app'
 import { keyPathProblems, keyPathStates, reservedKeySegments } from './keys'
+import { changeKinds } from './report'
 
 /**
  * the translation table's layouts, shared by the studio and the extension
@@ -249,3 +250,133 @@ export const namespaceActions = {
 	 */
 	rename: 'rename'
 } as const
+
+/**
+ * how many keys of each kind an operation changed, as the studio and the extension say it
+ */
+export const changeKindText = {
+	[changeKinds.added]: '{count} added',
+	[changeKinds.updated]: '{count} updated',
+	[changeKinds.renamed]: '{count} renamed',
+	[changeKinds.removed]: '{count} removed'
+} as const
+
+/**
+ * the whole-project actions the studio offers, besides editing keys
+ */
+export const projectActions = {
+	/**
+	 * every other locale brought in line with the default
+	 */
+	sync: 'sync',
+
+	/**
+	 * every file sorted and laid out
+	 */
+	format: 'format',
+
+	/**
+	 * keys updated and added from a table
+	 */
+	import: 'import',
+
+	/**
+	 * every key written to a table
+	 */
+	export: 'export'
+} as const
+
+/**
+ * what the studio and the extension say of each whole-project action
+ *
+ * @note sync, format and import rewrite files with no undo — the brief asks that this be said plainly
+ */
+export const projectActionText = {
+	[projectActions.sync]: {
+		label: 'Sync…',
+		title: 'Sync the locales',
+		description:
+			"Brings every other locale in line with the default: the keys it has and they lack are added. This can't be undone here; the files' history in git is the way back.",
+		button: 'Sync',
+		pending: 'Syncing…',
+		done: 'Synced: {summary}.'
+	},
+	[projectActions.format]: {
+		label: 'Format…',
+		title: 'Format the files',
+		description:
+			"Sorts the keys and lays out every file as the config says. No text changes. This can't be undone here; the files' history in git is the way back.",
+		button: 'Format',
+		pending: 'Formatting…',
+		done: 'Formatted: {summary}.'
+	},
+	[projectActions.import]: {
+		label: 'Import…',
+		title: 'Import a table',
+		description:
+			"Updates and adds keys from a table. It never removes one, and an empty cell changes nothing. This can't be undone here; the files' history in git is the way back.",
+		button: 'Import',
+		pending: 'Importing…',
+		done: 'Imported: {summary}.'
+	},
+	[projectActions.export]: {
+		label: 'Export…',
+		title: 'Export a table',
+		description:
+			'Writes every key, with its description and every locale, to a table. The translations are not changed.',
+		button: 'Export',
+		pending: 'Exporting…',
+		done: 'Exported {keys} to {path}.'
+	}
+} as const
+
+/**
+ * what a whole-project action's dialog says, beside each action's own words
+ */
+export const actionText = {
+	removeUnused: 'Also remove the keys the default no longer has, and their descriptions',
+	tableFormat: 'Table format',
+	nothingToDo: 'Nothing to change.',
+	writes: 'Writes {files}',
+	removes: 'Removes {files}',
+	files: 'Files',
+	exportPlan: 'Writes {keys} to {path}',
+	fileCount: { one: '{count} file', other: '{count} files' },
+	nameAFile: 'Name a file.',
+	stillWorking: 'Still working out what it will do; press again once it shows.'
+} as const
+
+/**
+ * what a whole-project action's dialog knows of what it would do
+ */
+export const previewStates = {
+	/**
+	 * the dry run is under way
+	 */
+	working: 'working',
+
+	/**
+	 * the dry run was refused, or nothing can be asked of it yet
+	 */
+	failed: 'failed',
+
+	/**
+	 * the dry run's outcome is in
+	 */
+	ready: 'ready'
+} as const
+
+/**
+ * how long the studio waits on a person, in milliseconds: before saying aloud what stands in the way of
+ * what they type, and before working out what an action would do with the options they set
+ */
+export const studioDelays = {
+	saying: 500,
+	preview: 300
+} as const
+
+/**
+ * the key code a browser gives a key press that ends a composition — Safari's Enter or Escape as an input
+ * method commits its text, which must not save, close or submit
+ */
+export const compositionKeyCode = 229

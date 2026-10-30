@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
 import type { KeyPath, Locale, NamespaceName, Revision } from '@linguify/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { trpcClient, useTRPC } from './trpc'
+import { type ApiInputs, trpcClient, useTRPC } from './trpc'
 
 /**
  * the revision of the files the studio last read or wrote — what every write says it expects
@@ -34,10 +34,10 @@ export const useKnownRevision = (revision: Revision) => {
  *
  * @param write - the API call, given the revision to expect
  *
- * @returns the write to make, settled once it is written and the catalogue read again
+ * @returns the write to make, settled with its result once it is written and the catalogue read again
  */
-export const useFileWrite = <Input>(
-	write: (input: Input, expectedRevision: Revision) => Promise<{ revision: Revision }>
+export const useFileWrite = <Input, Result extends { revision: Revision }>(
+	write: (input: Input, expectedRevision: Revision) => Promise<Result>
 ) => {
 	const trpc = useTRPC()
 	const queryClient = useQueryClient()
@@ -103,3 +103,56 @@ export const useRenameNamespace = () =>
 	useFileWrite(({ from, to }: { from: NamespaceName; to: NamespaceName }, expectedRevision: Revision) =>
 		trpcClient.namespace.rename.mutate({ from, to, expectedRevision })
 	)
+
+/**
+ * brings every other locale in line with the default
+ *
+ * @returns the sync to run, settled once it is written and the catalogue read again
+ */
+export const useSync = () =>
+	useFileWrite((input: SyncOptions, expectedRevision: Revision) =>
+		trpcClient.sync.mutate({ ...input, expectedRevision })
+	)
+
+/**
+ * sorts and lays out every file
+ *
+ * @returns the format to run, settled once it is written and the catalogue read again
+ */
+export const useFormat = () =>
+	useFileWrite((_: null, expectedRevision: Revision) => trpcClient.format.mutate({ expectedRevision }))
+
+/**
+ * updates and adds keys from a table
+ *
+ * @returns the import to run, settled once it is written and the catalogue read again
+ */
+export const useImport = () =>
+	useFileWrite((input: TableTarget, expectedRevision: Revision) =>
+		trpcClient.import.mutate({ ...input, expectedRevision })
+	)
+
+/**
+ * writes every key to a table — no translation changes, so outside the files' queue and revision, its
+ * failure reported as any write's
+ *
+ * @returns the export to run, settled once the table is written
+ */
+export const useExport = () => {
+	const mutation = useMutation({
+		mutationFn: (input: TableTarget) => trpcClient.export.mutate(input)
+	})
+	return mutation.mutateAsync
+}
+
+/**
+ * a sync's options, as the dialog sets them — every one given
+ */
+// biome-ignore lint/suspicious/noConfusingVoidType: an optional tRPC input is typed with void, which this strips
+export type SyncOptions = Required<Pick<Exclude<ApiInputs['sync'], undefined | void>, 'removeUnused'>>
+
+/**
+ * the table an import reads or an export writes: its format and file, as the dialogs choose them
+ */
+// biome-ignore lint/suspicious/noConfusingVoidType: an optional tRPC input is typed with void, which this strips
+export type TableTarget = Required<Pick<Exclude<ApiInputs['export'], undefined | void>, 'format' | 'path'>>

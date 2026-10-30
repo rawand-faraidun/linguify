@@ -109,3 +109,8 @@ export const defaultFileFormat = {
 	indentationStyle: 'tab',
 	finalNewline: true
 } as const
+
+/**
+ * what separates a path's parts, on any platform the studio's server may run on
+ */
+export const pathSeparators: readonly string[] = ['/', '\\']

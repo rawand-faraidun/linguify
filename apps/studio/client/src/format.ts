@@ -1,4 +1,4 @@
-import { studioLanguage, studioText } from '@linguify/constants'
+import { actionText, studioLanguage, studioText } from '@linguify/constants'
 
 /**
  * numbers as the studio's language writes them
@@ -35,3 +35,11 @@ export const keysWord = (count: number): string => studioText.keyCount[plural.se
  */
 export const countKeys = (count: number): string =>
 	fill(studioText.keyTotal, { count: numbers.format(count), keys: keysWord(count) })
+
+/**
+ * @param count - how many files
+ *
+ * @returns that many files, in words — `1 file`, `360 files`
+ */
+export const countFiles = (count: number): string =>
+	fill(actionText.fileCount[plural.select(count) === 'one' ? 'one' : 'other'], { count: numbers.format(count) })

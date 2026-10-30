@@ -12,6 +12,7 @@ export const configRouter = router({
 		...ctx.loaded,
 		capabilities: ctx.operation.capabilities,
 		namespaced: ctx.operation.namespaced,
-		namespaceFiles: ctx.operation.namespaceFiles
+		namespaceFiles: ctx.operation.namespaceFiles,
+		cwd: ctx.cwd
 	}))
 })
