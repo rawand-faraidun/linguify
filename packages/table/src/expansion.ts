@@ -1,4 +1,4 @@
-import { rowKinds } from '@linguify/constants'
+import { rowKinds, viewModes } from '@linguify/constants'
 import type { ViewMode } from '@linguify/types'
 import type { TableRow } from './rows'
 import { canExpand } from './table'
@@ -52,6 +52,21 @@ export const sectionsExpansion = (rows: readonly TableRow[]): Expansion => {
 	visit(rows)
 	return { all: false, overrides }
 }
+
+/**
+ * what a search shows, so no match hides in a closed row: every section and group open — and in the
+ * compact view every key too, as a match may be in a locale only an open key shows
+ *
+ * @param expansion - which rows are open
+ * @param rows - the rows the table shows, every level
+ * @param mode - the view mode
+ *
+ * @returns that expansion — keys outside the compact view as they were
+ */
+export const searchExpansion = (expansion: Expansion, rows: readonly TableRow[], mode: ViewMode): Expansion =>
+	mode === viewModes.compact
+		? expandedExpansion
+		: { all: expansion.all, overrides: { ...expansion.overrides, ...sectionsExpansion(rows).overrides } }
 
 /**
  * whether a row is open

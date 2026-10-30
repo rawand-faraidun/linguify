@@ -64,7 +64,8 @@ export const studioRoutes = {
 export const studioAssetsDir = 'studio'
 
 /**
- * the studio's words on screen
+ * the studio's words on screen — a phrase with a value in it names the value in braces, `{count}`, so its
+ * words stay in one place and in their order
  */
 export const studioText = {
 	title: 'Linguify studio',
@@ -79,6 +80,21 @@ export const studioText = {
 	keyCount: { one: 'key', other: 'keys' },
 	translations: 'Translations',
 	noKeys: 'No keys yet.',
+	noMatches: 'No keys match.',
+	search: 'Search keys and text',
+	clearSearch: 'Clear search',
+	namespaces: 'Namespaces',
+	untranslated: 'Untranslated',
+	untranslatedCount: '{count} untranslated',
+	extraCount: '{count} extra',
+	countSeparator: ' · ',
+	listSeparator: ', ',
+	chosen: '{label} ({chosen})',
+	chosenOf: '{count} of {total}',
+	keyTotal: '{count} {keys}',
+	matchCount: '{shown} of {total} {keys}',
+	clearFilters: 'Clear filters',
+	sortHint: 'Sorting orders the view only; the files are not changed.',
 	absent: 'not in this locale',
 	blank: 'blank text',
 	readAt: 'Read from disk at',

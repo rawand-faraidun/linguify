@@ -122,14 +122,28 @@ export const buildFlatRows = (rows: readonly KeyRow[], { namespaced }: RowOption
  *
  * @returns its table row
  */
-const keyRow = ({ key, description, values }: KeyRow, label: string): KeyTableRow => ({
-	kind: rowKinds.key,
-	id: rowId(rowKinds.key, key),
-	key,
-	label,
-	...(description === undefined ? {} : { description }),
-	values
-})
+const keyRow = (row: KeyRow, label: string): KeyTableRow => {
+	const labels = keyRows.get(row) ?? new Map<string, KeyTableRow>()
+	const known = labels.get(label)
+	if (known !== undefined) return known
+	const { key, description, values } = row
+	const built: KeyTableRow = {
+		kind: rowKinds.key,
+		id: rowId(rowKinds.key, key),
+		key,
+		label,
+		...(description === undefined ? {} : { description }),
+		values
+	}
+	keyRows.set(row, labels.set(label, built))
+	return built
+}
+
+/**
+ * each key's table rows by label, kept for as long as the key is — a search, filter or sort that keeps a
+ * key hands the table the same row, so a surface can leave it as it is
+ */
+const keyRows = new WeakMap<KeyRow, Map<string, KeyTableRow>>()
 
 /**
  * builds the tree view: nested keys collapse by path segment, inside a section per namespace

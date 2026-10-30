@@ -1,6 +1,6 @@
-import { sortColumns, sortDirections } from '@linguify/constants'
+import { sortColumns, sortDirections, viewModes } from '@linguify/constants'
 import { compareKeyPaths } from '@linguify/keys'
-import type { KeyRow, Locale, Values } from '@linguify/types'
+import type { KeyRow, Locale, Values, ViewMode } from '@linguify/types'
 
 /**
  * how the table is ordered — on screen only; the files never change
@@ -35,6 +35,44 @@ export const sortKeys = (rows: readonly KeyRow[], { column, direction }: KeySort
 		return sign * collator.compare(left, right)
 	})
 }
+
+/**
+ * what a column's header does when pressed: sort by it ascending, then descending, then not at all
+ *
+ * @param current - how the table is ordered now; nothing when in the files' order
+ * @param column - the column pressed
+ *
+ * @returns the next order — nothing for the files' own
+ */
+export const nextSort = (current: KeySort | undefined, column: KeySort['column']): KeySort | undefined => {
+	if (current === undefined || !sameColumn(current.column, column))
+		return { column, direction: sortDirections.ascending }
+	return current.direction === sortDirections.ascending ? { column, direction: sortDirections.descending } : undefined
+}
+
+/**
+ * whether two columns are the same: both the key, or the same locale
+ *
+ * @param a - a column
+ * @param b - another
+ *
+ * @returns whether they are the same column
+ */
+export const sameColumn = (a: KeySort['column'], b: KeySort['column']): boolean =>
+	a.by === sortColumns.key ? b.by === sortColumns.key : b.by === sortColumns.locale && a.locale === b.locale
+
+/**
+ * whether a view shows a column, so a sort by it can be seen — the compact view shows the key and the
+ * default locale only
+ *
+ * @param column - a column
+ * @param mode - the view mode
+ * @param defaultLocale - the default locale
+ *
+ * @returns whether the view shows it
+ */
+export const columnShown = (column: KeySort['column'], mode: ViewMode, defaultLocale: Locale): boolean =>
+	mode !== viewModes.compact || column.by === sortColumns.key || column.locale === defaultLocale
 
 /**
  * @param locale - a configured locale code

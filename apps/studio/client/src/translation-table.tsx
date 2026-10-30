@@ -1,7 +1,8 @@
 import { memo, type ReactNode, useMemo } from 'react'
 import {
 	rowKinds,
-	studioLanguage,
+	sortColumns,
+	sortDirections,
 	studioText,
 	tableMarkClasses,
 	tableMarkLabels,
@@ -13,20 +14,23 @@ import {
 	cellMark,
 	type Expansion,
 	isExpanded,
+	type KeySort,
 	type KeyTableRow,
 	localeOrder,
 	type TableRow as Row,
 	type RowSource,
 	rowFeatures,
 	rowOptionsFor,
+	sameColumn,
 	toExpandedState
 } from '@linguify/table'
 import type { Locale, TableMark, ViewMode } from '@linguify/types'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
 import { cn } from '@linguify/ui/lib/utils'
 import { tableFeatures, useTable } from '@tanstack/react-table'
-import { ChevronRightIcon } from 'lucide-react'
-import { plainFocusClass } from './classes'
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon } from 'lucide-react'
+import { plainButtonClass } from './classes'
+import { countKeys } from './format'
 
 /**
  * the translation table, read-only: a section per namespace, groups in the tree view, a row per key
@@ -38,29 +42,35 @@ import { plainFocusClass } from './classes'
  *
  * @param props - `rows`, built for `mode`; `source`, the project's locales and whether descriptions are
  * on; `expansion`, which rows are open; `onToggle`, to open or close one by id, which should not change
- * between renders — every row that did not change is then left as it is
+ * between renders — every row that did not change is then left as it is; `sort`, how the rows are ordered,
+ * and `onSort`, a column's header pressed
  *
  * @returns the table
  */
-export const TranslationTable = ({
+export const TranslationTable = memo(function TranslationTable({
 	rows,
 	mode,
 	source,
 	expansion,
-	onToggle
+	onToggle,
+	sort,
+	onSort
 }: {
 	rows: Row[]
 	mode: ViewMode
 	source: RowSource
 	expansion: Expansion
 	onToggle: (id: string) => void
-}) => {
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
+}) {
+	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
 		columns: [],
 		data: rows,
 		...rowOptionsFor(mode),
-		state: { expanded: toExpandedState(expansion, rows, mode) }
+		state: { expanded }
 	})
 	const compact = mode === viewModes.compact
 	const descriptions = source.descriptions && !compact
@@ -68,61 +78,110 @@ export const TranslationTable = ({
 	const shown = useMemo(() => (compact ? locales.slice(0, 1) : locales), [compact, locales])
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
-		<table id="translations" aria-label={studioText.translations} className="w-full caption-bottom text-xs">
-			<TableHeader className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
-				<TableRow>
-					<TableHead>{studioText.key}</TableHead>
-					{descriptions && <TableHead>{studioText.description}</TableHead>}
-					{shown.map(locale => (
-						<TableHead key={locale}>
-							{locale}
-							{locale === source.default && (
-								<>
-									{' '}
-									<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
-								</>
-							)}
-						</TableHead>
-					))}
-				</TableRow>
-			</TableHeader>
-			<TableBody>
-				{table
-					.getRowModel()
-					.rows.map(({ id, depth, original }) =>
-						original.kind === rowKinds.key ? (
-							<KeyLine
-								key={id}
-								row={original}
-								depth={depth}
-								locales={locales}
-								shown={shown}
-								defaultLocale={source.default}
-								descriptions={source.descriptions}
-								compact={compact}
-								open={compact && isExpanded(expansion, id)}
-								onToggle={onToggle}
-							/>
-						) : (
-							<GroupLine
-								key={id}
-								row={original}
-								depth={depth}
-								columns={columns}
-								open={canExpand(mode, original) && isExpanded(expansion, id)}
-								onToggle={onToggle}
-							/>
-						)
-					)}
-			</TableBody>
-		</table>
+		<>
+			<span id={sortHintId} hidden>
+				{studioText.sortHint}
+			</span>
+			<table id="translations" aria-label={studioText.translations} className="w-full caption-bottom text-xs">
+				<TableHeader className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
+					<TableRow>
+						<SortableHead column={{ by: sortColumns.key }} sort={sort} onSort={onSort}>
+							{studioText.key}
+						</SortableHead>
+						{descriptions && <TableHead>{studioText.description}</TableHead>}
+						{shown.map(locale => (
+							<SortableHead key={locale} column={{ by: sortColumns.locale, locale }} sort={sort} onSort={onSort}>
+								{locale}
+								{locale === source.default && (
+									<>
+										{' '}
+										<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
+									</>
+								)}
+							</SortableHead>
+						))}
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{table
+						.getRowModel()
+						.rows.map(({ id, depth, original }) =>
+							original.kind === rowKinds.key ? (
+								<KeyLine
+									key={id}
+									row={original}
+									depth={depth}
+									locales={locales}
+									shown={shown}
+									defaultLocale={source.default}
+									descriptions={source.descriptions}
+									compact={compact}
+									open={compact && isExpanded(expansion, id)}
+									onToggle={onToggle}
+								/>
+							) : (
+								<GroupLine
+									key={id}
+									row={original}
+									depth={depth}
+									columns={columns}
+									open={canExpand(mode, original) && isExpanded(expansion, id)}
+									onToggle={onToggle}
+								/>
+							)
+						)}
+				</TableBody>
+			</table>
+		</>
+	)
+})
+
+/**
+ * a column's header that orders the table by it when pressed — on screen only
+ *
+ * @note the button is named by the header's own words, and described by what sorting does; `aria-sort`
+ * is on the sorted header only
+ */
+const SortableHead = ({
+	column,
+	sort,
+	onSort,
+	children
+}: {
+	column: KeySort['column']
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
+	children: ReactNode
+}) => {
+	const direction = sort !== undefined && sameColumn(sort.column, column) ? sort.direction : undefined
+	const Icon = direction === undefined ? ArrowUpDownIcon : sortIcons[direction]
+	return (
+		<TableHead aria-sort={direction}>
+			<button
+				type="button"
+				aria-describedby={sortHintId}
+				onClick={() => onSort(column)}
+				className={cn('items-center', plainButtonClass)}
+			>
+				<span>{children}</span>
+				<Icon className={cn('size-3.5 shrink-0', direction === undefined && 'text-muted-foreground')} />
+			</button>
+		</TableHead>
 	)
 }
 
 /**
- * counts in the studio's language — one key, two keys
+ * the arrow a sorted column's header shows
  */
-const plural = new Intl.PluralRules(studioLanguage)
+const sortIcons = {
+	[sortDirections.ascending]: ArrowUpIcon,
+	[sortDirections.descending]: ArrowDownIcon
+}
+
+/**
+ * the id of the words every sortable header points to: what sorting does, and does not
+ */
+const sortHintId = 'sort-hint'
 
 /**
  * @param depth - how deep a row sits
@@ -135,12 +194,7 @@ const indent = (depth: number) => `calc(var(--spacing) * ${2 + depth * 4})`
  * a button that opens and closes a row, its chevron turning with it
  */
 const Disclosure = ({ open, onToggle, children }: { open: boolean; onToggle: () => void; children: ReactNode }) => (
-	<button
-		type="button"
-		aria-expanded={open}
-		onClick={onToggle}
-		className={cn('inline-flex items-start gap-1 text-start', plainFocusClass)}
-	>
+	<button type="button" aria-expanded={open} onClick={onToggle} className={cn('items-start', plainButtonClass)}>
 		<ChevronRightIcon className="mt-px size-3.5 shrink-0 in-aria-expanded:rotate-90 transition-transform" />
 		{children}
 	</button>
@@ -175,9 +229,7 @@ const GroupLine = memo(
 					<span className={cn(row.kind === rowKinds.section && 'font-semibold')}>
 						{row.kind === rowKinds.section ? row.namespace : row.label}
 					</span>
-					<span className="text-muted-foreground">
-						{row.keys} {studioText.keyCount[plural.select(row.keys) === 'one' ? 'one' : 'other']}
-					</span>
+					<span className="text-muted-foreground">{countKeys(row.keys)}</span>
 				</Disclosure>
 			</TableHead>
 		</TableRow>

@@ -12,7 +12,7 @@ import { ThemeSwitch } from './theme-switch'
 export const Toolbar = ({ children }: { children?: ReactNode }) => (
 	<header className="flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-2">
 		<h1 className="me-2 font-semibold text-sm">{studioText.title}</h1>
-		{children}
+		<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">{children}</div>
 		<div className="ms-auto flex items-center gap-2">
 			<ThemeSwitch />
 		</div>

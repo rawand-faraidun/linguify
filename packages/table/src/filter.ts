@@ -1,27 +1,51 @@
-import { tableMarks } from '@linguify/constants'
+import { searchFolds, searchIgnored, tableMarks } from '@linguify/constants'
 import { splitNamespace } from '@linguify/keys'
 import type { KeyRow, Locale, NamespaceName, TableMark } from '@linguify/types'
 
 /**
- * what the table is narrowed to; every part left out lets every key through
+ * what the table is narrowed to
  */
 export type KeyFilter = {
 	/**
-	 * text to find in a key path, a description or any locale's text, in any letter case
+	 * text to find in a key path, a description or any locale's text, in any letter case; empty finds
+	 * every key
 	 */
-	search?: string
+	search: string
 
 	/**
 	 * keep only keys still to translate in one of these locales — missing or empty there while the
-	 * default has them
+	 * default has them; none keeps every key
 	 */
-	untranslatedIn?: readonly Locale[]
+	untranslatedIn: readonly Locale[]
 
 	/**
-	 * keep only keys in these namespaces
+	 * keep only keys in these namespaces; nothing keeps every namespace
 	 */
-	namespaces?: readonly NamespaceName[]
+	namespaces: readonly NamespaceName[] | undefined
 }
+
+/**
+ * nothing narrowed
+ */
+export const noFilter: KeyFilter = { search: '', untranslatedIn: [], namespaces: undefined }
+
+/**
+ * @param filter - what the table is narrowed to
+ *
+ * @returns whether anything is narrowed
+ */
+export const isFiltered = (filter: KeyFilter): boolean => revealsMatches(filter) || filter.namespaces !== undefined
+
+/**
+ * whether the filter looks inside keys — a search, or the still-to-translate filter — so every match must
+ * be shown, wherever a closed section or key would hide it
+ *
+ * @param filter - what the table is narrowed to
+ *
+ * @returns whether a search or the still-to-translate filter is on
+ */
+export const revealsMatches = ({ search, untranslatedIn }: KeyFilter): boolean =>
+	fold(search) !== '' || untranslatedIn.length > 0
 
 /**
  * how far one locale is from the default — exactly what `diff` reports for it
@@ -86,6 +110,13 @@ export const cellMark = (row: KeyRow, locale: Locale, defaultLocale: Locale): Ta
 }
 
 /**
+ * @param counts - one locale's counts
+ *
+ * @returns how many of its keys are still to translate: missing or empty
+ */
+export const toTranslate = ({ missing, empty }: LocaleCounts): number => missing + empty
+
+/**
  * counts, per locale, the keys still to translate, and the keys the default no longer has
  *
  * @note counted over every key, never the filtered ones — the counters say how much is left to
@@ -119,23 +150,71 @@ export const countUntranslated = (
 /**
  * narrows the keys to what the filter lets through
  *
+ * @note the search folds letter case, compatibility forms, and the Arabic letters an Arabic keyboard types
+ * for Kurdish Sorani's own, and ignores joiners and tatweel — in the text and in what is typed
+ *
  * @param rows - every key
- * @param filter - the search, the locales still to translate in, the namespaces
+ * @param filter - the search, the locales still to translate in, the namespaces; a part left out lets
+ * every key through
  * @param defaultLocale - the locale every other is compared against
  *
  * @returns the keys every part of the filter lets through, in their order
  */
-export const filterKeys = (rows: readonly KeyRow[], filter: KeyFilter, defaultLocale: Locale): KeyRow[] => {
-	const needle = filter.search?.trim().toLowerCase() ?? ''
+export const filterKeys = (rows: readonly KeyRow[], filter: Partial<KeyFilter>, defaultLocale: Locale): KeyRow[] => {
+	const needle = fold(filter.search ?? '')
 	const namespaces = filter.namespaces === undefined ? undefined : new Set(filter.namespaces)
 	const untranslated = filter.untranslatedIn ?? []
 	return rows.filter(
 		row =>
-			(needle === '' ||
-				row.key.toLowerCase().includes(needle) ||
-				(row.description ?? '').toLowerCase().includes(needle) ||
-				Object.values(row.values).some(text => text.toLowerCase().includes(needle))) &&
+			(needle === '' || searchable(row).includes(needle)) &&
 			(namespaces === undefined || namespaces.has(splitNamespace(row.key).namespace)) &&
 			(untranslated.length === 0 || untranslated.some(locale => isUntranslated(row, locale, defaultLocale)))
 	)
 }
+
+/**
+ * @param text - a search, or text to search in
+ *
+ * @returns it as a search compares it: trimmed, folded, lower case
+ */
+const fold = (text: string): string => {
+	let folded = text.normalize('NFKC').toLowerCase()
+	for (const ignored of searchIgnored) folded = folded.replaceAll(ignored, '')
+	for (const [from, to] of Object.entries(searchFolds)) folded = folded.replaceAll(from, to)
+	return folded.trim()
+}
+
+/**
+ * each key's text as a search reads it, folded once and kept for as long as the key is
+ */
+const searchTexts = new WeakMap<KeyRow, string>()
+
+/**
+ * between a key's texts in what a search reads, so no match runs from one into the next — nothing typed
+ * contains it
+ */
+const textSeparator = '\u0000'
+
+/**
+ * @param row - one key
+ *
+ * @returns its path, description and every locale's text, folded, in one string
+ */
+const searchable = (row: KeyRow): string => {
+	const known = searchTexts.get(row)
+	if (known !== undefined) return known
+	const text = fold([row.key, row.description ?? '', ...Object.values(row.values)].join(textSeparator))
+	searchTexts.set(row, text)
+	return text
+}
+
+/**
+ * the namespaces the keys are in
+ *
+ * @param rows - every key
+ *
+ * @returns each namespace once, in the order its first key comes
+ */
+export const namespacesOf = (rows: readonly KeyRow[]): NamespaceName[] => [
+	...new Set(rows.map(row => splitNamespace(row.key).namespace))
+]

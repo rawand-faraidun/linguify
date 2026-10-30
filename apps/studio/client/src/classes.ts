@@ -18,3 +18,20 @@ export const plainFocusClass =
  * `aria-checked` and `data-state`, since a tooltip trigger sets its own `data-state` over the toggle's
  */
 export const switchItemClass = `${focusRingClass} aria-checked:bg-primary aria-checked:text-primary-foreground aria-checked:hover:bg-primary/90 aria-checked:hover:text-primary-foreground data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90`
+
+/**
+ * a plain button laid out as the table's: its icon beside its words, which start where text starts
+ */
+export const plainButtonClass = `inline-flex gap-1 text-start ${plainFocusClass}`
+
+/**
+ * an item of a menu the keyboard is on, filled like a pressed switch — the menus' own shade is too faint
+ * to follow
+ */
+export const menuItemClass = 'focus:bg-primary focus:text-primary-foreground focus:**:text-primary-foreground'
+
+/**
+ * a field's group whose field the keyboard is in: ringed as strongly as every other control
+ */
+export const fieldFocusClass =
+	'has-[[data-slot=input-group-control]:focus-visible]:ring-2 has-[[data-slot=input-group-control]:focus-visible]:ring-ring'

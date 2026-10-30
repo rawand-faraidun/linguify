@@ -162,3 +162,22 @@ export const storageKeys = {
 	theme: `${appName}:theme`,
 	viewMode: `${appName}:view-mode`
 } as const
+
+/**
+ * letters a search treats as one: each Arabic letter an Arabic keyboard types in place of Kurdish
+ * Sorani's own — kaf for keheh, yeh and alef maksura for Farsi yeh — so a search typed on either finds the
+ * text
+ *
+ * @note heh and Kurdish Sorani's ae stay apart: they are different letters
+ */
+export const searchFolds: Readonly<Record<string, string>> = {
+	'\u0643': '\u06a9',
+	'\u064a': '\u06cc',
+	'\u0649': '\u06cc'
+}
+
+/**
+ * characters a search ignores: the zero-width non-joiner and the tatweel, which shape text without
+ * changing what it says
+ */
+export const searchIgnored: readonly string[] = ['\u200c', '\u0640']
