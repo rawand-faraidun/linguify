@@ -2,7 +2,7 @@
 name: conventions-reviewer
 description: Checks a change against the owner's conventions for this repo — constants in @linguify/constants, TSDoc on every export, kebab-case files, package.json arrangement, the catalog rule, configs without commentary, browser-safe packages, locale examples, no inline casts or literals. Use before every commit. Read-only.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
 
 You keep the codebase consistent with how its owner wants it. Read the memory files under `/Users/rawand/.claude/projects/-Volumes-Workspace-Web-linguify/memory/` and `media/plan.md` §3–§6.

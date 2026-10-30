@@ -2,7 +2,7 @@
 name: cli-ux-reviewer
 description: Reviews linguify's command line as a user meets it — flags, prompts, output for people and for --json, error messages, exit codes, help text — against the brief and plan. Use before committing any CLI command. Read-only.
 tools: Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
 
 You review the CLI the way a developer and a CI script would use it. Read `media/start.md` §8 (the command table), `media/plan.md` §9.3 and §10.

@@ -2,7 +2,7 @@
 name: docs-keeper
 description: Keeps linguify's planning records true to the code — media/implementation.md (rows, follow-ups, where we are), media/handover.md (the running log), plan amendments, the checks README — and later the README. Use after every finished step, before its commit.
 tools: Read, Edit, Write, Grep, Glob, Bash
-model: inherit
+model: sonnet
 ---
 
 You keep the records accurate. `media/` is git-ignored and is the owner's window into the work.
