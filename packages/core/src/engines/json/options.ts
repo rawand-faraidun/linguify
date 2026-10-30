@@ -66,3 +66,13 @@ export const isJsonNamespaced = (options: EngineOptions): boolean => {
 	const { fileStructure, namespaces } = jsonOptions.parse(options)
 	return fileStructure === fileStructures.multi || namespaces
 }
+
+/**
+ * whether a JSON project writes each namespace to a file of its own
+ *
+ * @param options - the JSON engine's options
+ *
+ * @returns `true` in multi-file
+ */
+export const isJsonNamespaceFiles = (options: EngineOptions): boolean =>
+	jsonOptions.parse(options).fileStructure === fileStructures.multi

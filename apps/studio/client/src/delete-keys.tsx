@@ -14,6 +14,8 @@ import {
 import { cn } from '@linguify/ui/lib/utils'
 import { destructiveClass, focusRingClass } from './classes'
 import { countKeys, fill, numbers } from './format'
+import { StaleNotice } from './stale-notice'
+import { isStaleWrite } from './write-errors'
 
 /**
  * asks before a bulk delete: how many keys, which, from which locales — and how many of them the filter
@@ -21,8 +23,9 @@ import { countKeys, fill, numbers } from './format'
  *
  * @note it holds still while the keys are written away: Delete pressed again does nothing, and Cancel and
  * Escape wait, so nothing is deleted after a person cancelled. A failure leaves it open, where it was
- * asked. On closing, the keyboard goes where `onCancelled` or `onDeleted` puts it — Radix gives it back
- * only to a trigger of its own
+ * asked; refused because the files changed on disk, it says so with its own Refresh. On closing, the
+ * keyboard goes where `onCancelled` or `onDeleted` puts it — Radix gives it back only to a trigger of its
+ * own
  *
  * @note the list is one stop for Tab, so the keyboard can scroll it, and shows the first {@link listed}
  * paths — the title says how many there are
@@ -53,6 +56,8 @@ export const DeleteKeys = ({
 	onCancelled: () => void
 }) => {
 	const [pending, setPending] = useState(false)
+	const [stale, setStale] = useState(false)
+	const deleteAction = useRef<HTMLButtonElement>(null)
 	const done = useRef(false)
 	return (
 		<AlertDialog
@@ -96,11 +101,21 @@ export const DeleteKeys = ({
 						</li>
 					)}
 				</ul>
+				{stale && (
+					<StaleNotice
+						onRefreshed={() => {
+							// the notice goes, and the keyboard with it: back on Delete, to delete what is selected now
+							setStale(false)
+							deleteAction.current?.focus()
+						}}
+					/>
+				)}
 				<AlertDialogFooter>
 					<AlertDialogCancel className={focusRingClass} aria-disabled={pending}>
 						{studioText.cancel}
 					</AlertDialogCancel>
 					<AlertDialogAction
+						ref={deleteAction}
 						variant="destructive"
 						className={cn(destructiveClass, focusRingClass)}
 						aria-disabled={pending}
@@ -108,13 +123,17 @@ export const DeleteKeys = ({
 							event.preventDefault()
 							if (pending) return
 							setPending(true)
+							setStale(false)
 							void onDelete().then(
 								() => {
 									setPending(false)
 									done.current = true
 									onOpenChange(false)
 								},
-								() => setPending(false)
+								error => {
+									setStale(isStaleWrite(error))
+									setPending(false)
+								}
 							)
 						}}
 					>

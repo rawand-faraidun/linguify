@@ -36,3 +36,13 @@ export const reportWriteError = (error: Error, refresh: () => void) => {
 		action: { label: studioText.refresh, onClick: refresh }
 	})
 }
+
+/**
+ * @param error - what a write threw
+ *
+ * @returns whether it was refused because the files changed on disk since they were read
+ */
+export const isStaleWrite = (error: unknown): boolean =>
+	error instanceof Error &&
+	isTRPCClientError<AppRouter>(error) &&
+	error.data?.linguify.code === errorCodes.staleCatalogue

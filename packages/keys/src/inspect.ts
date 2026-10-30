@@ -79,4 +79,32 @@ export const findConflicts = (catalogue: Catalogue, path: KeyPath): KeyConflict[
  * @returns whether some locale has it
  */
 export const hasNamespace = (catalogue: Catalogue, namespace: NamespaceName): boolean =>
-	Object.values(catalogue.locales).some(tree => Object.hasOwn(tree, namespace))
+	namespaceHolders(catalogue, namespace).length > 0
+
+/**
+ * the locales that have a namespace, empty or not
+ *
+ * @param catalogue - every locale's tree
+ * @param namespace - a namespace name
+ * @param locales - the locales to look in, in the order to give them; every locale the catalogue holds
+ * when left out
+ *
+ * @returns those that have it
+ */
+export const namespaceHolders = (
+	catalogue: Catalogue,
+	namespace: NamespaceName,
+	locales: readonly Locale[] = Object.keys(catalogue.locales)
+): Locale[] => locales.filter(locale => Object.hasOwn(catalogue.locales[locale] ?? {}, namespace))
+
+/**
+ * the namespaces there are: every locale's top level, empty ones included, in the order the locales and
+ * their trees give them
+ *
+ * @param catalogue - every locale's tree
+ *
+ * @returns each namespace once
+ */
+export const namespacesIn = (catalogue: Catalogue): NamespaceName[] => [
+	...new Set(Object.values(catalogue.locales).flatMap(tree => Object.keys(tree)))
+]

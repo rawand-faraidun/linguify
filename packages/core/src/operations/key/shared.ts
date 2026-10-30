@@ -1,5 +1,5 @@
-import { errorCodes, keyPathStates, keySeparator } from '@linguify/constants'
-import { joinKeyPath, readNode, setNode, splitKeyPath } from '@linguify/keys'
+import { errorCodes, keyPathStates } from '@linguify/constants'
+import { isWithin, joinKeyPath, movePath, readNode, setNode, splitKeyPath } from '@linguify/keys'
 import type { Descriptions, KeyConflict, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, ValidationError } from '../../errors'
 import type { OperationContext } from '../context'
@@ -68,15 +68,6 @@ export const notAssignable = (path: KeyPath, [first, ...rest]: [KeyConflict, ...
 }
 
 /**
- * @param key - a key path
- * @param path - another key path
- *
- * @returns whether `key` is `path` itself or a key nested under it
- */
-export const isWithin = (key: KeyPath, path: KeyPath): boolean =>
-	key === path || key.startsWith(`${path}${keySeparator}`)
-
-/**
  * moves the descriptions of a key and of every key nested under it to a new path
  *
  * @note each description keeps its place in the file
@@ -90,9 +81,7 @@ export const isWithin = (key: KeyPath, path: KeyPath): boolean =>
 export const moveDescriptions = (descriptions: Descriptions, from: KeyPath, to: KeyPath): Descriptions => {
 	const entries = Object.entries(descriptions)
 	if (!entries.some(([key]) => isWithin(key, from))) return descriptions
-	return Object.fromEntries(
-		entries.map(([key, text]) => [isWithin(key, from) ? `${to}${key.slice(from.length)}` : key, text])
-	)
+	return Object.fromEntries(entries.map(([key, text]) => [movePath(key, from, to), text]))
 }
 
 /**

@@ -75,6 +75,11 @@ export type RowOptions = {
 	 * the project groups its keys in namespaces — each the first segment of a key path
 	 */
 	namespaced: boolean
+
+	/**
+	 * namespaces to show a section for though no key in the rows is in them — one just added, one emptied
+	 */
+	emptyNamespaces?: readonly NamespaceName[]
 }
 
 /**
@@ -98,7 +103,10 @@ export const rowId = (kind: TableRow['kind'], path: string): string => `${kind}$
  *
  * @returns the sections, each holding its keys — or, without namespaces, the keys themselves
  */
-export const buildFlatRows = (rows: readonly KeyRow[], { namespaced }: RowOptions): TableRow[] => {
+export const buildFlatRows = (
+	rows: readonly KeyRow[],
+	{ namespaced, emptyNamespaces = [] }: RowOptions
+): TableRow[] => {
 	if (!namespaced) return rows.map(row => keyRow(row, row.key))
 	const sections = new Map<NamespaceName, KeyTableRow[]>()
 	for (const row of rows) {
@@ -107,14 +115,40 @@ export const buildFlatRows = (rows: readonly KeyRow[], { namespaced }: RowOption
 		keys.push(keyRow(row, key))
 		sections.set(namespace, keys)
 	}
-	return [...sections].map(([namespace, keys]) => ({
-		kind: rowKinds.section,
-		id: rowId(rowKinds.section, namespace),
-		namespace,
-		keys: keys.length,
-		subRows: keys
-	}))
+	return withEmptySections(
+		[...sections].map(([namespace, keys]) => sectionRow(namespace, keys.length, keys)),
+		emptyNamespaces
+	)
 }
+
+/**
+ * @param sections - the sections the keys gave
+ * @param namespaces - namespaces to show though no key is in them
+ *
+ * @returns the sections, then an empty one for each of those namespaces not among them, in their order
+ */
+const withEmptySections = (sections: TableRow[], namespaces: readonly NamespaceName[]): TableRow[] => {
+	const shown = new Set(sections.flatMap(section => (section.kind === rowKinds.section ? [section.namespace] : [])))
+	return [
+		...sections,
+		...namespaces.filter(namespace => !shown.has(namespace)).map(namespace => sectionRow(namespace, 0, []))
+	]
+}
+
+/**
+ * @param namespace - a namespace
+ * @param keys - how many keys it holds, at any depth
+ * @param subRows - its rows
+ *
+ * @returns its section
+ */
+const sectionRow = (namespace: NamespaceName, keys: number, subRows: TableRow[]): SectionRow => ({
+	kind: rowKinds.section,
+	id: rowId(rowKinds.section, namespace),
+	namespace,
+	keys,
+	subRows
+})
 
 /**
  * @param row - one key, as `list keys` gives it
@@ -157,7 +191,10 @@ const keyRows = new WeakMap<KeyRow, Map<string, KeyTableRow>>()
  *
  * @returns the sections, each holding its groups and keys — or, without namespaces, the top level
  */
-export const buildTreeRows = (rows: readonly KeyRow[], { namespaced }: RowOptions): TableRow[] => {
+export const buildTreeRows = (
+	rows: readonly KeyRow[],
+	{ namespaced, emptyNamespaces = [] }: RowOptions
+): TableRow[] => {
 	const root: Branch = new Map()
 	for (const row of rows) {
 		const segments = splitKeyPath(row.key)
@@ -174,16 +211,9 @@ export const buildTreeRows = (rows: readonly KeyRow[], { namespaced }: RowOption
 	}
 	const top = toRows(root)
 	if (!namespaced) return top
-	return top.map(row =>
-		row.kind === rowKinds.group
-			? {
-					kind: rowKinds.section,
-					id: rowId(rowKinds.section, row.path),
-					namespace: row.path,
-					keys: row.keys,
-					subRows: row.subRows
-				}
-			: row
+	return withEmptySections(
+		top.map(row => (row.kind === rowKinds.group ? sectionRow(row.path, row.keys, row.subRows) : row)),
+		emptyNamespaces
 	)
 }
 

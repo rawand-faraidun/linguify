@@ -223,6 +223,9 @@ importers:
       '@linguify/constants':
         specifier: workspace:*
         version: link:../../../packages/constants
+      '@linguify/keys':
+        specifier: workspace:*
+        version: link:../../../packages/keys
       '@linguify/table':
         specifier: workspace:*
         version: link:../../../packages/table

@@ -1,4 +1,4 @@
-import { keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
+import { fileNamePattern, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
 import type { KeyPath, KeyPathProblem, NamespaceName } from '@linguify/types'
 
 /**
@@ -37,6 +37,17 @@ export const findKeyPathProblem = (path: KeyPath): KeyPathProblem | undefined =>
 }
 
 /**
+ * says why a name cannot be a namespace — a key path's rules, and no separator, as the first one parts the
+ * namespace from the key
+ *
+ * @param name - a namespace name
+ *
+ * @returns the problem, or `undefined` when the name is usable
+ */
+export const findNamespaceNameProblem = (name: NamespaceName): KeyPathProblem | undefined =>
+	findKeyPathProblem(name) ?? (splitKeyPath(name).length > 1 ? keyPathProblems.separator : undefined)
+
+/**
  * says why a key path cannot name a translation in a project — {@link findKeyPathProblem}'s rules, and the
  * project's own
  *
@@ -70,4 +81,53 @@ export const findProjectKeyPathProblem = (
 export const splitNamespace = (path: KeyPath): { namespace: NamespaceName; key: KeyPath } => {
 	const [namespace = '', ...rest] = splitKeyPath(path)
 	return { namespace, key: joinKeyPath(rest) }
+}
+
+/**
+ * @param key - a key path
+ * @param path - another key path
+ *
+ * @returns whether `key` is `path` itself or a key nested under it
+ */
+export const isWithin = (key: KeyPath, path: KeyPath): boolean =>
+	key === path || key.startsWith(`${path}${keySeparator}`)
+
+/**
+ * where a key path is after the key or group at `from` moves to `to` — a key rename, or a namespace's
+ *
+ * @param path - a key path
+ * @param from - the path moved
+ * @param to - where it moved to
+ *
+ * @returns the path under `to` when it was within `from`, else the path itself
+ */
+export const movePath = (path: KeyPath, from: KeyPath, to: KeyPath): KeyPath =>
+	isWithin(path, from) ? `${to}${path.slice(from.length)}` : path
+
+/**
+ * the namespace another would share a file with on a case-insensitive disk, where each namespace is a file
+ *
+ * @param name - a namespace name
+ * @param others - the other namespaces
+ *
+ * @returns the one that differs from it only in case, if any
+ */
+export const fileClash = (name: NamespaceName, others: readonly NamespaceName[]): NamespaceName | undefined =>
+	others.find(other => other !== name && other.toLowerCase() === name.toLowerCase())
+
+/**
+ * says why a name cannot be a namespace where each namespace is a file of its own — a path separator, `.`
+ * or `..`, or another namespace differing from it only in case
+ *
+ * @param name - a namespace name, usable as a namespace
+ * @param others - the other namespaces
+ *
+ * @returns the problem, or `undefined` when the name can be a file
+ */
+export const findNamespaceFileProblem = (
+	name: NamespaceName,
+	others: readonly NamespaceName[]
+): KeyPathProblem | undefined => {
+	if (!fileNamePattern.test(name)) return keyPathProblems.fileName
+	return fileClash(name, others) === undefined ? undefined : keyPathProblems.caseClash
 }

@@ -1,4 +1,5 @@
 import { errorCodes } from '@linguify/constants'
+import { namespaceHolders } from '@linguify/keys'
 import type { Catalogue, Locale, NamespaceName } from '@linguify/types'
 import { NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
@@ -14,7 +15,7 @@ export const findNamespaceHolders = (
 	{ config }: OperationContext,
 	catalogue: Catalogue,
 	name: NamespaceName
-): Locale[] => config.locales.filter(locale => Object.hasOwn(catalogue.locales[locale] ?? {}, name))
+): Locale[] => namespaceHolders(catalogue, name, config.locales)
 
 /**
  * @param name - the namespace no locale has

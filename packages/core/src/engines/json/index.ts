@@ -1,6 +1,6 @@
 import { fileStructures } from '@linguify/constants'
 import { registerEngine } from '../../engine'
-import { isJsonNamespaced, jsonOptions } from './options'
+import { isJsonNamespaced, isJsonNamespaceFiles, jsonOptions } from './options'
 import { readJson } from './read'
 import { serializeJson } from './serialize'
 
@@ -18,6 +18,7 @@ registerEngine({
 	},
 	options: jsonOptions,
 	namespaced: isJsonNamespaced,
+	namespaceFiles: isJsonNamespaceFiles,
 	read: readJson,
 	serialize: serializeJson
 })

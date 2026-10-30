@@ -1,11 +1,11 @@
 import { changeKinds, errorCodes, keyPathStates } from '@linguify/constants'
-import { hasNamespace, inspectKeyPath, readNode, removeNode, setNode, splitNamespace } from '@linguify/keys'
+import { hasNamespace, inspectKeyPath, isWithin, readNode, removeNode, setNode, splitNamespace } from '@linguify/keys'
 import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
 import { requireKeyPath } from '../guards'
 import type { OperationResult } from '../report'
-import { invalid, isWithin, moveDescriptions, notAssignable, parentOf, renameInPlace } from './shared'
+import { invalid, moveDescriptions, notAssignable, parentOf, renameInPlace } from './shared'
 
 /**
  * `key rename`'s input — moves the key in every locale, description included, across namespaces

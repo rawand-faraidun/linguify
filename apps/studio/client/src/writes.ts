@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
-import type { KeyPath, Locale, Revision } from '@linguify/types'
+import type { KeyPath, Locale, NamespaceName, Revision } from '@linguify/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { trpcClient, useTRPC } from './trpc'
 
@@ -82,4 +82,24 @@ export const useAddKey = (defaultLocale: Locale) =>
 export const useRemoveKeys = () =>
 	useFileWrite((paths: KeyPath[], expectedRevision: Revision) =>
 		trpcClient.key.remove.mutate({ paths, expectedRevision })
+	)
+
+/**
+ * adds an empty namespace to every locale
+ *
+ * @returns the namespace to add, settled once it is written and the catalogue read again
+ */
+export const useAddNamespace = () =>
+	useFileWrite((name: NamespaceName, expectedRevision: Revision) =>
+		trpcClient.namespace.add.mutate({ name, expectedRevision })
+	)
+
+/**
+ * renames a namespace in every locale, its keys and descriptions moving with it
+ *
+ * @returns the rename to make, settled once it is written and the catalogue read again
+ */
+export const useRenameNamespace = () =>
+	useFileWrite(({ from, to }: { from: NamespaceName; to: NamespaceName }, expectedRevision: Revision) =>
+		trpcClient.namespace.rename.mutate({ from, to, expectedRevision })
 	)

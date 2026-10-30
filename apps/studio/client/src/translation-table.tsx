@@ -30,13 +30,13 @@ import {
 	shownState,
 	toExpandedState
 } from '@linguify/table'
-import type { Locale, TableMark, ViewMode } from '@linguify/types'
+import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
 import { Textarea } from '@linguify/ui/components/textarea'
 import { cn } from '@linguify/ui/lib/utils'
 import { tableFeatures, useTable } from '@tanstack/react-table'
-import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon } from 'lucide-react'
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { checkboxClass, plainButtonClass, plainFocusClass, textWidthClass } from './classes'
 import { countKeys, fill } from './format'
 
@@ -69,7 +69,8 @@ export const TranslationTable = memo(function TranslationTable({
 	onEdit,
 	selection,
 	onSelect,
-	onSelectAll
+	onSelectAll,
+	onRename
 }: {
 	rows: Row[]
 	mode: ViewMode
@@ -82,6 +83,7 @@ export const TranslationTable = memo(function TranslationTable({
 	selection: Selection
 	onSelect: (row: Row) => void
 	onSelectAll: () => void
+	onRename: (namespace: NamespaceName) => void
 }) {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -178,6 +180,7 @@ export const TranslationTable = memo(function TranslationTable({
 									onToggle={onToggle}
 									state={selectionState(selection, original)}
 									onSelect={onSelect}
+									onRename={onRename}
 								/>
 							)
 						)}
@@ -208,7 +211,14 @@ const fixedColumns = { select: 'select', description: 'description' } as const
 /**
  * how a row says it is selected — the state the table primitive styles
  */
-const selectedRow = 'selected'
+export const selectedRow = 'selected'
+
+/**
+ * @param id - a row's id
+ *
+ * @returns the selector of that row in the table
+ */
+export const rowSelector = (id: string): string => `#${translationsId} tr[data-row="${CSS.escape(id)}"]`
 
 /**
  * gives the keyboard to the table, on its one stop for Tab
@@ -347,7 +357,15 @@ const checkboxState = (state: SelectionState): boolean | 'indeterminate' =>
  * a button that opens and closes a row, its chevron turning with it
  */
 const Disclosure = ({ open, onToggle, children }: { open: boolean; onToggle: () => void; children: ReactNode }) => (
-	<button type="button" aria-expanded={open} onClick={onToggle} className={cn('items-start', plainButtonClass)}>
+	<button
+		type="button"
+		tabIndex={-1}
+		data-cell
+		data-disclosure
+		aria-expanded={open}
+		onClick={onToggle}
+		className={cn('items-start', plainButtonClass)}
+	>
 		<ChevronRightIcon className="mt-px size-3.5 shrink-0 in-aria-expanded:rotate-90 transition-transform" />
 		{children}
 	</button>
@@ -365,7 +383,8 @@ const GroupLine = memo(
 		open,
 		onToggle,
 		state,
-		onSelect
+		onSelect,
+		onRename
 	}: {
 		row: Exclude<Row, KeyTableRow>
 		depth: number
@@ -374,35 +393,64 @@ const GroupLine = memo(
 		onToggle: (id: string) => void
 		state: SelectionState
 		onSelect: (row: Row) => void
-	}) => (
-		<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined}>
-			<TableCell data-select>
-				<Checkbox
-					tabIndex={-1}
-					data-cell
-					aria-label={fill(studioText.selectGroup, {
-						name: row.kind === rowKinds.section ? row.namespace : row.path
-					})}
-					className={checkboxClass}
-					checked={checkboxState(state)}
-					onCheckedChange={() => onSelect(row)}
-				/>
-			</TableCell>
-			<TableHead
-				scope="rowgroup"
-				colSpan={columns}
-				className="h-auto py-2 font-normal"
-				style={{ paddingInlineStart: indent(depth) }}
-			>
-				<Disclosure open={open} onToggle={() => onToggle(row.id)}>
-					<span className={cn(row.kind === rowKinds.section && 'font-semibold')}>
-						{row.kind === rowKinds.section ? row.namespace : row.label}
-					</span>
-					<span className="text-muted-foreground">{countKeys(row.keys)}</span>
-				</Disclosure>
-			</TableHead>
-		</TableRow>
-	)
+		onRename: (namespace: NamespaceName) => void
+	}) => {
+		const heading = (
+			<>
+				<span className={cn(row.kind === rowKinds.section && 'font-semibold')}>
+					{row.kind === rowKinds.section ? row.namespace : row.label}
+				</span>
+				<span className="text-muted-foreground">{countKeys(row.keys)}</span>
+			</>
+		)
+		return (
+			<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined}>
+				<TableCell data-select>
+					{row.keys > 0 && (
+						<Checkbox
+							tabIndex={-1}
+							data-cell
+							aria-label={fill(studioText.selectGroup, {
+								name: row.kind === rowKinds.section ? row.namespace : row.path
+							})}
+							className={checkboxClass}
+							checked={checkboxState(state)}
+							onCheckedChange={() => onSelect(row)}
+						/>
+					)}
+				</TableCell>
+				<TableHead
+					scope="rowgroup"
+					colSpan={columns}
+					className="h-auto py-2 font-normal"
+					style={{ paddingInlineStart: indent(depth) }}
+				>
+					{row.keys > 0 ? (
+						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
+							{heading}
+						</Disclosure>
+					) : (
+						// a namespace holding no key has nothing to open or select: its name, said as it is
+						<span className="inline-flex gap-1 ps-4.5">{heading}</span>
+					)}
+					{row.kind === rowKinds.section && (
+						<button
+							type="button"
+							tabIndex={-1}
+							data-cell
+							data-rename
+							aria-label={fill(studioText.renameNamespace, { name: row.namespace })}
+							title={fill(studioText.renameNamespace, { name: row.namespace })}
+							onClick={() => onRename(row.namespace)}
+							className={cn('ms-2 inline-flex align-middle text-muted-foreground', plainButtonClass)}
+						>
+							<PencilIcon className="size-3.5" />
+						</button>
+					)}
+				</TableHead>
+			</TableRow>
+		)
+	}
 )
 
 /**

@@ -23,6 +23,7 @@
 		"@linguify/api": "workspace:*",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/constants": "workspace:*",
+		"@linguify/keys": "workspace:*",
 		"@linguify/table": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",

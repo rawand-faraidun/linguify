@@ -1,5 +1,6 @@
 import { join } from 'node:path'
-import { errorCodes, fileNamePattern, fileStructures } from '@linguify/constants'
+import { errorCodes, fileStructures } from '@linguify/constants'
+import { fileClash, findNamespaceFileProblem } from '@linguify/keys'
 import type { Locale, TranslationTree } from '@linguify/types'
 import type { EngineContext, FileContent } from '../../engine'
 import { EngineError } from '../../errors'
@@ -32,13 +33,13 @@ export const serializeJson = (context: EngineContext, locales: Record<Locale, Tr
 		const seen = new Map<string, string>()
 		return Object.entries(tree).map(([namespace, node]) => {
 			const path = join(context.directory, locale, `${namespace}${jsonExtension}`)
-			if (!fileNamePattern.test(namespace)) {
+			if (findNamespaceFileProblem(namespace, []) !== undefined) {
 				throw new EngineError(
 					`\`${namespace}\` cannot be a namespace in a multi-file layout: its name becomes a file name, so it may not contain \`/\` or \`\\\``,
 					{ code: errorCodes.invalidStructure, details: { locale, key: namespace } }
 				)
 			}
-			const clash = seen.get(namespace.toLowerCase())
+			const clash = fileClash(namespace, [...seen.values()])
 			if (clash !== undefined) {
 				throw new EngineError(
 					`\`${namespace}\` and \`${clash}\` differ only in case — in a multi-file layout they would be the same file on a case-insensitive file system`,

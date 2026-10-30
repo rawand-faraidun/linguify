@@ -263,3 +263,27 @@ export const pinnedKeys = (rows: readonly KeyRow[], pinned: readonly KeyPath[]):
  */
 export const hiddenByView = (rows: readonly KeyRow[], shown: readonly KeyRow[], path: KeyPath): boolean =>
 	rows.some(row => row.key === path) && !shown.some(row => row.key === path)
+
+/**
+ * the namespaces a view shows as sections though they hold no key — added and not filled yet, or emptied
+ *
+ * @note none while a search or the still-to-translate filter is on — an empty namespace holds no match —
+ * and none the namespace filter leaves out
+ *
+ * @param namespaces - every namespace there is
+ * @param rows - every key
+ * @param filter - what the table is narrowed to
+ *
+ * @returns those empty namespaces, in their order
+ */
+export const emptyNamespacesShown = (
+	namespaces: readonly NamespaceName[],
+	rows: readonly KeyRow[],
+	filter: KeyFilter
+): NamespaceName[] => {
+	if (revealsMatches(filter)) return []
+	const holding = new Set(namespacesOf(rows))
+	return namespaces.filter(
+		namespace => !holding.has(namespace) && (filter.namespaces === undefined || filter.namespaces.includes(namespace))
+	)
+}

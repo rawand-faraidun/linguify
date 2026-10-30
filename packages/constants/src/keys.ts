@@ -41,7 +41,8 @@ export const emptyTranslation = ''
 export const reservedKeySegments: readonly string[] = ['__proto__', 'prototype', 'constructor']
 
 /**
- * why a key path cannot be used — the last two only in some projects
+ * why a key path or namespace name cannot be used — namespace-only and too-deep only in some projects,
+ * the rest only for a namespace, file-name and case-clash only where each namespace is a file
  */
 export const keyPathProblems = {
 	/**
@@ -67,7 +68,23 @@ export const keyPathProblems = {
 	/**
 	 * deeper than a format that cannot nest allows: a namespace and a name at most
 	 */
-	tooDeep: 'too-deep'
+	tooDeep: 'too-deep',
+
+	/**
+	 * a namespace with a separator in it — the first one separates the namespace from the key
+	 */
+	separator: 'separator',
+
+	/**
+	 * a namespace that would be a file, with a path separator in it, or `.` or `..`
+	 */
+	fileName: 'file-name',
+
+	/**
+	 * a namespace that would be a file differing from another only in case — one file on a
+	 * case-insensitive disk
+	 */
+	caseClash: 'case-clash'
 } as const
 
 /**

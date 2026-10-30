@@ -88,6 +88,14 @@ export type Engine = {
 	namespaced: (options: EngineOptions) => boolean
 
 	/**
+	 * whether each namespace becomes a file of its own under the given options — so a namespace's name is
+	 * a file name, and two that differ only in case would be one file on a case-insensitive disk
+	 *
+	 * @note a surface asks this to check a namespace's name before writing it
+	 */
+	namespaceFiles: (options: EngineOptions) => boolean
+
+	/**
 	 * reads every configured locale
 	 *
 	 * @note a locale whose files do not exist yet reads as empty — `init` and `sync` create them

@@ -11,6 +11,7 @@ export const configRouter = router({
 	get: projectProcedure.query(({ ctx }) => ({
 		...ctx.loaded,
 		capabilities: ctx.operation.capabilities,
-		namespaced: ctx.operation.namespaced
+		namespaced: ctx.operation.namespaced,
+		namespaceFiles: ctx.operation.namespaceFiles
 	}))
 })

@@ -191,7 +191,10 @@ export const keyPathProblemText = {
 	[keyPathProblems.emptySegment]: 'A segment is empty: two dots together, or one at either end.',
 	[keyPathProblems.reservedSegment]: `${reservedKeySegments.join(', ')} cannot be segments.`,
 	[keyPathProblems.namespaceOnly]: 'That names only a namespace; a key is its namespace, then its name.',
-	[keyPathProblems.tooDeep]: "This project's format cannot nest keys."
+	[keyPathProblems.tooDeep]: "This project's format cannot nest keys.",
+	[keyPathProblems.separator]: 'A namespace has no dots: the first one separates it from the key.',
+	[keyPathProblems.fileName]: 'Each namespace is a file here: no slashes, and not . or ..',
+	[keyPathProblems.caseClash]: 'Each namespace is a file here, and another differs from it only in case.'
 } as const
 
 /**
@@ -230,4 +233,19 @@ export const newKeyNotes = {
 	 * the default locale's text is still empty
 	 */
 	defaultRequired: 'default-required'
+} as const
+
+/**
+ * what a namespace dialog does
+ */
+export const namespaceActions = {
+	/**
+	 * add an empty namespace
+	 */
+	add: 'add',
+
+	/**
+	 * rename one, its keys moving with it
+	 */
+	rename: 'rename'
 } as const

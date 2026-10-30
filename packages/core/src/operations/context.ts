@@ -16,6 +16,11 @@ export type OperationContext = {
 	 * whether the first segment of every key path is a namespace
 	 */
 	namespaced: boolean
+
+	/**
+	 * whether each namespace is a file of its own, so its name must be one
+	 */
+	namespaceFiles: boolean
 }
 
 /**
@@ -33,7 +38,8 @@ export const createOperationContext = (config: Config): OperationContext => {
 	return {
 		config,
 		capabilities: engine.capabilities,
-		namespaced: engine.capabilities.namespaces && engine.namespaced(config.options)
+		namespaced: engine.capabilities.namespaces && engine.namespaced(config.options),
+		namespaceFiles: engine.capabilities.namespaces && engine.namespaceFiles(config.options)
 	}
 }
 

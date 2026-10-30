@@ -1,4 +1,4 @@
-import { type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
+import { type FormEvent, useMemo, useRef, useState } from 'react'
 import { exampleKeyPath, keyConflictText, keyPathProblemText, newKeyNotes, studioText } from '@linguify/constants'
 import { checkNewKeyForm, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
 import type { Catalogue, KeyPath, Locale } from '@linguify/types'
@@ -8,6 +8,7 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { fieldWidthClass, focusRingClass, inputFocusClass, textWidthClass } from './classes'
 import { fill } from './format'
+import { saying, useSettled } from './settled'
 
 /**
  * the id of the form that adds a key, which the button opening it controls
@@ -266,28 +267,6 @@ const noteText = (note: NewKeyNote): string => {
 			return studioText.defaultRequired
 	}
 }
-
-/**
- * a value once it has stopped changing for a while — so what is said aloud waits for typing to pause
- *
- * @param value - the value now
- * @param after - how long it must hold, in milliseconds
- *
- * @returns the value it last held that long
- */
-const useSettled = (value: string, after: number): string => {
-	const [settled, setSettled] = useState(value)
-	useEffect(() => {
-		const timer = setTimeout(() => setSettled(value), after)
-		return () => clearTimeout(timer)
-	}, [value, after])
-	return settled
-}
-
-/**
- * how long typing pauses before the first thing in the way is said aloud, in milliseconds
- */
-const saying = 500
 
 /**
  * the key code a browser gives a key press that ends a composition — Safari's Escape or Enter as an input

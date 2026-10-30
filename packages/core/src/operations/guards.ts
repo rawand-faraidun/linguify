@@ -1,5 +1,5 @@
 import { errorCodes, exampleKeyPath, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
-import { findKeyPathProblem, findProjectKeyPathProblem, splitKeyPath } from '@linguify/keys'
+import { findKeyPathProblem, findNamespaceNameProblem, findProjectKeyPathProblem } from '@linguify/keys'
 import type { KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
 import { NotFoundError, ValidationError } from '../errors'
 import type { OperationContext } from './context'
@@ -12,7 +12,11 @@ const keyPathReasons: Record<KeyPathProblem, string> = {
 	[keyPathProblems.emptySegment]: 'it has an empty segment — two dots in a row, or one at either end',
 	[keyPathProblems.reservedSegment]: `a segment is a reserved name (${reservedKeySegments.map(name => `\`${name}\``).join(', ')})`,
 	[keyPathProblems.namespaceOnly]: `it names only a namespace — a key is the namespace, then the key: \`${exampleKeyPath}\``,
-	[keyPathProblems.tooDeep]: "this project's format cannot nest keys"
+	[keyPathProblems.tooDeep]: "this project's format cannot nest keys",
+	[keyPathProblems.separator]: `it contains \`${keySeparator}\`, which separates the namespace from the key`,
+	[keyPathProblems.fileName]: 'its name becomes a file name, so it may not contain `/` or `\\`, nor be `.` or `..`',
+	[keyPathProblems.caseClash]:
+		'another namespace differs from it only in case — in a multi-file layout they would be the same file on a case-insensitive file system'
 }
 
 /**
@@ -37,11 +41,10 @@ export const findKeyPathReason = (path: KeyPath): string | undefined => {
  *
  * @returns the reason, or `undefined` when the name is usable
  */
-export const findNamespaceNameReason = (name: NamespaceName): string | undefined =>
-	findKeyPathReason(name) ??
-	(splitKeyPath(name).length > 1
-		? `it contains \`${keySeparator}\`, which separates the namespace from the key`
-		: undefined)
+export const findNamespaceNameReason = (name: NamespaceName): string | undefined => {
+	const problem = findNamespaceNameProblem(name)
+	return problem === undefined ? undefined : keyPathReasons[problem]
+}
 
 /**
  * makes sure a locale is one the config lists

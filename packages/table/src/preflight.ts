@@ -1,5 +1,15 @@
-import { newKeyNotes } from '@linguify/constants'
-import { findConflicts, findDuplicate, findProjectKeyPathProblem, hasNamespace, splitNamespace } from '@linguify/keys'
+import { type namespaceActions, newKeyNotes } from '@linguify/constants'
+import {
+	findConflicts,
+	findDuplicate,
+	findNamespaceFileProblem,
+	findNamespaceNameProblem,
+	findProjectKeyPathProblem,
+	hasNamespace,
+	namespaceHolders,
+	namespacesIn,
+	splitNamespace
+} from '@linguify/keys'
 import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
 import type { NewKey } from './edit'
 
@@ -107,3 +117,69 @@ export const checkNewKeyForm = (
  * @returns whether it stops the key being added — all but a namespace that may be created
  */
 export const stopsAdd = (note: NewKeyNote): boolean => note.kind !== newKeyNotes.newNamespace || !note.allowed
+
+/**
+ * what a namespace dialog does: add one, or rename one
+ */
+export type NamespaceAction =
+	| { kind: typeof namespaceActions.add }
+	| { kind: typeof namespaceActions.rename; from: NamespaceName }
+
+/**
+ * what stands in the way of a namespace name — to add, or to rename one to — found before anything is sent
+ */
+export type NamespaceCheck = {
+	/**
+	 * why the name is unusable — empty, a reserved name, a separator in it, or, where each namespace is a
+	 * file, not a file name or differing from another only in case — or nothing
+	 */
+	problem?: KeyPathProblem
+
+	/**
+	 * the locales that already have a namespace by that name
+	 */
+	taken: Locale[]
+
+	/**
+	 * a rename to the name it has already — nothing wrong, but nothing to do
+	 */
+	same: boolean
+
+	/**
+	 * whether nothing stands in the way
+	 */
+	ready: boolean
+}
+
+/**
+ * checks a namespace name the way core and the engine will
+ *
+ * @param catalogue - every locale's tree
+ * @param name - the name typed
+ * @param rules - `from`, the namespace being renamed, nothing when adding; `namespaceFiles`, whether each
+ * namespace is a file of its own
+ *
+ * @returns what stands in the way, and whether nothing does
+ */
+export const checkNamespaceName = (
+	catalogue: Catalogue,
+	name: NamespaceName,
+	{ from, namespaceFiles }: { from?: NamespaceName | undefined; namespaceFiles: boolean }
+): NamespaceCheck => {
+	const same = from !== undefined && name === from
+	const problem =
+		findNamespaceNameProblem(name) ??
+		(namespaceFiles && !same
+			? findNamespaceFileProblem(
+					name,
+					namespacesIn(catalogue).filter(namespace => namespace !== from)
+				)
+			: undefined)
+	const taken = problem === undefined && !same ? namespaceHolders(catalogue, name) : []
+	return {
+		...(problem === undefined ? {} : { problem }),
+		taken,
+		same,
+		ready: problem === undefined && !same && taken.length === 0
+	}
+}

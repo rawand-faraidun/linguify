@@ -1,5 +1,6 @@
 import { memo, useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { rowKinds, studioText, viewModes } from '@linguify/constants'
+import { namespaceActions, rowKinds, studioText, viewModes } from '@linguify/constants'
+import { namespacesIn } from '@linguify/keys'
 import {
 	availableViewModes,
 	buildRows,
@@ -8,6 +9,7 @@ import {
 	columnShown,
 	countUntranslated,
 	type Expansion,
+	emptyNamespacesShown,
 	expandedExpansion,
 	filterKeys,
 	hiddenByView,
@@ -17,8 +19,12 @@ import {
 	type KeySort,
 	keepExisting,
 	localeOrder,
+	movedExpansion,
+	movedFilter,
+	movedPaths,
+	movedSelection,
+	type NamespaceAction,
 	type NewKey,
-	namespacesOf,
 	narrowsView,
 	nextSort,
 	noFilter,
@@ -37,21 +43,22 @@ import {
 	toggleExpansion,
 	toggleSelection
 } from '@linguify/table'
-import type { KeyPath, ViewMode } from '@linguify/types'
+import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
-import { ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { FolderPlusIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { AddKey, addKeyFormId } from './add-key'
 import { destructiveClass, focusRingClass } from './classes'
 import { DeleteKeys } from './delete-keys'
 import { Filters, searchId } from './filters'
 import { countKeys, fill } from './format'
+import { NamespaceDialog } from './namespace-dialog'
 import { Toolbar } from './toolbar'
-import { focusTableStop, TranslationTable, translationsId } from './translation-table'
+import { focusTableStop, rowSelector, selectedRow, TranslationTable, translationsId } from './translation-table'
 import type { ApiOutputs } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
-import { useAddKey, useEditKey, useKnownRevision, useRemoveKeys } from './writes'
+import { useAddKey, useAddNamespace, useEditKey, useKnownRevision, useRemoveKeys, useRenameNamespace } from './writes'
 
 /**
  * the project, once read: the toolbar with the view's controls, and the table
@@ -68,6 +75,9 @@ import { useAddKey, useEditKey, useKnownRevision, useRemoveKeys } from './writes
  *
  * @note a key is added in a form above the table, outside its rows, so the rows on screen are still exactly
  * the table's own; a key added while the rows are held joins them
+ *
+ * @note namespaces are read from the files, so one just added or emptied has its section; a rename carries
+ * what was selected, held or filtered in it to its new name
  *
  * @note keys are selected by path, so a selection outlives a change of view, search, filter or sort, and a
  * key gone from disk drops out of it; select-all takes in what the view holds, and a bulk delete removes
@@ -103,7 +113,10 @@ export const Workspace = memo(
 		)
 		const keys = useMemo(() => rowsFromCatalogue(catalogue.catalogue, source), [catalogue, source])
 		const counts = useMemo(() => countUntranslated(keys, source.locales, source.default), [keys, source])
-		const namespaces = useMemo(() => (config.namespaced ? namespacesOf(keys) : []), [keys, config.namespaced])
+		const namespaces = useMemo(
+			() => (config.namespaced ? namespacesIn(catalogue.catalogue) : []),
+			[catalogue, config.namespaced]
+		)
 		const [chosen, setChosen] = useState<KeyFilter>(noFilter)
 		// a namespace or locale gone since it was chosen — renamed, deleted, or out of the config — is let go
 		const filter = useMemo((): KeyFilter => {
@@ -126,9 +139,13 @@ export const Workspace = memo(
 				source.default
 			)
 		}, [pinned, keys, sorted, search, filter.untranslatedIn, filter.namespaces, source.default])
+		const emptyNamespaces = useMemo(
+			() => emptyNamespacesShown(namespaces, keys, { ...filter, search }),
+			[namespaces, keys, filter, search]
+		)
 		const rows = useMemo(
-			() => buildRows(mode, visible, { namespaced: config.namespaced }),
-			[mode, visible, config.namespaced]
+			() => buildRows(mode, visible, { namespaced: config.namespaced, emptyNamespaces }),
+			[mode, visible, config.namespaced, emptyNamespaces]
 		)
 
 		const initial = useMemo(
@@ -174,6 +191,64 @@ export const Workspace = memo(
 		const addKey = useAddKey(source.default)
 		const [adding, setAdding] = useState(false)
 		const addButton = useRef<HTMLButtonElement>(null)
+		const addNamespaceButton = useRef<HTMLButtonElement>(null)
+		const addNamespace = useAddNamespace()
+		const renameNamespace = useRenameNamespace()
+		const [namespaceAction, setNamespaceAction] = useState<{ action: NamespaceAction; opening: number }>()
+		const openNamespaceDialog = useCallback(
+			(action: NamespaceAction) => setNamespaceAction(current => ({ action, opening: (current?.opening ?? 0) + 1 })),
+			[]
+		)
+		const onRename = useCallback(
+			(namespace: NamespaceName) => openNamespaceDialog({ kind: namespaceActions.rename, from: namespace }),
+			[openNamespaceDialog]
+		)
+		const writeNamespace = async (name: NamespaceName) => {
+			const action = namespaceAction?.action
+			if (action?.kind === namespaceActions.rename) {
+				const { from } = action
+				await renameNamespace({ from, to: name })
+				const move = (current: Partial<Record<ViewMode, Expansion>>) =>
+					Object.fromEntries(
+						Object.entries(current).map(([view, expansion]) => [view, movedExpansion(expansion, from, name)])
+					)
+				setChosenKeys(current => movedSelection(current, from, name))
+				setPinned(current => current && movedPaths(current, from, name))
+				setChosen(current => movedFilter(current, from, name))
+				setExpansions(move)
+				setLayers(move)
+				setLastAdded(current => current && movedPaths([current], from, name)[0])
+				setSaid(fill(studioText.renamedNamespace, { from, to: name }))
+				return
+			}
+			await addNamespace(name)
+			// a namespace filter on: the new one joins it, as a person adding it means to see it
+			setChosen(current =>
+				current.namespaces === undefined ? current : { ...current, namespaces: [...current.namespaces, name] }
+			)
+			setSaid(
+				fill(revealsMatches({ ...filter, search }) ? studioText.addedNamespaceHidden : studioText.addedNamespace, {
+					name
+				})
+			)
+		}
+		const namespaceClosed = (written: NamespaceName | undefined) => {
+			const action = namespaceAction?.action
+			setNamespaceAction(undefined)
+			const named = written ?? (action?.kind === namespaceActions.rename ? action.from : undefined)
+			// the written section, on its disclosure — or its rename, when it holds no key — or, cancelled, the
+			// button that opened the dialog
+			const row = named === undefined ? null : document.querySelector(rowSelector(rowId(rowKinds.section, named)))
+			const target =
+				(written === undefined
+					? row?.querySelector<HTMLElement>('[data-rename]')
+					: (row?.querySelector<HTMLElement>('[data-disclosure]') ??
+						row?.querySelector<HTMLElement>('[data-rename]'))) ?? null
+			if (target !== null) {
+				target.focus()
+				target.scrollIntoView({ block: 'nearest' })
+			} else if (action?.kind === namespaceActions.add || !focusTableStop()) addNamespaceButton.current?.focus()
+		}
 		const locales = useMemo(() => localeOrder(source), [source])
 		const rules = useMemo(
 			() => ({
@@ -204,11 +279,12 @@ export const Workspace = memo(
 		const [chosenKeys, setChosenKeys] = useState<Selection>(new Set())
 		// a key gone since it was ticked — deleted, renamed, or read again from disk — is let go
 		const selection = useMemo(() => keepExisting(chosenKeys, keys), [chosenKeys, keys])
-		const [deleted, setDeleted] = useState<number>()
+		// what the last write did, said until the next selection begins
+		const [said, setSaid] = useState<string>()
 		const selecting = useRef({ keys, rows })
 		selecting.current = { keys, rows }
 		const choose = useCallback((change: (current: Selection) => Selection) => {
-			setDeleted(undefined)
+			setSaid(undefined)
 			setChosenKeys(current => change(keepExisting(current, selecting.current.keys)))
 		}, [])
 		const onSelect = useCallback((row: TableRow) => choose(current => toggleSelection(current, row)), [choose])
@@ -221,31 +297,27 @@ export const Workspace = memo(
 		const after = useRef<string | undefined>(undefined)
 		const onDelete = async () => {
 			const shown = [...document.querySelectorAll(`#${translationsId} tbody tr[data-row]`)]
-			const last = shown.findLastIndex(row => row.getAttribute('data-state') === 'selected')
+			const last = shown.findLastIndex(row => row.getAttribute('data-state') === selectedRow)
 			after.current =
 				shown
 					.slice(last + 1)
-					.find(row => row.getAttribute('data-state') !== 'selected')
+					.find(row => row.getAttribute('data-state') !== selectedRow)
 					?.getAttribute('data-row') ?? undefined
 			await removeKeys(doomed.paths)
-			setDeleted(doomed.paths.length)
+			setSaid(fill(studioText.deleted, { keys: countKeys(doomed.paths.length) }))
 			setChosenKeys(new Set())
 		}
 		const afterDelete = () => {
 			const next =
 				after.current === undefined
 					? null
-					: document.querySelector<HTMLElement>(
-							`#${translationsId} tr[data-row="${CSS.escape(after.current)}"] [data-select] [role="checkbox"]`
-						)
+					: document.querySelector<HTMLElement>(`${rowSelector(after.current)} [data-select] [role="checkbox"]`)
 			if (next !== null) next.focus()
 			else if (!focusTableStop()) (document.getElementById(searchId) ?? addButton.current)?.focus()
 		}
 		useLayoutEffect(() => {
 			if (lastAdded === undefined) return
-			document
-				.querySelector(`#${translationsId} tr[data-row="${CSS.escape(rowId(rowKinds.key, lastAdded))}"]`)
-				?.scrollIntoView({ block: 'nearest' })
+			document.querySelector(rowSelector(rowId(rowKinds.key, lastAdded)))?.scrollIntoView({ block: 'nearest' })
 		}, [lastAdded])
 		const onEdit = useCallback(
 			(edit: KeyEdit) => {
@@ -279,6 +351,18 @@ export const Workspace = memo(
 						<PlusIcon data-icon="inline-start" />
 						{studioText.addKey}
 					</Button>
+					{config.namespaced && (
+						<Button
+							ref={addNamespaceButton}
+							variant="outline"
+							size="sm"
+							className={focusRingClass}
+							onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
+						>
+							<FolderPlusIcon data-icon="inline-start" />
+							{studioText.addNamespace}
+						</Button>
+					)}
 					<Button
 						ref={deleteButton}
 						variant="destructive"
@@ -302,12 +386,17 @@ export const Workspace = memo(
 					>
 						{studioText.clearSelection}
 					</Button>
-					<span id="selection-count" role="status" className="text-muted-foreground text-xs tabular-nums">
-						{selection.size > 0
-							? fill(studioText.selectedCount, { keys: countKeys(selection.size) })
-							: deleted === undefined
-								? ''
-								: fill(studioText.deleted, { keys: countKeys(deleted) })}
+					<span
+						id="selection-count"
+						role="status"
+						className="wrap-anywhere min-w-0 text-muted-foreground text-xs tabular-nums"
+					>
+						{[
+							selection.size > 0 ? fill(studioText.selectedCount, { keys: countKeys(selection.size) }) : undefined,
+							said
+						]
+							.filter(part => part !== undefined)
+							.join(studioText.countSeparator)}
 					</span>
 					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
 						<ListChevronsUpDownIcon data-icon="inline-start" />
@@ -358,9 +447,20 @@ export const Workspace = memo(
 							selection={selection}
 							onSelect={onSelect}
 							onSelectAll={onSelectAll}
+							onRename={onRename}
 						/>
 					)}
 				</main>
+				{namespaceAction !== undefined && (
+					<NamespaceDialog
+						key={namespaceAction.opening}
+						action={namespaceAction.action}
+						catalogue={catalogue.catalogue}
+						namespaceFiles={config.namespaceFiles}
+						onSubmit={writeNamespace}
+						onClosed={namespaceClosed}
+					/>
+				)}
 				<DeleteKeys
 					open={deleting}
 					onOpenChange={setDeleting}
