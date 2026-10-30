@@ -42,6 +42,9 @@ catalogs:
     read-excel-file:
       specifier: ^9.3.10
       version: 9.3.10
+    sonner:
+      specifier: ^2.0.8
+      version: 2.0.8
     tailwindcss:
       specifier: ^4.3.3
       version: 4.3.3
@@ -207,6 +210,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.3.0(react@19.3.0)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
     devDependencies:
       '@linguify/api':
         specifier: workspace:*
@@ -478,7 +484,7 @@ importers:
         specifier: ^4.21.4
         version: 4.21.4
       sonner:
-        specifier: ^2.0.8
+        specifier: 'catalog:'
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       tw-animate-css:
         specifier: ^1.4.0

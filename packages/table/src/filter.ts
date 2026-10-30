@@ -1,6 +1,7 @@
 import { searchFolds, searchIgnored, tableMarks } from '@linguify/constants'
 import { splitNamespace } from '@linguify/keys'
-import type { KeyRow, Locale, NamespaceName, TableMark } from '@linguify/types'
+import type { KeyPath, KeyRow, Locale, NamespaceName, TableMark } from '@linguify/types'
+import type { KeySort } from './sort'
 
 /**
  * what the table is narrowed to
@@ -218,3 +219,32 @@ const searchable = (row: KeyRow): string => {
 export const namespacesOf = (rows: readonly KeyRow[]): NamespaceName[] => [
 	...new Set(rows.map(row => splitNamespace(row.key).namespace))
 ]
+
+/**
+ * whether the view is narrowed or reordered — by a search, a filter or a sort — so a key just edited could
+ * move or vanish from where the person is looking
+ *
+ * @param filter - what the table is narrowed to
+ * @param sort - how it is ordered; nothing for the files' order
+ *
+ * @returns whether anything narrows or reorders it
+ */
+export const narrowsView = (filter: KeyFilter, sort: KeySort | undefined): boolean =>
+	isFiltered(filter) || sort !== undefined
+
+/**
+ * the keys shown while the view is held still: the paths it showed, in that order, read from the keys as
+ * they are now
+ *
+ * @note what an edit there changes moves nowhere and stays shown; a key removed since drops out. Changing
+ * the search, a filter or the sort lets go
+ *
+ * @param rows - every key, as read now
+ * @param pinned - the paths shown when the view was held, in their order
+ *
+ * @returns those keys still there, in that order
+ */
+export const pinnedKeys = (rows: readonly KeyRow[], pinned: readonly KeyPath[]): KeyRow[] => {
+	const byKey = new Map(rows.map(row => [row.key, row]))
+	return pinned.flatMap(key => byKey.get(key) ?? [])
+}

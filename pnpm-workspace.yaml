@@ -22,6 +22,7 @@ catalog:
   react: ^19.3.0
   react-dom: ^19.3.0
   read-excel-file: ^9.3.10
+  sonner: ^2.0.8
   tailwindcss: ^4.3.3
   typescript: ^6.0.3
   write-excel-file: ^4.1.1

@@ -35,3 +35,9 @@ export const menuItemClass = 'focus:bg-primary focus:text-primary-foreground foc
  */
 export const fieldFocusClass =
 	'has-[[data-slot=input-group-control]:focus-visible]:ring-2 has-[[data-slot=input-group-control]:focus-visible]:ring-ring'
+
+/**
+ * how wide a text from the files may grow inside its cell — the text, its key's label and its editor alike,
+ * so opening an editor moves nothing
+ */
+export const textWidthClass = 'max-w-80'

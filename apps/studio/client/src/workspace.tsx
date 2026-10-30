@@ -10,11 +10,14 @@ import {
 	expandedExpansion,
 	filterKeys,
 	isFiltered,
+	type KeyEdit,
 	type KeyFilter,
 	type KeySort,
 	namespacesOf,
+	narrowsView,
 	nextSort,
 	noFilter,
+	pinnedKeys,
 	type RowSource,
 	revealsMatches,
 	rowsFromCatalogue,
@@ -23,7 +26,7 @@ import {
 	sortKeys,
 	toggleExpansion
 } from '@linguify/table'
-import type { ViewMode } from '@linguify/types'
+import type { KeyPath, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { ListChevronsDownUpIcon, ListChevronsUpDownIcon } from 'lucide-react'
 import { focusRingClass } from './classes'
@@ -33,6 +36,7 @@ import { TranslationTable } from './translation-table'
 import type { ApiOutputs } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
+import { useEditKey, useKnownRevision } from './writes'
 
 /**
  * the project, once read: the toolbar with the view's controls, and the table
@@ -46,6 +50,10 @@ import { ViewSwitch } from './view-switch'
  * @note only what changed renders again: the keys are read from the catalogue once, sorted once per sort,
  * and filtered from that; a kept key keeps its row, and the rows' toggle never changes. The middle is
  * contained, so typing in the toolbar does not lay out the table again
+ *
+ * @note an edit under a search, filter or sort holds the rows shown as they are ({@link pinnedKeys}), so the
+ * key just changed neither moves nor disappears under the person's hands; changing the search, a filter,
+ * the sort or the view lets go
  *
  * @param props - `config` and `catalogue`, as the API gave them; `error`, a failed refresh's message,
  * shown above what was read
@@ -87,15 +95,15 @@ export const Workspace = memo(
 		const [sort, setSort] = useState<KeySort>()
 		const search = useDeferredValue(filter.search)
 		const sorted = useMemo(() => (sort === undefined ? keys : sortKeys(keys, sort)), [keys, sort])
-		const visible = useMemo(
-			() =>
-				filterKeys(
-					sorted,
-					{ search, untranslatedIn: filter.untranslatedIn, namespaces: filter.namespaces },
-					source.default
-				),
-			[sorted, search, filter.untranslatedIn, filter.namespaces, source.default]
-		)
+		const [pinned, setPinned] = useState<readonly KeyPath[]>()
+		const visible = useMemo(() => {
+			if (pinned !== undefined) return pinnedKeys(keys, pinned)
+			return filterKeys(
+				sorted,
+				{ search, untranslatedIn: filter.untranslatedIn, namespaces: filter.namespaces },
+				source.default
+			)
+		}, [pinned, keys, sorted, search, filter.untranslatedIn, filter.namespaces, source.default])
 		const rows = useMemo(
 			() => buildRows(mode, visible, { namespaced: config.namespaced }),
 			[mode, visible, config.namespaced]
@@ -111,8 +119,9 @@ export const Workspace = memo(
 		const revealed = useMemo(() => searchExpansion(base, rows, mode), [base, rows, mode])
 		const [layers, setLayers] = useState<Partial<Record<ViewMode, Expansion>>>({})
 		const expansion = revealing ? (layers[mode] ?? revealed) : base
-		const latest = useRef({ mode, initial, revealing, revealed })
-		latest.current = { mode, initial, revealing, revealed }
+		const narrowed = narrowsView(filter, sort)
+		const latest = useRef({ mode, initial, revealing, revealed, visible, narrowed })
+		latest.current = { mode, initial, revealing, revealed, visible, narrowed }
 		const toggle = useCallback((id: string) => {
 			const { mode, initial, revealing, revealed } = latest.current
 			if (revealing) setLayers(current => ({ ...current, [mode]: toggleExpansion(current[mode] ?? revealed, id) }))
@@ -124,15 +133,30 @@ export const Workspace = memo(
 				: setExpansions(current => ({ ...current, [mode]: next }))
 		const changeFilter = (next: KeyFilter) => {
 			if (!revealsMatches(next)) setLayers({})
+			setPinned(undefined)
 			setChosen(next)
 		}
 		const changeMode = (next: ViewMode) => {
 			pick(next)
+			setPinned(undefined)
 			setSort(current =>
 				current !== undefined && columnShown(current.column, next, source.default) ? current : undefined
 			)
 		}
-		const onSort = useCallback((column: KeySort['column']) => setSort(current => nextSort(current, column)), [])
+		const onSort = useCallback((column: KeySort['column']) => {
+			setPinned(undefined)
+			setSort(current => nextSort(current, column))
+		}, [])
+		useKnownRevision(catalogue.revision)
+		const editKey = useEditKey()
+		const onEdit = useCallback(
+			(edit: KeyEdit) => {
+				const { visible, narrowed } = latest.current
+				if (narrowed) setPinned(current => current ?? visible.map(row => row.key))
+				return editKey(edit)
+			},
+			[editKey]
+		)
 		return (
 			<>
 				<Toolbar>
@@ -173,6 +197,7 @@ export const Workspace = memo(
 							onToggle={toggle}
 							sort={sort}
 							onSort={onSort}
+							onEdit={onEdit}
 						/>
 					)}
 				</main>

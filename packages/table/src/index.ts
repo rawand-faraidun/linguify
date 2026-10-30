@@ -1,4 +1,5 @@
 export * from './catalogue'
+export * from './edit'
 export * from './expansion'
 export * from './filter'
 export * from './preflight'

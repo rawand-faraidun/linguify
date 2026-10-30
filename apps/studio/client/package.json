@@ -16,7 +16,8 @@
 		"@trpc/tanstack-react-query": "^11.19.0",
 		"lucide-react": "catalog:",
 		"react": "catalog:",
-		"react-dom": "catalog:"
+		"react-dom": "catalog:",
+		"sonner": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/api": "workspace:*",

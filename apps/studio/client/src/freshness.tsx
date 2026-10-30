@@ -1,9 +1,10 @@
 import { studioText } from '@linguify/constants'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
-import { useIsFetching, useQueryClient } from '@tanstack/react-query'
+import { useIsFetching } from '@tanstack/react-query'
 import { RefreshCwIcon } from 'lucide-react'
 import { focusRingClass } from './classes'
+import { refresh } from './trpc'
 
 /**
  * the quiet footer: when the files were read, what to do after editing them by hand, and a refresh
@@ -20,7 +21,6 @@ import { focusRingClass } from './classes'
  * @returns the footer
  */
 export const Freshness = ({ readAt }: { readAt: number }) => {
-	const queryClient = useQueryClient()
 	const fetching = useIsFetching() > 0
 	const read = new Date(readAt)
 	return (
@@ -41,7 +41,7 @@ export const Freshness = ({ readAt }: { readAt: number }) => {
 				className={cn('ms-auto', focusRingClass)}
 				aria-disabled={fetching}
 				onClick={() => {
-					if (!fetching) void queryClient.refetchQueries({ type: 'active' })
+					if (!fetching) void refresh()
 				}}
 			>
 				<RefreshCwIcon data-icon="inline-start" className={cn(fetching && 'motion-safe:animate-spin')} />

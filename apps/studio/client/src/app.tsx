@@ -1,10 +1,16 @@
 import { studioText } from '@linguify/constants'
+import { Toaster } from '@linguify/ui/components/sonner'
 import { TooltipProvider } from '@linguify/ui/components/tooltip'
 import { useQuery } from '@tanstack/react-query'
 import { Freshness } from './freshness'
 import { Toolbar } from './toolbar'
 import { useTRPC } from './trpc'
 import { Workspace } from './workspace'
+
+/**
+ * how far toasts sit from the bottom: above the footer, so they never cover its Refresh
+ */
+const toasterAboveFooter = 48
 
 /**
  * the studio: the toolbar, the project, and the footer saying how fresh it is
@@ -42,6 +48,7 @@ export const App = () => {
 				)}
 				<Freshness readAt={read ? Math.min(config.dataUpdatedAt, catalogue.dataUpdatedAt) : 0} />
 			</div>
+			<Toaster position="bottom-right" offset={{ bottom: toasterAboveFooter }} />
 		</TooltipProvider>
 	)
 }

@@ -3,3 +3,20 @@
 @source "../../../../packages/ui/src";
 @source "../../../../packages/table/src";
 @source "../../../../packages/constants/src";
+
+[data-sonner-toaster][data-sonner-toaster] {
+	font-family: inherit;
+}
+
+/* sonner adds its own styles as the page runs, after these: one more attribute outweighs them */
+[data-sonner-toaster] [data-sonner-toast] [data-button][data-button] {
+	border-radius: 0;
+}
+
+[data-sonner-toaster] [data-sonner-toast]:focus-visible,
+[data-sonner-toaster] [data-sonner-toast] [data-button][data-button]:focus-visible,
+[data-sonner-toaster] [data-sonner-toast] [data-close-button][data-close-button]:focus-visible {
+	box-shadow:
+		0 0 0 1px var(--background),
+		0 0 0 3px var(--ring);
+}
