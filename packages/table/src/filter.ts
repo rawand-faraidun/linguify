@@ -248,3 +248,18 @@ export const pinnedKeys = (rows: readonly KeyRow[], pinned: readonly KeyPath[]):
 	const byKey = new Map(rows.map(row => [row.key, row]))
 	return pinned.flatMap(key => byKey.get(key) ?? [])
 }
+
+/**
+ * whether a key is there and the view does not show it — narrowed out by a search or a filter
+ *
+ * @note read from what was written and read back, never guessed beforehand: `keys.fillWithDefault` and
+ * the like decide what a new key holds
+ *
+ * @param rows - every key, as read now
+ * @param shown - the keys the view lets through
+ * @param path - a key path
+ *
+ * @returns whether the key exists and is not shown
+ */
+export const hiddenByView = (rows: readonly KeyRow[], shown: readonly KeyRow[], path: KeyPath): boolean =>
+	rows.some(row => row.key === path) && !shown.some(row => row.key === path)

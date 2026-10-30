@@ -21,3 +21,40 @@ export const keyEditInput = (
 	'description' in edit
 		? { path: edit.key, description: edit.description }
 		: { path: edit.key, translations: { [edit.locale]: edit.text } }
+
+/**
+ * a key a person is adding: its path, its description, and its text per locale
+ */
+export type NewKey = {
+	path: KeyPath
+	description: string
+	texts: Readonly<Record<Locale, string>>
+}
+
+/**
+ * what `key.add` is asked to do for a new key
+ *
+ * @note a text left empty is left out, so `keys.fillWithDefault` decides it as it would for `key add`; a
+ * new namespace is created as `keys.createNamespace` says, as for `key add`
+ *
+ * @param key - the new key
+ * @param defaultLocale - the default locale, whose text is the key's value
+ *
+ * @returns the path, the default's text, the others', and the description when given
+ */
+export const newKeyInput = (
+	key: NewKey,
+	defaultLocale: Locale
+): {
+	path: KeyPath
+	value: string
+	translations: Record<Locale, string>
+	description?: string
+} => ({
+	path: key.path,
+	value: key.texts[defaultLocale] ?? '',
+	translations: Object.fromEntries(
+		Object.entries(key.texts).filter(([locale, text]) => locale !== defaultLocale && text !== '')
+	),
+	...(key.description === '' ? {} : { description: key.description })
+})

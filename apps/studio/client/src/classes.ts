@@ -41,3 +41,15 @@ export const fieldFocusClass =
  * so opening an editor moves nothing
  */
 export const textWidthClass = 'max-w-80'
+
+/**
+ * a text field's focus ring, as strong as every other control's — and still there on a field marked
+ * invalid, whose own ring would otherwise take its place
+ */
+export const inputFocusClass =
+	'focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring aria-invalid:focus-visible:border-ring aria-invalid:focus-visible:ring-2 aria-invalid:focus-visible:ring-ring'
+
+/**
+ * how wide a text field is in a form of several side by side
+ */
+export const fieldWidthClass = 'w-56'

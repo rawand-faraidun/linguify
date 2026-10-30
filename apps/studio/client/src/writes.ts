@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import { type KeyEdit, keyEditInput } from '@linguify/table'
-import type { Revision } from '@linguify/types'
+import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
+import type { Locale, Revision } from '@linguify/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { trpcClient, useTRPC } from './trpc'
 
@@ -60,4 +60,16 @@ export const useFileWrite = <Input>(
 export const useEditKey = () =>
 	useFileWrite((edit: KeyEdit, expectedRevision: Revision) =>
 		trpcClient.key.set.mutate({ ...keyEditInput(edit), expectedRevision })
+	)
+
+/**
+ * adds a key, with its text in every locale given and its description
+ *
+ * @param defaultLocale - the default locale, whose text is the key's value
+ *
+ * @returns the key to add, settled once it is written and the catalogue read again
+ */
+export const useAddKey = (defaultLocale: Locale) =>
+	useFileWrite((key: NewKey, expectedRevision: Revision) =>
+		trpcClient.key.add.mutate({ ...newKeyInput(key, defaultLocale), expectedRevision })
 	)

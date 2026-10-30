@@ -1,4 +1,5 @@
 import { appName } from './app'
+import { keyPathProblems, keyPathStates, reservedKeySegments } from './keys'
 
 /**
  * the translation table's layouts, shared by the studio and the extension
@@ -181,3 +182,52 @@ export const searchFolds: Readonly<Record<string, string>> = {
  * changing what it says
  */
 export const searchIgnored: readonly string[] = ['\u200c', '\u0640']
+
+/**
+ * why a key path cannot be used, as the studio and the extension say it
+ */
+export const keyPathProblemText = {
+	[keyPathProblems.empty]: 'Type the key path.',
+	[keyPathProblems.emptySegment]: 'A segment is empty: two dots together, or one at either end.',
+	[keyPathProblems.reservedSegment]: `${reservedKeySegments.join(', ')} cannot be segments.`,
+	[keyPathProblems.namespaceOnly]: 'That names only a namespace; a key is its namespace, then its name.',
+	[keyPathProblems.tooDeep]: "This project's format cannot nest keys."
+} as const
+
+/**
+ * what is in a new key's way, in one locale, as the studio and the extension say it
+ */
+export const keyConflictText = {
+	[keyPathStates.group]: '{at} holds keys of its own in {locale}.',
+	[keyPathStates.blocked]: '{at} is a text in {locale}, so no key can go under it.'
+} as const
+
+/**
+ * the kinds of thing a new key's form says
+ */
+export const newKeyNotes = {
+	/**
+	 * the path cannot be used
+	 */
+	problem: 'problem',
+
+	/**
+	 * the key is there already
+	 */
+	duplicate: 'duplicate',
+
+	/**
+	 * nested keys, or a text, in the key's way in a locale
+	 */
+	conflict: 'conflict',
+
+	/**
+	 * the key would start a namespace
+	 */
+	newNamespace: 'new-namespace',
+
+	/**
+	 * the default locale's text is still empty
+	 */
+	defaultRequired: 'default-required'
+} as const

@@ -1,5 +1,5 @@
 import { changeKinds, errorCodes, keyPathStates } from '@linguify/constants'
-import { inspectKeyPath, readNode, removeNode, setNode, splitNamespace } from '@linguify/keys'
+import { hasNamespace, inspectKeyPath, readNode, removeNode, setNode, splitNamespace } from '@linguify/keys'
 import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
@@ -66,8 +66,7 @@ export const renameKey = (
 	}
 	if (context.namespaced) {
 		const { namespace } = splitNamespace(to)
-		const exists = config.locales.some(locale => Object.hasOwn(tree(locale), namespace))
-		if (!exists && !config.keys.createNamespace) {
+		if (!hasNamespace(catalogue, namespace) && !config.keys.createNamespace) {
 			throw new NotFoundError(
 				`The namespace \`${namespace}\` does not exist. Create it first, or allow it to be created (\`keys.createNamespace\`)`,
 				{ code: errorCodes.namespaceNotFound, details: { namespace, path: to } }

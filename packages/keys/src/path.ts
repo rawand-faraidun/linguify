@@ -37,6 +37,30 @@ export const findKeyPathProblem = (path: KeyPath): KeyPathProblem | undefined =>
 }
 
 /**
+ * says why a key path cannot name a translation in a project — {@link findKeyPathProblem}'s rules, and the
+ * project's own
+ *
+ * @note with namespaces on, a path needs a namespace and a name; a format that cannot nest allows no
+ * further segments
+ *
+ * @param path - a key path
+ * @param project - whether the project has namespaces, and whether its format nests keys
+ *
+ * @returns the problem, or `undefined` when the path is usable there
+ */
+export const findProjectKeyPathProblem = (
+	path: KeyPath,
+	{ namespaced, nesting }: { namespaced: boolean; nesting: boolean }
+): KeyPathProblem | undefined => {
+	const problem = findKeyPathProblem(path)
+	if (problem !== undefined) return problem
+	const segments = splitKeyPath(path).length
+	if (namespaced && segments < 2) return keyPathProblems.namespaceOnly
+	if (!nesting && segments > (namespaced ? 2 : 1)) return keyPathProblems.tooDeep
+	return undefined
+}
+
+/**
  * splits a namespaced key path into its namespace and the key inside it
  *
  * @param path - a usable key path whose first segment is the namespace

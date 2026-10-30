@@ -5,6 +5,7 @@ import type {
 	KeyPath,
 	KeyPathInspection,
 	Locale,
+	NamespaceName,
 	TranslationNode,
 	TranslationTree
 } from '@linguify/types'
@@ -67,3 +68,15 @@ export const findConflicts = (catalogue: Catalogue, path: KeyPath): KeyConflict[
 		if (inspection.state === keyPathStates.blocked) return [{ locale, ...inspection }]
 		return []
 	})
+
+/**
+ * whether a namespace is there: any locale's tree has it, empty or not — a namespace just added holds no
+ * keys yet
+ *
+ * @param catalogue - every locale's tree
+ * @param namespace - a namespace name
+ *
+ * @returns whether some locale has it
+ */
+export const hasNamespace = (catalogue: Catalogue, namespace: NamespaceName): boolean =>
+	Object.values(catalogue.locales).some(tree => Object.hasOwn(tree, namespace))

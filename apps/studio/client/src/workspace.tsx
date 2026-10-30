@@ -1,5 +1,5 @@
-import { memo, useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
-import { studioText, viewModes } from '@linguify/constants'
+import { memo, useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { rowKinds, studioText, viewModes } from '@linguify/constants'
 import {
 	availableViewModes,
 	buildRows,
@@ -9,17 +9,22 @@ import {
 	type Expansion,
 	expandedExpansion,
 	filterKeys,
+	hiddenByView,
 	isFiltered,
 	type KeyEdit,
 	type KeyFilter,
 	type KeySort,
+	localeOrder,
+	type NewKey,
 	namespacesOf,
 	narrowsView,
 	nextSort,
 	noFilter,
 	pinnedKeys,
 	type RowSource,
+	revealKey,
 	revealsMatches,
+	rowId,
 	rowsFromCatalogue,
 	searchExpansion,
 	sectionsExpansion,
@@ -28,7 +33,8 @@ import {
 } from '@linguify/table'
 import type { KeyPath, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
-import { ListChevronsDownUpIcon, ListChevronsUpDownIcon } from 'lucide-react'
+import { ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon } from 'lucide-react'
+import { AddKey, addKeyFormId } from './add-key'
 import { focusRingClass } from './classes'
 import { Filters } from './filters'
 import { Toolbar } from './toolbar'
@@ -36,7 +42,7 @@ import { TranslationTable } from './translation-table'
 import type { ApiOutputs } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
-import { useEditKey, useKnownRevision } from './writes'
+import { useAddKey, useEditKey, useKnownRevision } from './writes'
 
 /**
  * the project, once read: the toolbar with the view's controls, and the table
@@ -50,6 +56,9 @@ import { useEditKey, useKnownRevision } from './writes'
  * @note only what changed renders again: the keys are read from the catalogue once, sorted once per sort,
  * and filtered from that; a kept key keeps its row, and the rows' toggle never changes. The middle is
  * contained, so typing in the toolbar does not lay out the table again
+ *
+ * @note a key is added in a form above the table, outside its rows, so the rows on screen are still exactly
+ * the table's own; a key added while the rows are held joins them
  *
  * @note an edit under a search, filter or sort holds the rows shown as they are ({@link pinnedKeys}), so the
  * key just changed neither moves nor disappears under the person's hands; changing the search, a filter,
@@ -149,6 +158,42 @@ export const Workspace = memo(
 		}, [])
 		useKnownRevision(catalogue.revision)
 		const editKey = useEditKey()
+		const addKey = useAddKey(source.default)
+		const [adding, setAdding] = useState(false)
+		const addButton = useRef<HTMLButtonElement>(null)
+		const locales = useMemo(() => localeOrder(source), [source])
+		const rules = useMemo(
+			() => ({
+				namespaced: config.namespaced,
+				nesting: config.capabilities.nesting,
+				createNamespace: config.config.keys.createNamespace
+			}),
+			[config]
+		)
+		const [lastAdded, setLastAdded] = useState<KeyPath>()
+		const added = useMemo(
+			() => (lastAdded === undefined ? undefined : { key: lastAdded, hidden: hiddenByView(keys, visible, lastAdded) }),
+			[lastAdded, keys, visible]
+		)
+		const onAdd = async (key: NewKey) => {
+			await addKey(key)
+			const { mode, revealing } = latest.current
+			// held rows take the new key in; its section and groups open, so it is in sight
+			setPinned(current => (current === undefined ? undefined : [...current, key.path]))
+			const reveal = (current: Partial<Record<ViewMode, Expansion>>, start: Expansion) => ({
+				...current,
+				[mode]: revealKey(current[mode] ?? start, key.path, { mode, namespaced: config.namespaced })
+			})
+			if (revealing) setLayers(current => reveal(current, latest.current.revealed))
+			else setExpansions(current => reveal(current, latest.current.initial))
+			setLastAdded(key.path)
+		}
+		useLayoutEffect(() => {
+			if (lastAdded === undefined) return
+			document
+				.querySelector(`#translations tr[data-row="${CSS.escape(rowId(rowKinds.key, lastAdded))}"]`)
+				?.scrollIntoView({ block: 'nearest' })
+		}, [lastAdded])
 		const onEdit = useCallback(
 			(edit: KeyEdit) => {
 				const { visible, narrowed } = latest.current
@@ -169,6 +214,18 @@ export const Workspace = memo(
 						shown={visible.length}
 						total={keys.length}
 					/>
+					<Button
+						ref={addButton}
+						variant="outline"
+						size="sm"
+						className={focusRingClass}
+						aria-expanded={adding}
+						aria-controls={adding ? addKeyFormId : undefined}
+						onClick={() => setAdding(open => !open)}
+					>
+						<PlusIcon data-icon="inline-start" />
+						{studioText.addKey}
+					</Button>
 					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
 						<ListChevronsUpDownIcon data-icon="inline-start" />
 						{studioText.expandAll}
@@ -179,6 +236,23 @@ export const Workspace = memo(
 					</Button>
 				</Toolbar>
 				<main className="flex min-h-0 flex-1 flex-col overflow-auto contain-content">
+					{adding && (
+						<AddKey
+							catalogue={catalogue.catalogue}
+							locales={locales}
+							defaultLocale={source.default}
+							descriptions={source.descriptions}
+							rules={rules}
+							added={added}
+							onAdd={onAdd}
+							onTyping={() => setLastAdded(undefined)}
+							onClearFilters={() => changeFilter(noFilter)}
+							onClose={() => {
+								setAdding(false)
+								addButton.current?.focus()
+							}}
+						/>
+					)}
 					{error !== undefined && (
 						<p id="error" role="alert" className="p-4 text-destructive">
 							{error}

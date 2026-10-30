@@ -41,7 +41,7 @@ export const emptyTranslation = ''
 export const reservedKeySegments: readonly string[] = ['__proto__', 'prototype', 'constructor']
 
 /**
- * why a key path cannot be used
+ * why a key path cannot be used — the last two only in some projects
  */
 export const keyPathProblems = {
 	/**
@@ -57,7 +57,17 @@ export const keyPathProblems = {
 	/**
 	 * a segment is one of {@link reservedKeySegments}
 	 */
-	reservedSegment: 'reserved-segment'
+	reservedSegment: 'reserved-segment',
+
+	/**
+	 * with namespaces on, a path that names only a namespace — a key is its namespace, then its name
+	 */
+	namespaceOnly: 'namespace-only',
+
+	/**
+	 * deeper than a format that cannot nest allows: a namespace and a name at most
+	 */
+	tooDeep: 'too-deep'
 } as const
 
 /**

@@ -1,12 +1,23 @@
-import { findConflicts, findDuplicate, findKeyPathProblem } from '@linguify/keys'
-import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, Locale } from '@linguify/types'
+import { newKeyNotes } from '@linguify/constants'
+import { findConflicts, findDuplicate, findProjectKeyPathProblem, hasNamespace, splitNamespace } from '@linguify/keys'
+import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
+import type { NewKey } from './edit'
+
+/**
+ * what a project's key paths must be: in a namespace when it has them, no deeper than its format nests
+ */
+export type KeyRules = {
+	namespaced: boolean
+	nesting: boolean
+}
 
 /**
  * what stands in the way of writing a key, found before anything is sent
  */
 export type KeyCheck = {
 	/**
-	 * why the path is unusable — empty, a segment empty, a reserved name — or nothing
+	 * why the path is unusable in this project — empty, a segment empty, a reserved name, a namespace alone,
+	 * too deep — or nothing
 	 */
 	problem?: KeyPathProblem
 
@@ -19,6 +30,11 @@ export type KeyCheck = {
 	 * the locales where nested keys are there already, or the path runs through a translation
 	 */
 	conflicts: KeyConflict[]
+
+	/**
+	 * the namespace the key would start, when no locale has it yet — empty namespaces count as there
+	 */
+	namespace?: NamespaceName
 }
 
 /**
@@ -29,11 +45,65 @@ export type KeyCheck = {
  *
  * @param catalogue - every locale's tree
  * @param path - the key path
+ * @param rules - whether the project has namespaces, and whether its format nests keys
  *
  * @returns what stands in the way; an unusable path is not checked further
  */
-export const checkNewKey = (catalogue: Catalogue, path: KeyPath): KeyCheck => {
-	const problem = findKeyPathProblem(path)
+export const checkNewKey = (catalogue: Catalogue, path: KeyPath, rules: KeyRules): KeyCheck => {
+	const problem = findProjectKeyPathProblem(path, rules)
 	if (problem !== undefined) return { problem, duplicate: [], conflicts: [] }
-	return { duplicate: findDuplicate(catalogue, path), conflicts: findConflicts(catalogue, path) }
+	const namespace = rules.namespaced ? splitNamespace(path).namespace : undefined
+	return {
+		duplicate: findDuplicate(catalogue, path),
+		conflicts: findConflicts(catalogue, path),
+		...(namespace === undefined || hasNamespace(catalogue, namespace) ? {} : { namespace })
+	}
 }
+
+/**
+ * one thing a new key's form says, each surface in its own words
+ */
+export type NewKeyNote =
+	| { kind: typeof newKeyNotes.problem; problem: KeyPathProblem }
+	| { kind: typeof newKeyNotes.duplicate; locales: Locale[] }
+	| { kind: typeof newKeyNotes.conflict; conflict: KeyConflict }
+	| { kind: typeof newKeyNotes.newNamespace; namespace: NamespaceName; allowed: boolean }
+	| { kind: typeof newKeyNotes.defaultRequired }
+
+/**
+ * what a new key's form says, and whether it can be added
+ *
+ * @note the default locale's text is required. A namespace not there yet is created only where
+ * `keys.createNamespace` allows it, as core does; otherwise it stops the add, a typo caught before it
+ * becomes a file
+ *
+ * @param catalogue - every locale's tree
+ * @param key - the key as typed
+ * @param rules - the project's key rules, its default locale, and `keys.createNamespace`
+ *
+ * @returns the notes, in the order to show them, and whether none stops the add
+ */
+export const checkNewKeyForm = (
+	catalogue: Catalogue,
+	key: NewKey,
+	rules: KeyRules & { defaultLocale: Locale; createNamespace: boolean }
+): { notes: NewKeyNote[]; ready: boolean } => {
+	const check = checkNewKey(catalogue, key.path, rules)
+	const notes: NewKeyNote[] = [
+		...(check.problem === undefined ? [] : [{ kind: newKeyNotes.problem, problem: check.problem }]),
+		...(check.duplicate.length === 0 ? [] : [{ kind: newKeyNotes.duplicate, locales: check.duplicate }]),
+		...check.conflicts.map(conflict => ({ kind: newKeyNotes.conflict, conflict })),
+		...(check.namespace === undefined
+			? []
+			: [{ kind: newKeyNotes.newNamespace, namespace: check.namespace, allowed: rules.createNamespace }]),
+		...((key.texts[rules.defaultLocale] ?? '') === '' ? [{ kind: newKeyNotes.defaultRequired }] : [])
+	]
+	return { notes, ready: notes.every(note => !stopsAdd(note)) }
+}
+
+/**
+ * @param note - one thing a new key's form says
+ *
+ * @returns whether it stops the key being added — all but a namespace that may be created
+ */
+export const stopsAdd = (note: NewKeyNote): boolean => note.kind !== newKeyNotes.newNamespace || !note.allowed

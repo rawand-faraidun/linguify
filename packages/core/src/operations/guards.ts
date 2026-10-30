@@ -1,5 +1,5 @@
 import { errorCodes, exampleKeyPath, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
-import { findKeyPathProblem, splitKeyPath } from '@linguify/keys'
+import { findKeyPathProblem, findProjectKeyPathProblem, splitKeyPath } from '@linguify/keys'
 import type { KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
 import { NotFoundError, ValidationError } from '../errors'
 import type { OperationContext } from './context'
@@ -10,7 +10,9 @@ import type { OperationContext } from './context'
 const keyPathReasons: Record<KeyPathProblem, string> = {
 	[keyPathProblems.empty]: 'it is empty',
 	[keyPathProblems.emptySegment]: 'it has an empty segment — two dots in a row, or one at either end',
-	[keyPathProblems.reservedSegment]: `a segment is a reserved name (${reservedKeySegments.map(name => `\`${name}\``).join(', ')})`
+	[keyPathProblems.reservedSegment]: `a segment is a reserved name (${reservedKeySegments.map(name => `\`${name}\``).join(', ')})`,
+	[keyPathProblems.namespaceOnly]: `it names only a namespace — a key is the namespace, then the key: \`${exampleKeyPath}\``,
+	[keyPathProblems.tooDeep]: "this project's format cannot nest keys"
 }
 
 /**
@@ -107,8 +109,7 @@ export const requireNamespaceName = (context: OperationContext, name: NamespaceN
 /**
  * makes sure a key path can name a translation in this project
  *
- * @note with namespaces on, a path needs a namespace and a key; an engine that cannot nest allows no
- * further segments
+ * @note `findProjectKeyPathProblem`'s rules — the same the studio checks a new key with before it is sent
  *
  * @param context - the operation context
  * @param path - the key path an input names
@@ -116,15 +117,9 @@ export const requireNamespaceName = (context: OperationContext, name: NamespaceN
  * @throws {@link ValidationError} `INVALID_INPUT`, saying why
  */
 export const requireKeyPath = ({ namespaced, capabilities }: OperationContext, path: KeyPath): void => {
-	const segments = splitKeyPath(path)
-	const reason =
-		findKeyPathReason(path) ??
-		(namespaced && segments.length < 2
-			? `it names only a namespace — a key is the namespace, then the key: \`${exampleKeyPath}\``
-			: !capabilities.nesting && segments.length > (namespaced ? 2 : 1)
-				? "this project's format cannot nest keys"
-				: undefined)
-	if (reason === undefined) return
+	const problem = findProjectKeyPathProblem(path, { namespaced, nesting: capabilities.nesting })
+	if (problem === undefined) return
+	const reason = keyPathReasons[problem]
 	throw new ValidationError(`\`${path}\` is not a usable key path: ${reason}`, {
 		code: errorCodes.invalidInput,
 		details: { path }

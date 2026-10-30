@@ -1,6 +1,8 @@
 import { rowKinds, viewModes } from '@linguify/constants'
-import type { ViewMode } from '@linguify/types'
+import { joinKeyPath, splitKeyPath, splitNamespace } from '@linguify/keys'
+import type { KeyPath, ViewMode } from '@linguify/types'
 import type { TableRow } from './rows'
+import { rowId } from './rows'
 import { canExpand } from './table'
 
 /**
@@ -117,4 +119,29 @@ export const toExpandedState = (
 	}
 	visit(rows)
 	return state
+}
+
+/**
+ * opens what holds a key — its section, and in the tree view its groups — so a key just added is in sight
+ *
+ * @param expansion - which rows are open
+ * @param path - the key's path
+ * @param shape - the view mode, and whether the project has namespaces
+ *
+ * @returns the expansion with those rows open
+ */
+export const revealKey = (
+	expansion: Expansion,
+	path: KeyPath,
+	{ mode, namespaced }: { mode: ViewMode; namespaced: boolean }
+): Expansion => {
+	const segments = splitKeyPath(path)
+	const groups =
+		mode === viewModes.tree
+			? segments
+					.slice(namespaced ? 1 : 0, -1)
+					.map((_, index) => rowId(rowKinds.group, joinKeyPath(segments.slice(0, index + (namespaced ? 2 : 1)))))
+			: []
+	const holders = [...(namespaced ? [rowId(rowKinds.section, splitNamespace(path).namespace)] : []), ...groups]
+	return holders.reduce((current, id) => toggleExpansion(current, id, true), expansion)
 }
