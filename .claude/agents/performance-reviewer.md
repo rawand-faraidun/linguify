@@ -1,5 +1,5 @@
 ---
-name: scale-reviewer
+name: performance-reviewer
 description: Measures linguify on large translation projects — thousands of keys across many locales, with descriptions — for anything quadratic or slow in core operations, the API, CLI output, the studio's table and the webview. Use before committing a change to operations, io, the API or the table. Read-only.
 tools: Read, Grep, Glob, Bash
 model: sonnet
