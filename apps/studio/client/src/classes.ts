@@ -53,3 +53,17 @@ export const inputFocusClass =
  * how wide a text field is in a form of several side by side
  */
 export const fieldWidthClass = 'w-56'
+
+/**
+ * the table's checkboxes: a border that shows when empty, filled when ticked, a dash when only part is —
+ * the generated primitive draws only a tick, on a border too faint to see, keyed on an attribute Radix does
+ * not set
+ */
+export const checkboxClass = `${focusRingClass} border-muted-foreground data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground data-[state=indeterminate]:border-primary data-[state=indeterminate]:[&_svg]:hidden data-[state=indeterminate]:before:h-0.5 data-[state=indeterminate]:before:w-2 data-[state=indeterminate]:before:bg-primary`
+
+/**
+ * a button that destroys, readable: the destructive colour on the page itself — its own faint tint under
+ * small red text falls short of contrast in the light theme
+ */
+export const destructiveClass =
+	'bg-transparent hover:bg-destructive/10 dark:bg-transparent dark:hover:bg-destructive/20'

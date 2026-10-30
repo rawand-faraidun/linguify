@@ -3,6 +3,7 @@ import { rowKinds, studioText, viewModes } from '@linguify/constants'
 import {
 	availableViewModes,
 	buildRows,
+	bulkDelete,
 	collapsedExpansion,
 	columnShown,
 	countUntranslated,
@@ -14,6 +15,7 @@ import {
 	type KeyEdit,
 	type KeyFilter,
 	type KeySort,
+	keepExisting,
 	localeOrder,
 	type NewKey,
 	namespacesOf,
@@ -26,23 +28,30 @@ import {
 	revealsMatches,
 	rowId,
 	rowsFromCatalogue,
+	type Selection,
 	searchExpansion,
 	sectionsExpansion,
 	sortKeys,
-	toggleExpansion
+	type TableRow,
+	toggleAll,
+	toggleExpansion,
+	toggleSelection
 } from '@linguify/table'
 import type { KeyPath, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
-import { ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon } from 'lucide-react'
+import { cn } from '@linguify/ui/lib/utils'
+import { ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { AddKey, addKeyFormId } from './add-key'
-import { focusRingClass } from './classes'
-import { Filters } from './filters'
+import { destructiveClass, focusRingClass } from './classes'
+import { DeleteKeys } from './delete-keys'
+import { Filters, searchId } from './filters'
+import { countKeys, fill } from './format'
 import { Toolbar } from './toolbar'
-import { TranslationTable } from './translation-table'
+import { focusTableStop, TranslationTable, translationsId } from './translation-table'
 import type { ApiOutputs } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
-import { useAddKey, useEditKey, useKnownRevision } from './writes'
+import { useAddKey, useEditKey, useKnownRevision, useRemoveKeys } from './writes'
 
 /**
  * the project, once read: the toolbar with the view's controls, and the table
@@ -59,6 +68,10 @@ import { useAddKey, useEditKey, useKnownRevision } from './writes'
  *
  * @note a key is added in a form above the table, outside its rows, so the rows on screen are still exactly
  * the table's own; a key added while the rows are held joins them
+ *
+ * @note keys are selected by path, so a selection outlives a change of view, search, filter or sort, and a
+ * key gone from disk drops out of it; select-all takes in what the view holds, and a bulk delete removes
+ * every selected key, those a filter hides too — its confirmation says how many
  *
  * @note an edit under a search, filter or sort holds the rows shown as they are ({@link pinnedKeys}), so the
  * key just changed neither moves nor disappears under the person's hands; changing the search, a filter,
@@ -188,10 +201,50 @@ export const Workspace = memo(
 			else setExpansions(current => reveal(current, latest.current.initial))
 			setLastAdded(key.path)
 		}
+		const [chosenKeys, setChosenKeys] = useState<Selection>(new Set())
+		// a key gone since it was ticked — deleted, renamed, or read again from disk — is let go
+		const selection = useMemo(() => keepExisting(chosenKeys, keys), [chosenKeys, keys])
+		const [deleted, setDeleted] = useState<number>()
+		const selecting = useRef({ keys, rows })
+		selecting.current = { keys, rows }
+		const choose = useCallback((change: (current: Selection) => Selection) => {
+			setDeleted(undefined)
+			setChosenKeys(current => change(keepExisting(current, selecting.current.keys)))
+		}, [])
+		const onSelect = useCallback((row: TableRow) => choose(current => toggleSelection(current, row)), [choose])
+		const onSelectAll = useCallback(() => choose(current => toggleAll(current, selecting.current.rows)), [choose])
+		const removeKeys = useRemoveKeys()
+		const [deleting, setDeleting] = useState(false)
+		const deleteButton = useRef<HTMLButtonElement>(null)
+		const doomed = useMemo(() => bulkDelete(selection, keys, visible), [selection, keys, visible])
+		// after a delete, the keyboard goes to the row after the last one deleted, so the person keeps their place
+		const after = useRef<string | undefined>(undefined)
+		const onDelete = async () => {
+			const shown = [...document.querySelectorAll(`#${translationsId} tbody tr[data-row]`)]
+			const last = shown.findLastIndex(row => row.getAttribute('data-state') === 'selected')
+			after.current =
+				shown
+					.slice(last + 1)
+					.find(row => row.getAttribute('data-state') !== 'selected')
+					?.getAttribute('data-row') ?? undefined
+			await removeKeys(doomed.paths)
+			setDeleted(doomed.paths.length)
+			setChosenKeys(new Set())
+		}
+		const afterDelete = () => {
+			const next =
+				after.current === undefined
+					? null
+					: document.querySelector<HTMLElement>(
+							`#${translationsId} tr[data-row="${CSS.escape(after.current)}"] [data-select] [role="checkbox"]`
+						)
+			if (next !== null) next.focus()
+			else if (!focusTableStop()) (document.getElementById(searchId) ?? addButton.current)?.focus()
+		}
 		useLayoutEffect(() => {
 			if (lastAdded === undefined) return
 			document
-				.querySelector(`#translations tr[data-row="${CSS.escape(rowId(rowKinds.key, lastAdded))}"]`)
+				.querySelector(`#${translationsId} tr[data-row="${CSS.escape(rowId(rowKinds.key, lastAdded))}"]`)
 				?.scrollIntoView({ block: 'nearest' })
 		}, [lastAdded])
 		const onEdit = useCallback(
@@ -226,6 +279,36 @@ export const Workspace = memo(
 						<PlusIcon data-icon="inline-start" />
 						{studioText.addKey}
 					</Button>
+					<Button
+						ref={deleteButton}
+						variant="destructive"
+						size="sm"
+						className={cn(destructiveClass, focusRingClass, 'aria-disabled:opacity-50')}
+						aria-disabled={selection.size === 0}
+						aria-describedby="selection-count"
+						onClick={() => {
+							if (selection.size > 0) setDeleting(true)
+						}}
+					>
+						<Trash2Icon data-icon="inline-start" />
+						{studioText.deleteSelected}
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className={cn(focusRingClass, 'aria-disabled:opacity-50')}
+						aria-disabled={selection.size === 0}
+						onClick={() => choose(() => new Set())}
+					>
+						{studioText.clearSelection}
+					</Button>
+					<span id="selection-count" role="status" className="text-muted-foreground text-xs tabular-nums">
+						{selection.size > 0
+							? fill(studioText.selectedCount, { keys: countKeys(selection.size) })
+							: deleted === undefined
+								? ''
+								: fill(studioText.deleted, { keys: countKeys(deleted) })}
+					</span>
 					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
 						<ListChevronsUpDownIcon data-icon="inline-start" />
 						{studioText.expandAll}
@@ -272,9 +355,22 @@ export const Workspace = memo(
 							sort={sort}
 							onSort={onSort}
 							onEdit={onEdit}
+							selection={selection}
+							onSelect={onSelect}
+							onSelectAll={onSelectAll}
 						/>
 					)}
 				</main>
+				<DeleteKeys
+					open={deleting}
+					onOpenChange={setDeleting}
+					keys={doomed.paths}
+					hidden={doomed.hidden}
+					locales={locales}
+					onDelete={onDelete}
+					onDeleted={afterDelete}
+					onCancelled={() => deleteButton.current?.focus()}
+				/>
 			</>
 		)
 	}

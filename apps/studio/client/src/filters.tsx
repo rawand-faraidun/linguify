@@ -16,6 +16,11 @@ import { fieldFocusClass, focusRingClass, menuItemClass } from './classes'
 import { countKeys, fill, keysWord, numbers } from './format'
 
 /**
+ * the search box's id
+ */
+export const searchId = 'search'
+
+/**
  * the search, the namespace filter, the still-to-translate filter with each locale's counts, how many keys
  * match, and a way to clear it all
  *
@@ -58,7 +63,7 @@ export const Filters = ({
 					</InputGroupAddon>
 					<InputGroupInput
 						ref={search}
-						id="search"
+						id={searchId}
 						type="search"
 						dir="auto"
 						aria-label={studioText.search}

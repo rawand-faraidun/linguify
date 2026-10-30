@@ -1,6 +1,7 @@
 import { type KeyboardEvent, memo, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
 	rowKinds,
+	selectionStates,
 	sortColumns,
 	sortDirections,
 	studioText,
@@ -22,21 +23,26 @@ import {
 	type RowSource,
 	rowFeatures,
 	rowOptionsFor,
+	type Selection,
+	type SelectionState,
 	sameColumn,
+	selectionState,
+	shownState,
 	toExpandedState
 } from '@linguify/table'
 import type { Locale, TableMark, ViewMode } from '@linguify/types'
+import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
 import { Textarea } from '@linguify/ui/components/textarea'
 import { cn } from '@linguify/ui/lib/utils'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon } from 'lucide-react'
-import { plainButtonClass, plainFocusClass, textWidthClass } from './classes'
+import { checkboxClass, plainButtonClass, plainFocusClass, textWidthClass } from './classes'
 import { countKeys, fill } from './format'
 
 /**
  * the translation table: a section per namespace, groups in the tree view, a row per key, its texts and
- * description changed in place
+ * description changed in place, a checkbox on every row to select keys for a bulk delete
  *
  * @note a plain `<table>`, not the UI package's `Table`, which wraps it in a box that scrolls sideways —
  * that box would hold the sticky column heads instead of the page's scrolling middle. Each text is
@@ -46,7 +52,9 @@ import { countKeys, fill } from './format'
  * @param props - `rows`, built for `mode`; `source`, the project's locales and whether descriptions are
  * on; `expansion`, which rows are open; `onToggle`, to open or close one by id, which should not change
  * between renders — every row that did not change is then left as it is; `sort`, how the rows are ordered,
- * and `onSort`, a column's header pressed; `onEdit`, a text changed in a cell, settled once it is written
+ * and `onSort`, a column's header pressed; `onEdit`, a text changed in a cell, settled once it is written;
+ * `selection`, the keys selected, `onSelect`, a row's checkbox pressed, and `onSelectAll`, the head's
+ * checkbox pressed — both should not change between renders, as `onToggle`
  *
  * @returns the table
  */
@@ -58,7 +66,10 @@ export const TranslationTable = memo(function TranslationTable({
 	onToggle,
 	sort,
 	onSort,
-	onEdit
+	onEdit,
+	selection,
+	onSelect,
+	onSelectAll
 }: {
 	rows: Row[]
 	mode: ViewMode
@@ -68,13 +79,16 @@ export const TranslationTable = memo(function TranslationTable({
 	sort: KeySort | undefined
 	onSort: (column: KeySort['column']) => void
 	onEdit: (edit: KeyEdit) => Promise<unknown>
+	selection: Selection
+	onSelect: (row: Row) => void
+	onSelectAll: () => void
 }) {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
 	useLayoutEffect(() => {
 		const table = tableRef.current
-		if (table !== null && table.querySelector(rovingText) === null)
-			table.querySelector(editableText)?.setAttribute('tabindex', '0')
+		if (table !== null && table.querySelector(rovingControl) === null)
+			(table.querySelector(editableText) ?? table.querySelector(cellControl))?.setAttribute('tabindex', '0')
 	})
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
@@ -102,13 +116,21 @@ export const TranslationTable = memo(function TranslationTable({
 			<table
 				ref={tableRef}
 				onFocus={event => rove(event.currentTarget, event.target)}
-				onKeyDown={moveBetweenTexts}
-				id="translations"
+				onKeyDown={moveBetweenControls}
+				id={translationsId}
 				aria-label={studioText.translations}
 				className="w-full caption-bottom text-xs"
 			>
 				<TableHeader className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
 					<TableRow>
+						<TableHead className="w-0" data-select>
+							<Checkbox
+								aria-label={studioText.selectShown}
+								className={checkboxClass}
+								checked={checkboxState(shownState(selection, rows))}
+								onCheckedChange={onSelectAll}
+							/>
+						</TableHead>
 						<SortableHead column={{ by: sortColumns.key }} sort={sort} onSort={onSort}>
 							{studioText.key}
 						</SortableHead>
@@ -143,6 +165,8 @@ export const TranslationTable = memo(function TranslationTable({
 									open={compact && isExpanded(expansion, id)}
 									onToggle={onToggle}
 									onEdit={onEdit}
+									selected={selection.has(original.key)}
+									onSelect={onSelect}
 								/>
 							) : (
 								<GroupLine
@@ -152,6 +176,8 @@ export const TranslationTable = memo(function TranslationTable({
 									columns={columns}
 									open={canExpand(mode, original) && isExpanded(expansion, id)}
 									onToggle={onToggle}
+									state={selectionState(selection, original)}
+									onSelect={onSelect}
 								/>
 							)
 						)}
@@ -162,43 +188,73 @@ export const TranslationTable = memo(function TranslationTable({
 })
 
 /**
- * every text a person can open, and the one the keyboard reaches the table on
+ * the table's id
  */
-const editableText = '[data-edit]'
-const rovingText = '[data-edit][tabindex="0"]'
+export const translationsId = 'translations'
 
 /**
- * makes the text just focused the table's one stop for Tab — all the others are reached with the arrow keys,
+ * every control in the table's cells — a key's checkbox, a text a person can open — the texts alone, and the
+ * one the keyboard reaches the table on, a text when there is one, so the hint on moving is heard on the way in
+ */
+const cellControl = '[data-cell]'
+const editableText = '[data-edit]'
+const rovingControl = '[data-cell][tabindex="0"]'
+
+/**
+ * the table's columns that are not a locale's, as the keyboard tells them apart
+ */
+const fixedColumns = { select: 'select', description: 'description' } as const
+
+/**
+ * how a row says it is selected — the state the table primitive styles
+ */
+const selectedRow = 'selected'
+
+/**
+ * gives the keyboard to the table, on its one stop for Tab
+ *
+ * @returns whether there was a stop to give it to — none when the table shows nothing
+ */
+export const focusTableStop = (): boolean => {
+	const stop = document.querySelector<HTMLElement>(`#${translationsId} ${rovingControl}`)
+	stop?.focus()
+	return stop !== null
+}
+
+/**
+ * makes the control just focused the table's one stop for Tab — all the others are reached with the arrow keys,
  * so the table is one step in the page however many texts it holds
  *
  * @param table - the table
  * @param target - what was focused
  */
 const rove = (table: HTMLElement, target: EventTarget) => {
-	if (!(target instanceof HTMLElement) || !target.matches(editableText)) return
-	for (const other of table.querySelectorAll(rovingText)) other.setAttribute('tabindex', '-1')
+	if (!(target instanceof HTMLElement) || !target.matches(cellControl)) return
+	for (const other of table.querySelectorAll(rovingControl)) other.setAttribute('tabindex', '-1')
 	target.setAttribute('tabindex', '0')
 }
 
 /**
- * @param text - an editable text
+ * @param control - a control in a cell
  *
- * @returns its column: its locale, or the description
+ * @returns its column: the checkboxes', a locale, or the description
  */
-const columnOf = (text: Element): string =>
-	text.closest('[data-locale]')?.getAttribute('data-locale') ??
-	(text.closest('[data-description]') === null ? '' : 'description')
+const columnOf = (control: Element): string =>
+	control.closest('[data-select]') !== null
+		? fixedColumns.select
+		: (control.closest('[data-locale]')?.getAttribute('data-locale') ??
+			(control.closest('[data-description]') === null ? '' : fixedColumns.description))
 
 /**
- * moves the keyboard between texts: left and right along a row, up and down a column, Home and End to a
- * row's ends
+ * moves the keyboard between the cells' controls: left and right along a row, up and down a column, Home
+ * and End to a row's ends
  *
  * @param event - a key pressed in the table
  */
-const moveBetweenTexts = (event: KeyboardEvent<HTMLTableElement>) => {
+const moveBetweenControls = (event: KeyboardEvent<HTMLTableElement>) => {
 	const from = event.target
-	if (!(from instanceof HTMLElement) || !from.matches(editableText)) return
-	const texts = [...event.currentTarget.querySelectorAll<HTMLElement>(editableText)]
+	if (!(from instanceof HTMLElement) || !from.matches(cellControl)) return
+	const texts = [...event.currentTarget.querySelectorAll<HTMLElement>(cellControl)]
 	const at = texts.indexOf(from)
 	const row = from.closest('tr')
 	const sameRow = texts.filter(text => text.closest('tr') === row)
@@ -280,6 +336,14 @@ const sortHintId = 'sort-hint'
 const indent = (depth: number) => `calc(var(--spacing) * ${2 + depth * 4})`
 
 /**
+ * @param state - how much of a row is selected
+ *
+ * @returns what its checkbox shows: ticked, a dash, or empty
+ */
+const checkboxState = (state: SelectionState): boolean | 'indeterminate' =>
+	state === selectionStates.all ? true : state === selectionStates.some ? 'indeterminate' : false
+
+/**
  * a button that opens and closes a row, its chevron turning with it
  */
 const Disclosure = ({ open, onToggle, children }: { open: boolean; onToggle: () => void; children: ReactNode }) => (
@@ -299,15 +363,31 @@ const GroupLine = memo(
 		depth,
 		columns,
 		open,
-		onToggle
+		onToggle,
+		state,
+		onSelect
 	}: {
 		row: Exclude<Row, KeyTableRow>
 		depth: number
 		columns: number
 		open: boolean
 		onToggle: (id: string) => void
+		state: SelectionState
+		onSelect: (row: Row) => void
 	}) => (
-		<TableRow data-row={row.id}>
+		<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined}>
+			<TableCell data-select>
+				<Checkbox
+					tabIndex={-1}
+					data-cell
+					aria-label={fill(studioText.selectGroup, {
+						name: row.kind === rowKinds.section ? row.namespace : row.path
+					})}
+					className={checkboxClass}
+					checked={checkboxState(state)}
+					onCheckedChange={() => onSelect(row)}
+				/>
+			</TableCell>
 			<TableHead
 				scope="rowgroup"
 				colSpan={columns}
@@ -340,7 +420,9 @@ const KeyLine = memo(
 		compact,
 		open,
 		onToggle,
-		onEdit
+		onEdit,
+		selected,
+		onSelect
 	}: {
 		row: KeyTableRow
 		depth: number
@@ -352,6 +434,8 @@ const KeyLine = memo(
 		open: boolean
 		onToggle: (id: string) => void
 		onEdit: (edit: KeyEdit) => Promise<unknown>
+		selected: boolean
+		onSelect: (row: Row) => void
 	}) => {
 		const label = <KeyLabel row={row} />
 		const description = (
@@ -378,7 +462,17 @@ const KeyLine = memo(
 			</Editable>
 		)
 		return (
-			<TableRow data-row={row.id}>
+			<TableRow data-row={row.id} data-state={selected ? selectedRow : undefined}>
+				<TableCell className="align-top" data-select>
+					<Checkbox
+						tabIndex={-1}
+						data-cell
+						aria-label={fill(studioText.select, { key: row.key })}
+						className={checkboxClass}
+						checked={selected}
+						onCheckedChange={() => onSelect(row)}
+					/>
+				</TableCell>
 				<TableHead
 					scope="row"
 					title={row.key}
@@ -498,6 +592,7 @@ const Editable = ({
 				type="button"
 				tabIndex={roving ? 0 : -1}
 				data-edit
+				data-cell
 				aria-describedby={editHintIds.open}
 				onClick={event => {
 					setRoving(event.currentTarget.tabIndex === 0)
