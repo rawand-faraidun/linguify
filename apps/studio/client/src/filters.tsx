@@ -1,6 +1,16 @@
 import { useRef } from 'react'
 import { compositionKeyCode, studioText } from '@linguify/constants'
-import { isFiltered, type KeyFilter, type LocaleCounts, noFilter, toTranslate } from '@linguify/table'
+import {
+	countKeys,
+	fill,
+	isFiltered,
+	type KeyFilter,
+	keysWord,
+	type LocaleCounts,
+	noFilter,
+	numbers,
+	toTranslate
+} from '@linguify/table'
 import type { Locale, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import {
@@ -13,7 +23,6 @@ import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '
 import { cn } from '@linguify/ui/lib/utils'
 import { ChevronDownIcon, SearchIcon, XIcon } from 'lucide-react'
 import { fieldFocusClass, focusRingClass, menuItemClass } from './classes'
-import { countKeys, fill, keysWord, numbers } from './format'
 
 /**
  * the search box's id

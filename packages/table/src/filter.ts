@@ -100,6 +100,21 @@ export const isUntranslated = (row: KeyRow, locale: Locale, defaultLocale: Local
 }
 
 /**
+ * the text a table shows for a key in a locale beside its mark: the text itself when nothing marks it or it
+ * is extra; nothing where the mark says it all — missing, empty, absent, blank
+ *
+ * @param row - one key
+ * @param locale - any locale
+ * @param mark - its mark, from {@link cellMark}
+ *
+ * @returns the text to show, or `undefined`
+ */
+export const cellText = (row: KeyRow, locale: Locale, mark: TableMark | undefined): string | undefined => {
+	const text = mark === undefined || mark === tableMarks.extra ? row.values[locale] : undefined
+	return text === '' ? undefined : text
+}
+
+/**
  * how a table marks a key's text in a locale — the same rules `diff` and the counters use
  *
  * @param row - one key

@@ -10,7 +10,7 @@
 	},
 	"dependencies": {
 		"@tanstack/react-query": "catalog:",
-		"@tanstack/react-table": "9.2.8",
+		"@tanstack/react-table": "catalog:",
 		"@trpc/client": "catalog:",
 		"@trpc/server": "catalog:",
 		"@trpc/tanstack-react-query": "catalog:",
@@ -28,7 +28,7 @@
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@linguify/ui": "workspace:*",
-		"@tailwindcss/vite": "^4.3.3",
+		"@tailwindcss/vite": "catalog:",
 		"@types/node": "catalog:",
 		"@types/react": "catalog:",
 		"@types/react-dom": "catalog:",

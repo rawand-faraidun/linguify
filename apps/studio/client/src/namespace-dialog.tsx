@@ -1,6 +1,6 @@
 import { type FormEvent, useRef, useState } from 'react'
 import { compositionKeyCode, keyPathProblemText, namespaceActions, studioDelays, studioText } from '@linguify/constants'
-import { checkNamespaceName, type NamespaceAction } from '@linguify/table'
+import { checkNamespaceName, fill, type NamespaceAction } from '@linguify/table'
 import type { Catalogue, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import {
@@ -16,7 +16,6 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { focusRingClass, inputFocusClass } from './classes'
 import { ignoreComposingEnter } from './composition'
-import { fill } from './format'
 import { useSettled } from './settled'
 import { WriteNotice } from './write-notice'
 

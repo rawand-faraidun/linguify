@@ -8,7 +8,7 @@ import {
 	studioDelays,
 	studioText
 } from '@linguify/constants'
-import { checkNewKeyForm, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
+import { checkNewKeyForm, fill, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
 import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { Input } from '@linguify/ui/components/input'
@@ -16,7 +16,6 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { fieldWidthClass, focusRingClass, inputFocusClass, textWidthClass } from './classes'
 import { ignoreComposingEnter } from './composition'
-import { fill } from './format'
 import { useSettled } from './settled'
 
 /**

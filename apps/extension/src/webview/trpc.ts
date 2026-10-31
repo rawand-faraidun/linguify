@@ -1,6 +1,7 @@
 import type { AppRouter } from '@linguify/api'
 import { QueryClient } from '@tanstack/react-query'
 import { createTRPCClient } from '@trpc/client'
+import type { inferRouterOutputs } from '@trpc/server'
 import { createTRPCContext } from '@trpc/tanstack-react-query'
 import { bridgeLink } from './bridge-link'
 
@@ -22,3 +23,8 @@ export const queryClient = new QueryClient({
  * `TRPCProvider` and `useTRPC` — the API as TanStack Query options
  */
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>()
+
+/**
+ * what each API call answers, as the webview receives it
+ */
+export type ApiOutputs = inferRouterOutputs<AppRouter>

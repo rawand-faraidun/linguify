@@ -23,7 +23,9 @@
 		"@linguify/table": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
+		"@tailwindcss/vite": "catalog:",
 		"@tanstack/react-query": "catalog:",
+		"@tanstack/react-table": "catalog:",
 		"@trpc/client": "catalog:",
 		"@trpc/server": "catalog:",
 		"@trpc/tanstack-react-query": "catalog:",
@@ -34,6 +36,7 @@
 		"@vitejs/plugin-react": "catalog:",
 		"react": "catalog:",
 		"react-dom": "catalog:",
+		"tailwindcss": "catalog:",
 		"tsdown": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:"

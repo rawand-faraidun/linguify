@@ -374,6 +374,22 @@ export const previewStates = {
 } as const
 
 /**
+ * the translation table's id, the studio's and the extension's alike
+ */
+export const tableId = 'translations'
+
+/**
+ * the blocks a table cell's text and a row's key are drawn in: bounded inside the cell, wrapping — a long
+ * key or text never widens the table past its locales
+ *
+ * @note in constants so the studio and the extension draw them alike
+ */
+export const tableTextClasses = {
+	text: 'block max-w-80 whitespace-pre-wrap break-words',
+	key: 'block max-w-80 wrap-anywhere whitespace-normal'
+} as const
+
+/**
  * how many keys a table opens on with every section open; above it, the sections start closed — a person
  * opens the one they want in a moment, and a table of 20,000 open keys takes the browser seconds a change
  */

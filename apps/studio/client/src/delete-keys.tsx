@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { studioText } from '@linguify/constants'
+import { countKeys, fill, numbers, plural } from '@linguify/table'
 import type { KeyPath, Locale } from '@linguify/types'
 import {
 	AlertDialog,
@@ -13,7 +14,6 @@ import {
 } from '@linguify/ui/components/alert-dialog'
 import { cn } from '@linguify/ui/lib/utils'
 import { destructiveClass, focusRingClass } from './classes'
-import { countKeys, fill, numbers, plural } from './format'
 import { WriteNotice } from './write-notice'
 
 /**

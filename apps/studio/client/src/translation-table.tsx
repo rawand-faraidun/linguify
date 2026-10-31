@@ -6,17 +6,22 @@ import {
 	sortColumns,
 	sortDirections,
 	studioText,
+	tableId,
 	tableMarkClasses,
 	tableMarkLabels,
 	tableMarks,
+	tableTextClasses,
 	viewModes
 } from '@linguify/constants'
 import { localeOrder, type RowSource } from '@linguify/keys'
 import {
 	canExpand,
 	cellMark,
+	cellText,
+	countKeys,
 	type Expansion,
 	editedText,
+	fill,
 	isExpanded,
 	type KeyEdit,
 	type KeySort,
@@ -39,7 +44,6 @@ import { cn } from '@linguify/ui/lib/utils'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
 import { checkboxClass, plainButtonClass, plainFocusClass, textWidthClass } from './classes'
-import { countKeys, fill } from './format'
 
 /**
  * the translation table: a section per namespace, groups in the tree view, a row per key, its texts and
@@ -120,7 +124,7 @@ export const TranslationTable = memo(function TranslationTable({
 				ref={tableRef}
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={moveBetweenControls}
-				id={translationsId}
+				id={tableId}
 				aria-label={studioText.translations}
 				className="w-full caption-bottom text-xs"
 			>
@@ -192,11 +196,6 @@ export const TranslationTable = memo(function TranslationTable({
 })
 
 /**
- * the table's id
- */
-export const translationsId = 'translations'
-
-/**
  * every control in the table's cells — a key's checkbox, a text a person can open — the texts alone, and the
  * one the keyboard reaches the table on, a text when there is one, so the hint on moving is heard on the way in
  */
@@ -219,7 +218,7 @@ export const selectedRow = 'selected'
  *
  * @returns the selector of that row in the table
  */
-export const rowSelector = (id: string): string => `#${translationsId} tr[data-row="${CSS.escape(id)}"]`
+export const rowSelector = (id: string): string => `#${tableId} tr[data-row="${CSS.escape(id)}"]`
 
 /**
  * gives the keyboard to the table, on its one stop for Tab
@@ -227,7 +226,7 @@ export const rowSelector = (id: string): string => `#${translationsId} tr[data-r
  * @returns whether there was a stop to give it to — none when the table shows nothing
  */
 export const focusTableStop = (): boolean => {
-	const stop = document.querySelector<HTMLElement>(`#${translationsId} ${rovingControl}`)
+	const stop = document.querySelector<HTMLElement>(`#${tableId} ${rovingControl}`)
 	stop?.focus()
 	return stop !== null
 }
@@ -740,17 +739,17 @@ const KeyLabel = ({ row }: { row: KeyTableRow }) =>
 /**
  * the key label's block: as wide as a text's, and wrapping anywhere
  */
-const keyLabelClass = `wrap-anywhere block whitespace-normal ${textWidthClass}`
+const keyLabelClass = tableTextClasses.key
 
 /**
  * a key's text in one locale, and its mark when the text alone does not say enough
  */
 const Value = ({ row, locale, defaultLocale }: { row: KeyTableRow; locale: Locale; defaultLocale: Locale }) => {
 	const mark = cellMark(row, locale, defaultLocale)
-	const text = mark === undefined || mark === tableMarks.extra ? row.values[locale] : undefined
+	const text = cellText(row, locale, mark)
 	return (
 		<>
-			{text !== undefined && text !== '' && <Text text={text} lang={locale} />}
+			{text !== undefined && <Text text={text} lang={locale} />}
 			{mark !== undefined && <Mark mark={mark} />}
 		</>
 	)
@@ -761,7 +760,7 @@ const Value = ({ row, locale, defaultLocale }: { row: KeyTableRow; locale: Local
  */
 const Text = ({ text, lang }: { text: string | undefined; lang?: Locale }) =>
 	text === undefined ? null : (
-		<span data-text dir="auto" lang={lang} className={cn('block whitespace-pre-wrap break-words', textWidthClass)}>
+		<span data-text dir="auto" lang={lang} className={tableTextClasses.text}>
 			{text}
 		</span>
 	)

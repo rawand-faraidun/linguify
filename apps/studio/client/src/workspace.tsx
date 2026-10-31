@@ -1,5 +1,5 @@
 import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { namespaceActions, rowKinds, studioText, tableOpenLimit, viewModes } from '@linguify/constants'
+import { namespaceActions, rowKinds, studioText, tableId, tableOpenLimit, viewModes } from '@linguify/constants'
 import { keyRows, localeOrder, namespacesIn, type RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
@@ -7,10 +7,12 @@ import {
 	bulkDelete,
 	collapsedExpansion,
 	columnShown,
+	countKeys,
 	countUntranslated,
 	type Expansion,
 	emptyNamespacesShown,
 	expandedExpansion,
+	fill,
 	filterKeys,
 	hiddenByView,
 	isFiltered,
@@ -49,11 +51,10 @@ import { AddKey, addKeyFormId } from './add-key'
 import { destructiveClass, focusRingClass } from './classes'
 import { DeleteKeys } from './delete-keys'
 import { Filters, searchId } from './filters'
-import { countKeys, fill } from './format'
 import { NamespaceDialog } from './namespace-dialog'
 import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
-import { focusTableStop, rowSelector, selectedRow, TranslationTable, translationsId } from './translation-table'
+import { focusTableStop, rowSelector, selectedRow, TranslationTable } from './translation-table'
 import { type ApiOutputs, onRefresh } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
@@ -309,7 +310,7 @@ export const Workspace = memo(
 		// after a delete, the keyboard goes to the row after the last one deleted, so the person keeps their place
 		const after = useRef<string | undefined>(undefined)
 		const onDelete = async () => {
-			const shown = [...document.querySelectorAll(`#${translationsId} tbody tr[data-row]`)]
+			const shown = [...document.querySelectorAll(`#${tableId} tbody tr[data-row]`)]
 			const last = shown.findLastIndex(row => row.getAttribute('data-state') === selectedRow)
 			after.current =
 				shown

@@ -1,18 +1,55 @@
+@import "tailwindcss";
+
+@source "../../../../packages/constants/src";
+@source "../../../../packages/table/src";
+
+/*
+ * the studio's token names, painted in the editor's own colours: VS Code sets these variables for the
+ * person's theme — light, dark, high contrast — and changes them live when the theme changes
+ */
+@theme inline {
+	--color-background: var(--vscode-editor-background);
+	--color-foreground: var(--vscode-editor-foreground);
+	--color-muted-foreground: var(--vscode-descriptionForeground);
+	--color-border: var(--vscode-panel-border, var(--vscode-editorWidget-border));
+	--color-focus: var(--vscode-focusBorder);
+	--color-control: var(--vscode-button-secondaryBackground);
+	--color-control-foreground: var(--vscode-button-secondaryForeground);
+	--color-control-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+	--color-chosen: var(--vscode-inputOption-activeBackground);
+	--color-chosen-foreground: var(--vscode-inputOption-activeForeground);
+	--color-chosen-border: var(--vscode-inputOption-activeBorder);
+	--color-missing: var(--vscode-inputValidation-warningBackground);
+	--color-missing-foreground: var(--vscode-editor-foreground);
+	--color-missing-border: var(--vscode-inputValidation-warningBorder);
+	--color-extra: var(--vscode-inputValidation-infoBackground);
+	--color-extra-foreground: var(--vscode-editor-foreground);
+	--color-extra-border: var(--vscode-inputValidation-infoBorder);
+	--color-contrast: var(--vscode-contrastBorder, transparent);
+	--font-sans: var(--vscode-font-family);
+	--font-mono: var(--vscode-editor-font-family);
+	--radius: 0;
+}
+
 body {
-	color: var(--vscode-foreground);
-	background: var(--vscode-editor-background);
-	font-family: var(--vscode-font-family);
+	background: var(--color-background);
+	color: var(--color-foreground);
+	font-family: var(--font-sans);
 	font-size: var(--vscode-font-size);
 }
 
-table {
-	border-collapse: collapse;
+/* a mark is outlined in its own border colour too: high contrast themes draw borders, not fills */
+[data-mark="missing"],
+[data-mark="empty"] {
+	outline: 1px solid var(--color-missing-border);
 }
 
-th,
-td {
-	padding: 0.25rem 0.5rem;
-	border-bottom: 1px solid var(--vscode-panel-border);
-	text-align: start;
-	vertical-align: top;
+[data-mark="extra"] {
+	outline: 1px solid var(--color-extra-border);
+}
+
+/* outside the control, so a ring the colour of a chosen button's fill still shows */
+:focus-visible {
+	outline: 1px solid var(--color-focus);
+	outline-offset: 2px;
 }

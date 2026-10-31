@@ -1,12 +1,12 @@
 import { actionText, studioLanguage, studioText } from '@linguify/constants'
 
 /**
- * numbers as the studio's language writes them
+ * numbers as the studio's and the extension's language writes them
  */
 export const numbers = new Intl.NumberFormat(studioLanguage)
 
 /**
- * counts in the studio's language — one key, two keys
+ * counts in their language — one key, two keys
  */
 const pluralRules = new Intl.PluralRules(studioLanguage)
 
