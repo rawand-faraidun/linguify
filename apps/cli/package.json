@@ -46,7 +46,7 @@
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",
-		"tsdown": "^0.23.0",
+		"tsdown": "catalog:",
 		"typescript": "catalog:"
 	},
 	"engines": {
