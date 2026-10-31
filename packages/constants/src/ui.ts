@@ -374,6 +374,12 @@ export const previewStates = {
 } as const
 
 /**
+ * how many keys a table opens on with every section open; above it, the sections start closed — a person
+ * opens the one they want in a moment, and a table of 20,000 open keys takes the browser seconds a change
+ */
+export const tableOpenLimit = 2000
+
+/**
  * how long the studio waits on a person, in milliseconds: before saying aloud what stands in the way of
  * what they type, and before working out what an action would do with the options they set
  */

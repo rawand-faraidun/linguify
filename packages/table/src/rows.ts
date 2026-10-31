@@ -284,3 +284,38 @@ export const availableViewModes = ({ nesting }: Pick<EngineCapabilities, 'nestin
  */
 export const usableViewMode = (mode: ViewMode, capabilities: Pick<EngineCapabilities, 'nesting'>): ViewMode =>
 	availableViewModes(capabilities).includes(mode) ? mode : viewModes.flat
+
+/**
+ * the rows read again after a write, each the earlier row itself where nothing in it changed
+ *
+ * @note a table remembers what it built for each row by the row itself, so a row read afresh, though the
+ * same, is built and drawn again; kept, only the rows a write touched are — one edit no longer redraws
+ * every key
+ *
+ * @param previous - the rows as they were
+ * @param next - the rows as read now
+ *
+ * @returns `next`, with every row that equals its earlier self replaced by it
+ */
+export const keepUnchangedRows = (previous: readonly KeyRow[], next: readonly KeyRow[]): KeyRow[] => {
+	const before = new Map(previous.map(row => [row.key, row]))
+	return next.map(row => {
+		const earlier = before.get(row.key)
+		return earlier !== undefined && sameRow(earlier, row) ? earlier : row
+	})
+}
+
+/**
+ * @param a - a key's row
+ * @param b - another row for the same key
+ *
+ * @returns whether they hold the same description and the same text in the same locales
+ */
+const sameRow = (a: KeyRow, b: KeyRow): boolean => {
+	if (a.description !== b.description) return false
+	const locales = Object.keys(a.values)
+	return (
+		locales.length === Object.keys(b.values).length &&
+		locales.every(locale => Object.hasOwn(b.values, locale) && a.values[locale] === b.values[locale])
+	)
+}

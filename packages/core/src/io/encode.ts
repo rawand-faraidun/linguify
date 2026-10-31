@@ -71,6 +71,19 @@ const delimited = ({ header, rows }: Table, delimiter: string): string =>
 	`${byteOrderMark}${Papa.unparse({ fields: header, data: rows }, { delimiter, newline: ioLineEnding })}${ioLineEnding}`
 
 /**
+ * makes sure a table can be written in a format — what encoding it would refuse, found without encoding it,
+ * so an export's dry run says it as the write would
+ *
+ * @param format - the format
+ * @param table - the header and rows
+ *
+ * @throws {@link ValidationError} `INVALID_INPUT` for an xlsx cell longer than Excel holds
+ */
+export const requireEncodable = (format: IoFormat, table: Table): void => {
+	if (format === ioFormats.xlsx) requireCellsFit(table)
+}
+
+/**
  * makes sure every cell fits in an Excel cell
  *
  * @param table - the header and rows

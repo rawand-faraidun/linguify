@@ -22,11 +22,20 @@ import type { mutationOptions } from './contracts'
 export type MutationOptions = z.output<typeof mutationOptions>
 
 /**
+ * the files a write plans, by name — their contents stay in the server: no caller reads them, and at
+ * 20,000 keys they made a sync's dry run an 11 MB answer
+ */
+export type PlannedFiles = {
+	write: { file: string }[]
+	delete: string[]
+}
+
+/**
  * what every mutation returns
  */
 export type MutationResult = {
 	report: Report
-	plan: WritePlan
+	plan: PlannedFiles
 
 	/**
 	 * the revision after the write, or the unchanged one under `dryRun`
@@ -129,6 +138,7 @@ export const run = async <Input>(
 					...serialisedAsRead(loaded, reading.catalogue)
 				})
 			: nothing
-	if (dryRun) return { report, plan, revision: reading.revision, applied: false }
-	return { report, plan, revision: await applyWrite(loaded, plan, reading.revision), applied: true }
+	const files = { write: plan.write.map(({ file }) => ({ file })), delete: plan.delete }
+	if (dryRun) return { report, plan: files, revision: reading.revision, applied: false }
+	return { report, plan: files, revision: await applyWrite(loaded, plan, reading.revision), applied: true }
 }

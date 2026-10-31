@@ -1,7 +1,7 @@
 import { emptyTranslation, ioColumns } from '@linguify/constants'
 import { localeOrder } from '@linguify/keys'
 import type { Catalogue, IoFormat } from '@linguify/types'
-import { encodeTable, type IoTarget, resolveIoTarget, type Table } from '../io'
+import { encodeTable, type IoTarget, requireEncodable, resolveIoTarget, type Table } from '../io'
 import type { OperationContext } from './context'
 import { buildKeyRows } from './rows'
 
@@ -27,6 +27,30 @@ export type ExportFile = IoTarget & {
 	 * the file's complete content: text for csv, tsv and json, bytes for xlsx
 	 */
 	content: string | Uint8Array
+}
+
+/**
+ * where an export would go and how many rows it would hold — a dry run's answer, without building the file,
+ * which for xlsx is most of the work; what building it would refuse is still refused
+ *
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ * @param input - `export`'s input
+ *
+ * @returns the format, the path relative to the working directory, and the row count
+ *
+ * @throws {@link ValidationError} `INVALID_INPUT` when the format and the path's extension disagree, or a
+ * cell is longer than an xlsx file holds
+ */
+export const planExport = (
+	context: OperationContext,
+	catalogue: Catalogue,
+	input: ExportInput = {}
+): IoTarget & { rows: number } => {
+	const target = resolveIoTarget(context.config, input)
+	const table = buildTable(context, catalogue)
+	requireEncodable(target.format, table)
+	return { ...target, rows: table.rows.length }
 }
 
 /**

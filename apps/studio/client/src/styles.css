@@ -20,3 +20,21 @@
 		0 0 0 1px var(--background),
 		0 0 0 3px var(--ring);
 }
+
+/*
+ * a modal sets two inherited values on body — Radix's pointer-events and react-remove-scroll's custom
+ * property — and each made the browser restyle every cell of a large table, opening and closing; fixed here,
+ * main keeps its own pointer-events, so the change stops at body
+ */
+body {
+	--removed-body-scroll-bar-size: 0px;
+}
+
+main {
+	pointer-events: auto;
+}
+
+/* the table is laid out apart from the form above it, so typing in the form does not lay out every row */
+#translations {
+	contain: layout style;
+}

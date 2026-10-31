@@ -1,5 +1,5 @@
 import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { namespaceActions, rowKinds, studioText, viewModes } from '@linguify/constants'
+import { namespaceActions, rowKinds, studioText, tableOpenLimit, viewModes } from '@linguify/constants'
 import { keyRows, localeOrder, namespacesIn, type RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
@@ -18,6 +18,7 @@ import {
 	type KeyFilter,
 	type KeySort,
 	keepExisting,
+	keepUnchangedRows,
 	movedExpansion,
 	movedFilter,
 	movedPaths,
@@ -40,7 +41,7 @@ import {
 	toggleExpansion,
 	toggleSelection
 } from '@linguify/table'
-import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
+import type { KeyPath, KeyRow, NamespaceName, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
 import { FolderPlusIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon, Trash2Icon } from 'lucide-react'
@@ -109,7 +110,13 @@ export const Workspace = memo(
 			}),
 			[config]
 		)
-		const keys = useMemo(() => keyRows(catalogue.catalogue, source), [catalogue, source])
+		// rows a write left as they were stay the same rows, so only the changed ones are drawn again
+		const earlier = useRef<readonly KeyRow[]>([])
+		const keys = useMemo(() => {
+			const read = keepUnchangedRows(earlier.current, keyRows(catalogue.catalogue, source))
+			earlier.current = read
+			return read
+		}, [catalogue, source])
 		const counts = useMemo(() => countUntranslated(keys, source.locales, source.default), [keys, source])
 		const namespaces = useMemo(
 			() => (config.namespaced ? namespacesIn(catalogue.catalogue, localeOrder(source)) : []),
@@ -148,9 +155,11 @@ export const Workspace = memo(
 			[mode, visible, config.namespaced, emptyNamespaces]
 		)
 
+		// a large project opens with its sections closed: every key open is seconds of the browser's work a change
+		const large = keys.length > tableOpenLimit
 		const initial = useMemo(
-			() => (mode === viewModes.compact ? sectionsExpansion(rows) : expandedExpansion),
-			[mode, rows]
+			() => (large ? collapsedExpansion : mode === viewModes.compact ? sectionsExpansion(rows) : expandedExpansion),
+			[large, mode, rows]
 		)
 		const [expansions, setExpansions] = useState<Partial<Record<ViewMode, Expansion>>>({})
 		const base = expansions[mode] ?? initial

@@ -4,6 +4,7 @@ import { errorCodes, ioColumns } from '@linguify/constants'
 import {
 	exportCatalogue,
 	importCatalogue,
+	planExport,
 	readCatalogue,
 	readTable,
 	resolveIoTarget,
@@ -27,12 +28,14 @@ import { projectProcedure } from '../trpc'
 export const exportProcedure = projectProcedure
 	.input(exportInput.extend({ dryRun: mutationOptions.shape.dryRun }).optional())
 	.mutation(async ({ ctx, input: { dryRun = false, ...input } = {} }) => {
-		const file = await exportCatalogue(ctx.operation, (await readCatalogue(ctx.loaded)).catalogue, input)
-		const path = resolve(ctx.cwd, file.path)
-		await requireOutsideProject(ctx.loaded, path, file.path)
-		const replaces = await requireReplaceable(path, file.format, file.path)
-		if (!dryRun) await writeFile(path, file.content)
-		return { format: file.format, path, rows: file.rows, replaces, written: !dryRun }
+		const { catalogue } = await readCatalogue(ctx.loaded)
+		// a dry run only counts the rows: building the file — an xlsx workbook above all — is the write's work
+		const target = planExport(ctx.operation, catalogue, input)
+		const path = resolve(ctx.cwd, target.path)
+		await requireOutsideProject(ctx.loaded, path, target.path)
+		const replaces = await requireReplaceable(path, target.format, target.path)
+		if (!dryRun) await writeFile(path, (await exportCatalogue(ctx.operation, catalogue, input)).content)
+		return { format: target.format, path, rows: target.rows, replaces, written: !dryRun }
 	})
 
 /**
