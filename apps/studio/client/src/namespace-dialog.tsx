@@ -15,10 +15,10 @@ import { Input } from '@linguify/ui/components/input'
 import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { focusRingClass, inputFocusClass } from './classes'
+import { ignoreComposingEnter } from './composition'
 import { fill } from './format'
 import { useSettled } from './settled'
-import { StaleNotice } from './stale-notice'
-import { isStaleWrite } from './write-errors'
+import { WriteNotice } from './write-notice'
 
 /**
  * asks for a namespace's name — a new one, or one to rename to — and checks it as it is typed, the way core
@@ -28,8 +28,8 @@ import { isStaleWrite } from './write-errors'
  * to the name, read with it
  *
  * @note it holds still while it writes, as the bulk delete does: the button pressed again does nothing, and
- * Escape and Cancel wait. Refused because the files changed on disk, it says so with its own Refresh and
- * keeps the name. Mounted afresh for each opening, so it starts from the name it renames, or none
+ * Escape and Cancel wait. A failure is said in it — with its own Refresh when the files changed on disk —
+ * and the name is kept. Mounted afresh for each opening, so it starts from the name it renames, or none
  *
  * @note on closing, the keyboard goes where `onClosed` puts it — Radix gives it back only to a trigger of its
  * own, and the button that opened it may now name another namespace
@@ -57,7 +57,7 @@ export const NamespaceDialog = ({
 	const [name, setName] = useState(renaming ?? '')
 	const [open, setOpen] = useState(true)
 	const [pending, setPending] = useState(false)
-	const [stale, setStale] = useState(false)
+	const [failure, setFailure] = useState<{ error: unknown }>()
 	const field = useRef<HTMLInputElement>(null)
 	const written = useRef<NamespaceName | undefined>(undefined)
 	const check = checkNamespaceName(catalogue, name, { from: renaming, namespaceFiles })
@@ -77,15 +77,15 @@ export const NamespaceDialog = ({
 			return
 		}
 		setPending(true)
-		setStale(false)
+		setFailure(undefined)
 		try {
 			await onSubmit(name)
 			written.current = name
 			setPending(false)
 			setOpen(false)
 		} catch (error) {
-			// reported once for every write; what was typed stays to try again
-			setStale(isStaleWrite(error))
+			// reported once for every write, and said here; what was typed stays to try again
+			setFailure({ error })
 			setPending(false)
 		}
 	}
@@ -110,7 +110,12 @@ export const NamespaceDialog = ({
 					onClosed(written.current)
 				}}
 			>
-				<form onSubmit={submit} aria-busy={pending} className="flex min-w-0 flex-col gap-4">
+				<form
+					onSubmit={submit}
+					onKeyDown={ignoreComposingEnter}
+					aria-busy={pending}
+					className="flex min-w-0 flex-col gap-4"
+				>
 					<DialogHeader>
 						<DialogTitle className="wrap-anywhere">
 							{adding ? studioText.addNamespaceTitle : fill(studioText.renameNamespace, { name: renaming })}
@@ -146,11 +151,12 @@ export const NamespaceDialog = ({
 							{spoken}
 						</span>
 					</div>
-					{stale && (
-						<StaleNotice
+					{failure !== undefined && (
+						<WriteNotice
+							error={failure.error}
 							onRefreshed={() => {
 								// the notice goes, and the keyboard with it: back on the name, to make the change again
-								setStale(false)
+								setFailure(undefined)
 								field.current?.focus()
 							}}
 						/>

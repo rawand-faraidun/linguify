@@ -3,7 +3,7 @@ import { findConflicts, findDuplicate, hasNamespace, setTranslation, splitNamesp
 import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
-import { requireDescriptions, requireKeyPath } from '../guards'
+import { requireDescriptions, requireKeyPath, requireNamespaceFile } from '../guards'
 import type { OperationResult } from '../report'
 import { collectGivenText, notAssignable } from './shared'
 
@@ -85,6 +85,7 @@ export const addKey = (context: OperationContext, catalogue: Catalogue, input: A
 				{ code: errorCodes.namespaceNotFound, details: { namespace, path } }
 			)
 		}
+		requireNamespaceFile(context, catalogue, namespace)
 	}
 
 	const defaultText = given.get(config.default) ?? emptyTranslation

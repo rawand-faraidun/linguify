@@ -9,12 +9,13 @@ import {
 	studioText
 } from '@linguify/constants'
 import { checkNewKeyForm, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
-import type { Catalogue, KeyPath, Locale } from '@linguify/types'
+import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { Input } from '@linguify/ui/components/input'
 import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { fieldWidthClass, focusRingClass, inputFocusClass, textWidthClass } from './classes'
+import { ignoreComposingEnter } from './composition'
 import { fill } from './format'
 import { useSettled } from './settled'
 
@@ -59,7 +60,7 @@ export const AddKey = ({
 	locales: readonly Locale[]
 	defaultLocale: Locale
 	descriptions: boolean
-	rules: { namespaced: boolean; nesting: boolean; createNamespace: boolean }
+	rules: KeyRules & { createNamespace: boolean }
 	added: { key: KeyPath; hidden: boolean } | undefined
 	onAdd: (key: NewKey) => Promise<unknown>
 	onTyping: () => void
@@ -122,6 +123,7 @@ export const AddKey = ({
 			aria-busy={saving}
 			onSubmit={submit}
 			onKeyDown={event => {
+				ignoreComposingEnter(event)
 				const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
 				if (event.key === 'Escape' && !composing) close()
 			}}
@@ -218,7 +220,7 @@ export const AddKey = ({
 						className={cn('aria-disabled:opacity-50', focusRingClass)}
 						aria-disabled={!ready}
 					>
-						{studioText.add}
+						{saving ? studioText.adding : studioText.add}
 					</Button>
 					<Button
 						type="button"

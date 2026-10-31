@@ -6,13 +6,12 @@ import {
 	type OperationResult,
 	type PlanOptions,
 	planWrite,
-	type Report,
 	readCatalogue,
 	serializeCatalogue,
 	staleCatalogue,
 	type WritePlan
 } from '@linguify/core'
-import type { Catalogue, LoadedConfig, Revision } from '@linguify/types'
+import type { Catalogue, LoadedConfig, Report, Revision } from '@linguify/types'
 import type { z } from 'zod'
 import type { mutationOptions } from './contracts'
 

@@ -1,6 +1,6 @@
-import { memo, useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { namespaceActions, rowKinds, studioText, viewModes } from '@linguify/constants'
-import { namespacesIn } from '@linguify/keys'
+import { keyRows, localeOrder, namespacesIn, type RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
 	buildRows,
@@ -18,7 +18,6 @@ import {
 	type KeyFilter,
 	type KeySort,
 	keepExisting,
-	localeOrder,
 	movedExpansion,
 	movedFilter,
 	movedPaths,
@@ -29,11 +28,9 @@ import {
 	nextSort,
 	noFilter,
 	pinnedKeys,
-	type RowSource,
 	revealKey,
 	revealsMatches,
 	rowId,
-	rowsFromCatalogue,
 	type Selection,
 	searchExpansion,
 	sectionsExpansion,
@@ -56,7 +53,7 @@ import { NamespaceDialog } from './namespace-dialog'
 import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
 import { focusTableStop, rowSelector, selectedRow, TranslationTable, translationsId } from './translation-table'
-import type { ApiOutputs } from './trpc'
+import { type ApiOutputs, onRefresh } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
 import { useAddKey, useAddNamespace, useEditKey, useKnownRevision, useRemoveKeys, useRenameNamespace } from './writes'
@@ -112,11 +109,11 @@ export const Workspace = memo(
 			}),
 			[config]
 		)
-		const keys = useMemo(() => rowsFromCatalogue(catalogue.catalogue, source), [catalogue, source])
+		const keys = useMemo(() => keyRows(catalogue.catalogue, source), [catalogue, source])
 		const counts = useMemo(() => countUntranslated(keys, source.locales, source.default), [keys, source])
 		const namespaces = useMemo(
-			() => (config.namespaced ? namespacesIn(catalogue.catalogue) : []),
-			[catalogue, config.namespaced]
+			() => (config.namespaced ? namespacesIn(catalogue.catalogue, localeOrder(source)) : []),
+			[catalogue, config.namespaced, source]
 		)
 		const [chosen, setChosen] = useState<KeyFilter>(noFilter)
 		// a namespace or locale gone since it was chosen — renamed, deleted, or out of the config — is let go
@@ -132,6 +129,8 @@ export const Workspace = memo(
 		const search = useDeferredValue(filter.search)
 		const sorted = useMemo(() => (sort === undefined ? keys : sortKeys(keys, sort)), [keys, sort])
 		const [pinned, setPinned] = useState<readonly KeyPath[]>()
+		// a refresh shows the files as they are: rows held behind an earlier edit are let go
+		useEffect(() => onRefresh(() => setPinned(undefined)), [])
 		const visible = useMemo(() => {
 			if (pinned !== undefined) return pinnedKeys(keys, pinned)
 			return filterKeys(
@@ -189,7 +188,7 @@ export const Workspace = memo(
 		}, [])
 		useKnownRevision(catalogue.revision)
 		const editKey = useEditKey()
-		const addKey = useAddKey(source.default)
+		const addKey = useAddKey()
 		const [adding, setAdding] = useState(false)
 		const addButton = useRef<HTMLButtonElement>(null)
 		const addNamespaceButton = useRef<HTMLButtonElement>(null)
@@ -208,7 +207,7 @@ export const Workspace = memo(
 			const action = namespaceAction?.action
 			if (action?.kind === namespaceActions.rename) {
 				const { from } = action
-				await renameNamespace({ from, to: name })
+				const renamed = await renameNamespace({ from, to: name })
 				const move = (current: Partial<Record<ViewMode, Expansion>>) =>
 					Object.fromEntries(
 						Object.entries(current).map(([view, expansion]) => [view, movedExpansion(expansion, from, name)])
@@ -219,18 +218,21 @@ export const Workspace = memo(
 				setExpansions(move)
 				setLayers(move)
 				setLastAdded(current => current && movedPaths([current], from, name)[0])
-				setSaid(fill(studioText.renamedNamespace, { from, to: name }))
+				setSaid(withWarnings(fill(studioText.renamedNamespace, { from, to: name }), renamed.report))
 				return
 			}
-			await addNamespace(name)
+			const added = await addNamespace(name)
 			// a namespace filter on: the new one joins it, as a person adding it means to see it
 			setChosen(current =>
 				current.namespaces === undefined ? current : { ...current, namespaces: [...current.namespaces, name] }
 			)
 			setSaid(
-				fill(revealsMatches({ ...filter, search }) ? studioText.addedNamespaceHidden : studioText.addedNamespace, {
-					name
-				})
+				withWarnings(
+					fill(revealsMatches({ ...filter, search }) ? studioText.addedNamespaceHidden : studioText.addedNamespace, {
+						name
+					}),
+					added.report
+				)
 			)
 		}
 		const namespaceClosed = (written: NamespaceName | undefined) => {
@@ -255,6 +257,7 @@ export const Workspace = memo(
 			() => ({
 				namespaced: config.namespaced,
 				nesting: config.capabilities.nesting,
+				namespaceFiles: config.namespaceFiles,
 				createNamespace: config.config.keys.createNamespace
 			}),
 			[config]
@@ -304,8 +307,11 @@ export const Workspace = memo(
 					.slice(last + 1)
 					.find(row => row.getAttribute('data-state') !== selectedRow)
 					?.getAttribute('data-row') ?? undefined
-			await removeKeys(doomed.paths)
-			setSaid(fill(studioText.deleted, { keys: countKeys(doomed.paths.length) }))
+			const removed = await removeKeys(doomed.paths)
+			// what core removed, and anything it left — a path holding keys of its own in another locale
+			setSaid(
+				withWarnings(fill(studioText.deleted, { keys: countKeys(removed.report.changes.length) }), removed.report)
+			)
 			setChosenKeys(new Set())
 		}
 		const afterDelete = () => {
@@ -324,6 +330,7 @@ export const Workspace = memo(
 			(edit: KeyEdit) => {
 				const { visible, narrowed } = latest.current
 				if (narrowed) setPinned(current => current ?? visible.map(row => row.key))
+				setSaid(undefined)
 				return editKey(edit)
 			},
 			[editKey]
@@ -355,7 +362,12 @@ export const Workspace = memo(
 					<ProjectActions
 						defaults={{ removeUnused: config.config.sync.removeUnused, format: config.config.io.format }}
 						cwd={config.cwd}
-						onDone={setSaid}
+						revision={catalogue.revision}
+						onDone={said => {
+							setSaid(said)
+							// keys the action added or removed show as the view says, not held behind an earlier edit
+							setPinned(undefined)
+						}}
 					/>
 					{config.namespaced && (
 						<Button
@@ -413,7 +425,7 @@ export const Workspace = memo(
 						{studioText.collapseAll}
 					</Button>
 				</Toolbar>
-				<main className="flex min-h-0 flex-1 flex-col overflow-auto contain-content">
+				<main className="flex min-h-0 flex-1 scroll-pt-10 flex-col overflow-auto contain-content">
 					{adding && (
 						<AddKey
 							catalogue={catalogue.catalogue}
@@ -481,3 +493,12 @@ export const Workspace = memo(
 		)
 	}
 )
+
+/**
+ * @param done - what a write did, in words
+ * @param report - what core reported of it
+ *
+ * @returns the words, then each warning core gave — what it left as it was, and why
+ */
+const withWarnings = (done: string, report: { warnings: readonly { message: string }[] }): string =>
+	[done, ...report.warnings.map(warning => warning.message)].join(' ')

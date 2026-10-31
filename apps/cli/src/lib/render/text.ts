@@ -1,6 +1,6 @@
-import { relative } from 'node:path'
 import { styleText } from 'node:util'
 import { cliFieldSeparator, cliTextMarkers, unprintableCharacter } from '@linguify/constants'
+import { relativePath } from '@linguify/keys'
 import stringWidth from 'string-width'
 
 /**
@@ -113,4 +113,4 @@ export const fields = (...values: string[]): string => values.join(cliFieldSepar
  *
  * @returns it relative to the folder, written out safely — a folder or file name can hold anything
  */
-export const shownPath = (cwd: string, file: string): string => printable(relative(cwd, file) || file)
+export const shownPath = (cwd: string, file: string): string => printable(relativePath(cwd, file))

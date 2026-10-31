@@ -3,7 +3,7 @@ import { hasNamespace, inspectKeyPath, isWithin, readNode, removeNode, setNode, 
 import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, NotFoundError } from '../../errors'
 import type { OperationContext } from '../context'
-import { requireKeyPath } from '../guards'
+import { requireKeyPath, requireNamespaceFile } from '../guards'
 import type { OperationResult } from '../report'
 import { invalid, moveDescriptions, notAssignable, parentOf, renameInPlace } from './shared'
 
@@ -72,6 +72,7 @@ export const renameKey = (
 				{ code: errorCodes.namespaceNotFound, details: { namespace, path: to } }
 			)
 		}
+		requireNamespaceFile(context, catalogue, namespace)
 	}
 
 	const sameParent = parentOf(from) === parentOf(to)

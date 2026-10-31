@@ -1,3 +1,5 @@
 export * from './inspect'
+export * from './io'
 export * from './path'
+export * from './rows'
 export * from './tree'

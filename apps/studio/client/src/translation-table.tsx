@@ -11,17 +11,17 @@ import {
 	tableMarks,
 	viewModes
 } from '@linguify/constants'
+import { localeOrder, type RowSource } from '@linguify/keys'
 import {
 	canExpand,
 	cellMark,
 	type Expansion,
+	editedText,
 	isExpanded,
 	type KeyEdit,
 	type KeySort,
 	type KeyTableRow,
-	localeOrder,
 	type TableRow as Row,
-	type RowSource,
 	rowFeatures,
 	rowOptionsFor,
 	type Selection,
@@ -619,11 +619,13 @@ const Editable = ({
 	const commit = async (typed: string, how: 'enter' | 'leave') => {
 		if (!editing.current || pending.current) return
 		if (how === 'leave' && (changed || typed === failed.current)) return
-		if (typed === text) return close(how === 'enter')
+		// the field gives line breaks back as line feeds: unchanged text writes nothing, and \r\n stays
+		const written = editedText(typed, text)
+		if (written === undefined) return close(how === 'enter')
 		pending.current = true
 		setSaving(true)
 		try {
-			await onCommit(typed)
+			await onCommit(written)
 			close(how === 'enter')
 		} catch {
 			// reported once for every write; what was typed stays to try again

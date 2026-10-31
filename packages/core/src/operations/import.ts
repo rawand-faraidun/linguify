@@ -1,13 +1,13 @@
 import { changeKinds, emptyTranslation, errorCodes, ioColumns } from '@linguify/constants'
-import { assignTranslation, findConflicts, findDuplicate, readTranslation } from '@linguify/keys'
-import type { Catalogue, Descriptions, KeyPath, Locale, TranslationTree } from '@linguify/types'
+import { assignTranslation, findConflicts, findDuplicate, readTranslation, splitNamespace } from '@linguify/keys'
+import type { Catalogue, Descriptions, KeyChange, KeyPath, Locale, TranslationTree } from '@linguify/types'
 import { ConflictError, type LinguifyError, NotFoundError, ValidationError } from '../errors'
 import { importInvalid, type Table } from '../io'
 import { getOwn } from '../utils'
 import type { OperationContext } from './context'
-import { requireKeyPath } from './guards'
+import { requireKeyPath, requireNamespaceFile } from './guards'
 import { notAssignable } from './key/shared'
-import type { KeyChange, OperationResult } from './report'
+import type { OperationResult } from './report'
 
 /**
  * a table read from an import file
@@ -60,7 +60,7 @@ export const importCatalogue = (
 	{ table, file }: ImportSource
 ): OperationResult => {
 	const { config } = context
-	const rows = readRows(context, table, file)
+	const rows = readRows(context, table, file, catalogue)
 
 	// one copy of each tree and of the descriptions, written row by row: copying them again for every row
 	// made a large import grow with the square of its size. Each row still sees the rows before it
@@ -114,11 +114,17 @@ export const importCatalogue = (
  * @param context - the operation context
  * @param table - the imported table
  * @param file - its file, for error messages
+ * @param catalogue - the catalogue, which a new namespace's name is checked against
  *
  * @returns every row with a key, its row number as a spreadsheet shows it (the header is row 1), and its
  * non-empty cells
  */
-const readRows = (context: OperationContext, { header, rows }: Table, file: string): ImportRow[] => {
+const readRows = (
+	context: OperationContext,
+	{ header, rows }: Table,
+	file: string,
+	catalogue: Catalogue
+): ImportRow[] => {
 	const { config } = context
 	const blank = (column: number) => rows.every(row => (row[column] ?? '') === '')
 	const keyColumn = header.indexOf(ioColumns.key)
@@ -159,6 +165,7 @@ const readRows = (context: OperationContext, { header, rows }: Table, file: stri
 		if (key === '') throw importInvalid(file, `row ${rowNumber} has text but no key`)
 		try {
 			requireKeyPath(context, key)
+			if (context.namespaced) requireNamespaceFile(context, catalogue, splitNamespace(key).namespace)
 		} catch (error) {
 			throw atRow(file, rowNumber, error as LinguifyError)
 		}

@@ -1,9 +1,9 @@
 import { changeKinds, warningCodes } from '@linguify/constants'
 import { joinKeyPath, readNode, removeNodes, splitKeyPath } from '@linguify/keys'
-import type { Catalogue, KeyPath, Locale, TranslationTree } from '@linguify/types'
+import type { Catalogue, KeyChange, KeyPath, Locale, TranslationNode, TranslationTree, Warning } from '@linguify/types'
 import type { OperationContext } from '../context'
 import { requireKeyPath } from '../guards'
-import type { KeyChange, OperationResult, Warning } from '../report'
+import type { OperationResult } from '../report'
 import { invalid } from './shared'
 
 /**
@@ -18,7 +18,9 @@ export type RemoveKeysInput = {
  *
  * @note a group goes with everything nested in it. The groups a removal empties are dropped — never a
  * namespace, which `namespace remove` handles. A path no locale has is a warning, and the rest still
- * go; a path given twice is removed once
+ * go; a path given twice is removed once. A path that is a translation in one locale and nested keys in
+ * another loses only the translation, with a warning: the nested keys are keys of their own, which the
+ * person did not name
  *
  * @param context - the operation context
  * @param catalogue - the catalogue
@@ -43,11 +45,14 @@ export const removeKeys = (
 		: removeAtOnce(context, catalogue.locales, unique)
 
 	const removed = new Set(changes.map(({ path }) => path))
+	const mixed = new Set(warnings.flatMap(({ code, path }) => (code === warningCodes.structureConflict ? [path] : [])))
 	const described = new Set<KeyPath>()
 	const kept = Object.entries(catalogue.descriptions).filter(([key]) => {
 		const by = findRemovedAncestor(key, removed)
-		if (by !== undefined) described.add(by)
-		return by === undefined
+		// under a path removed only as a translation, a nested key's description stays with it
+		const gone = by !== undefined && (by === key || !mixed.has(by))
+		if (gone) described.add(by)
+		return !gone
 	})
 	const descriptions = described.size === 0 ? catalogue.descriptions : Object.fromEntries(kept)
 	return {
@@ -100,6 +105,52 @@ const skipped = (path: KeyPath): Warning => ({
 })
 
 /**
+ * @param path - a key path some locale has
+ * @param texts - the locales where it is a translation
+ * @param groups - the locales where it holds nested keys
+ *
+ * @returns the warning that only its translation was removed
+ */
+const translationOnly = (path: KeyPath, texts: Locale[], groups: Locale[]): Warning => ({
+	code: warningCodes.structureConflict,
+	path,
+	message: `\`${path}\` is a translation in ${listed(texts)} but holds nested keys in ${listed(groups)}; only the translation was removed`
+})
+
+/**
+ * @param locales - locale codes
+ *
+ * @returns them for a message
+ */
+const listed = (locales: Locale[]): string => locales.map(locale => `\`${locale}\``).join(', ')
+
+/**
+ * finds what a path is in each locale
+ *
+ * @param locales - the configured locales
+ * @param trees - every locale's tree
+ * @param path - a key path
+ *
+ * @returns the locales that have it, and of those, the ones where it is a translation and the ones where
+ * it holds nested keys
+ */
+const shapes = (
+	locales: readonly Locale[],
+	trees: Record<Locale, TranslationTree>,
+	path: KeyPath
+): { holders: Locale[]; texts: Locale[]; groups: Locale[] } => {
+	const nodes = locales.map((locale): [Locale, TranslationNode | undefined] => [
+		locale,
+		readNode(trees[locale] ?? {}, path)
+	])
+	return {
+		holders: nodes.flatMap(([locale, node]) => (node === undefined ? [] : [locale])),
+		texts: nodes.flatMap(([locale, node]) => (typeof node === 'string' ? [locale] : [])),
+		groups: nodes.flatMap(([locale, node]) => (typeof node === 'object' ? [locale] : []))
+	}
+}
+
+/**
  * removes paths none of which lies inside another, in one walk of each locale's tree
  *
  * @param context - the operation context
@@ -115,16 +166,23 @@ const removeAtOnce = (
 ): Removal => {
 	const changes: KeyChange[] = []
 	const warnings: Warning[] = []
+	// per locale, the paths it loses: a path that is a translation elsewhere stays where it holds keys
+	const gone = new Map<Locale, KeyPath[]>(config.locales.map(locale => [locale, []]))
 	for (const path of paths) {
-		const holders = config.locales.filter(locale => readNode(trees[locale] ?? {}, path) !== undefined)
-		if (holders.length === 0) warnings.push(skipped(path))
-		else changes.push({ kind: changeKinds.removed, path, locales: holders })
+		const { holders, texts, groups } = shapes(config.locales, trees, path)
+		if (holders.length === 0) {
+			warnings.push(skipped(path))
+			continue
+		}
+		const mixed = texts.length > 0 && groups.length > 0
+		if (mixed) warnings.push(translationOnly(path, texts, groups))
+		for (const locale of mixed ? texts : holders) gone.get(locale)?.push(path)
+		changes.push({ kind: changeKinds.removed, path, locales: mixed ? texts : holders })
 	}
-	const gone = changes.map(({ path }) => path)
 	const locales = Object.fromEntries(
 		config.locales.map((locale): [Locale, TranslationTree] => [
 			locale,
-			removeNodes(trees[locale] ?? {}, gone, { keepTopLevel: namespaced })
+			removeNodes(trees[locale] ?? {}, gone.get(locale) ?? [], { keepTopLevel: namespaced })
 		])
 	)
 	return { locales, changes, warnings }
@@ -149,18 +207,24 @@ const removeOneByOne = (
 	const changes: KeyChange[] = []
 	const warnings: Warning[] = []
 	for (const path of paths) {
-		const holders = config.locales.filter(locale => readNode(locales[locale] ?? {}, path) !== undefined)
+		const { holders, texts, groups } = shapes(config.locales, locales, path)
 		if (holders.length === 0) {
 			warnings.push(skipped(path))
 			continue
 		}
+		const mixed = texts.length > 0 && groups.length > 0
+		if (mixed) warnings.push(translationOnly(path, texts, groups))
+		const from = mixed ? texts : holders
+		const before = locales
 		locales = Object.fromEntries(
 			config.locales.map((locale): [Locale, TranslationTree] => [
 				locale,
-				removeNodes(locales[locale] ?? {}, [path], { keepTopLevel: namespaced })
+				from.includes(locale)
+					? removeNodes(before[locale] ?? {}, [path], { keepTopLevel: namespaced })
+					: (before[locale] ?? {})
 			])
 		)
-		changes.push({ kind: changeKinds.removed, path, locales: holders })
+		changes.push({ kind: changeKinds.removed, path, locales: from })
 	}
 	return { locales, changes, warnings }
 }

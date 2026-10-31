@@ -1,9 +1,9 @@
-import { emptyTranslation, errorCodes } from '@linguify/constants'
-import { flattenTree } from '@linguify/keys'
+import { errorCodes, translationGaps } from '@linguify/constants'
+import { flattenTree, localeOrder, translationGap } from '@linguify/keys'
 import type { Catalogue, KeyPath, Locale } from '@linguify/types'
 import { ValidationError } from '../errors'
 import { getOwn } from '../utils'
-import { localeOrder, type OperationContext } from './context'
+import type { OperationContext } from './context'
 import { requireLocale } from './guards'
 
 /**
@@ -70,11 +70,13 @@ export const diff = (context: OperationContext, catalogue: Catalogue, input: Dif
 	const targets = input.locale === undefined ? localeOrder(config).slice(1) : [input.locale]
 	return targets.map(locale => {
 		const target = flattenTree(catalogue.locales[locale] ?? {})
+		// the one rule the studio's marks and counters use too
+		const gap = (key: KeyPath) => translationGap(getOwn(source, key), getOwn(target, key))
 		return {
 			locale,
-			missing: Object.keys(source).filter(key => getOwn(target, key) === undefined),
-			extra: Object.keys(target).filter(key => getOwn(source, key) === undefined),
-			empty: Object.keys(source).filter(key => getOwn(target, key) === emptyTranslation)
+			missing: Object.keys(source).filter(key => gap(key) === translationGaps.missing),
+			extra: Object.keys(target).filter(key => gap(key) === translationGaps.extra),
+			empty: Object.keys(source).filter(key => gap(key) === translationGaps.empty)
 		}
 	})
 }

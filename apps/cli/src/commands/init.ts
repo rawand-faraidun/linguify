@@ -77,7 +77,8 @@ const ask = async (command: Command): Promise<InitInput> => {
 					if (codes.length === 0) return value?.trim() ? 'Name at least one locale — en, ckb' : undefined
 					const problem = codes.map(code => locale.safeParse(code)).find(result => !result.success)
 					if (problem !== undefined) return problem.error?.issues[0]?.message
-					return new Set(codes).size === codes.length ? undefined : 'Each locale once'
+					// once each, letter case aside — the config refuses `en` and `EN`, one file on a case-insensitive disk
+					return new Set(codes.map(code => code.toLowerCase())).size === codes.length ? undefined : 'Each locale once'
 				}
 			})
 		)

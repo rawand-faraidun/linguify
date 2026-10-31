@@ -1,23 +1,15 @@
-import { errorCodes, exampleKeyPath, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
-import { findKeyPathProblem, findNamespaceNameProblem, findProjectKeyPathProblem } from '@linguify/keys'
-import type { KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
+import { errorCodes, keyPathProblemText } from '@linguify/constants'
+import {
+	findKeyPathProblem,
+	findNamespaceFileProblem,
+	findNamespaceNameProblem,
+	findProjectKeyPathProblem,
+	hasNamespace,
+	namespacesIn
+} from '@linguify/keys'
+import type { Catalogue, KeyPath, Locale, NamespaceName } from '@linguify/types'
 import { NotFoundError, ValidationError } from '../errors'
 import type { OperationContext } from './context'
-
-/**
- * why each kind of unusable key path is refused
- */
-const keyPathReasons: Record<KeyPathProblem, string> = {
-	[keyPathProblems.empty]: 'it is empty',
-	[keyPathProblems.emptySegment]: 'it has an empty segment — two dots in a row, or one at either end',
-	[keyPathProblems.reservedSegment]: `a segment is a reserved name (${reservedKeySegments.map(name => `\`${name}\``).join(', ')})`,
-	[keyPathProblems.namespaceOnly]: `it names only a namespace — a key is the namespace, then the key: \`${exampleKeyPath}\``,
-	[keyPathProblems.tooDeep]: "this project's format cannot nest keys",
-	[keyPathProblems.separator]: `it contains \`${keySeparator}\`, which separates the namespace from the key`,
-	[keyPathProblems.fileName]: 'its name becomes a file name, so it may not contain `/` or `\\`, nor be `.` or `..`',
-	[keyPathProblems.caseClash]:
-		'another namespace differs from it only in case — in a multi-file layout they would be the same file on a case-insensitive file system'
-}
 
 /**
  * says why a key path cannot be used in any project — the rules that need no config
@@ -31,7 +23,7 @@ const keyPathReasons: Record<KeyPathProblem, string> = {
  */
 export const findKeyPathReason = (path: KeyPath): string | undefined => {
 	const problem = findKeyPathProblem(path)
-	return problem === undefined ? undefined : keyPathReasons[problem]
+	return problem === undefined ? undefined : keyPathProblemText[problem]
 }
 
 /**
@@ -43,7 +35,7 @@ export const findKeyPathReason = (path: KeyPath): string | undefined => {
  */
 export const findNamespaceNameReason = (name: NamespaceName): string | undefined => {
 	const problem = findNamespaceNameProblem(name)
-	return problem === undefined ? undefined : keyPathReasons[problem]
+	return problem === undefined ? undefined : keyPathProblemText[problem]
 }
 
 /**
@@ -103,7 +95,35 @@ export const requireNamespaceName = (context: OperationContext, name: NamespaceN
 	requireNamespaces(context)
 	const reason = findNamespaceNameReason(name)
 	if (reason === undefined) return
-	throw new ValidationError(`\`${name}\` cannot be a namespace: ${reason}`, {
+	throw new ValidationError(`\`${name}\` cannot be a namespace. ${reason}`, {
+		code: errorCodes.invalidInput,
+		details: { namespace: name }
+	})
+}
+
+/**
+ * makes sure a namespace a change creates can be a file, where each namespace is one — the studio checks a
+ * name with the same rule before it is sent
+ *
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ * @param name - the namespace the change creates, or renames another to
+ * @param from - the namespace being renamed, which the new name may differ from only in case
+ *
+ * @throws {@link ValidationError} `INVALID_INPUT` for a name no file can have, or one differing from another
+ * namespace only in case
+ */
+export const requireNamespaceFile = (
+	{ namespaceFiles }: OperationContext,
+	catalogue: Catalogue,
+	name: NamespaceName,
+	from?: NamespaceName
+): void => {
+	if (!namespaceFiles || hasNamespace(catalogue, name)) return
+	const others = namespacesIn(catalogue).filter(namespace => namespace !== from)
+	const problem = findNamespaceFileProblem(name, others)
+	if (problem === undefined) return
+	throw new ValidationError(`\`${name}\` cannot be a namespace. ${keyPathProblemText[problem]}`, {
 		code: errorCodes.invalidInput,
 		details: { namespace: name }
 	})
@@ -122,8 +142,7 @@ export const requireNamespaceName = (context: OperationContext, name: NamespaceN
 export const requireKeyPath = ({ namespaced, capabilities }: OperationContext, path: KeyPath): void => {
 	const problem = findProjectKeyPathProblem(path, { namespaced, nesting: capabilities.nesting })
 	if (problem === undefined) return
-	const reason = keyPathReasons[problem]
-	throw new ValidationError(`\`${path}\` is not a usable key path: ${reason}`, {
+	throw new ValidationError(`\`${path}\` is not a usable key path. ${keyPathProblemText[problem]}`, {
 		code: errorCodes.invalidInput,
 		details: { path }
 	})

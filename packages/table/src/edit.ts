@@ -35,26 +35,45 @@ export type NewKey = {
  * what `key.add` is asked to do for a new key
  *
  * @note a text left empty is left out, so `keys.fillWithDefault` decides it as it would for `key add`; a
- * new namespace is created as `keys.createNamespace` says, as for `key add`
+ * new namespace is created as `keys.createNamespace` says, as for `key add`. Every text goes by its locale,
+ * the default's too — never as `value`, which core reads as whatever the default is when it writes
  *
  * @param key - the new key
- * @param defaultLocale - the default locale, whose text is the key's value
  *
- * @returns the path, the default's text, the others', and the description when given
+ * @returns the path, each text by its locale, and the description when given
  */
 export const newKeyInput = (
-	key: NewKey,
-	defaultLocale: Locale
+	key: NewKey
 ): {
 	path: KeyPath
-	value: string
 	translations: Record<Locale, string>
 	description?: string
 } => ({
 	path: key.path,
-	value: key.texts[defaultLocale] ?? '',
-	translations: Object.fromEntries(
-		Object.entries(key.texts).filter(([locale, text]) => locale !== defaultLocale && text !== '')
-	),
+	translations: Object.fromEntries(Object.entries(key.texts).filter(([, text]) => text !== '')),
 	...(key.description === '' ? {} : { description: key.description })
 })
+
+/**
+ * a text as a browser's text field gives it back: every line break a line feed
+ *
+ * @param text - a text as stored
+ *
+ * @returns it with `\r\n` and a lone `\r` as `\n`
+ */
+const asTyped = (text: string): string => text.replace(/\r\n?/g, '\n')
+
+/**
+ * what an edit of a text writes — a text field gives every line break back as a line feed, so a text whose
+ * breaks were all `\r\n` gets them back, and one opened and saved untouched writes nothing
+ *
+ * @param typed - what the field holds
+ * @param stored - the text as the files hold it
+ *
+ * @returns the text to write, or `undefined` when it is the stored text, line breaks aside
+ */
+export const editedText = (typed: string, stored: string): string | undefined => {
+	if (typed === asTyped(stored)) return undefined
+	const crlf = stored.includes('\r\n') && !/\r(?!\n)|(?<!\r)\n/.test(stored)
+	return crlf ? typed.replace(/\n/g, '\r\n') : typed
+}

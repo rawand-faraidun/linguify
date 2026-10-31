@@ -41,7 +41,7 @@ export const Freshness = ({ readAt }: { readAt: number }) => {
 				className={cn('ms-auto', focusRingClass)}
 				aria-disabled={fetching}
 				onClick={() => {
-					if (!fetching) void refresh()
+					if (!fetching) void refresh().catch(() => undefined)
 				}}
 			>
 				<RefreshCwIcon data-icon="inline-start" className={cn(fetching && 'motion-safe:animate-spin')} />

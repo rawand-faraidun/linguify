@@ -40,6 +40,7 @@
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/constants": "workspace:*",
 		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
 		"@linguify/studio-client": "workspace:*",
 		"@linguify/studio-server": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",

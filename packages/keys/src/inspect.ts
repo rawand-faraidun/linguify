@@ -98,13 +98,16 @@ export const namespaceHolders = (
 ): Locale[] => locales.filter(locale => Object.hasOwn(catalogue.locales[locale] ?? {}, namespace))
 
 /**
- * the namespaces there are: every locale's top level, empty ones included, in the order the locales and
- * their trees give them
+ * the namespaces there are: every locale's top level, empty ones included — the first locale's in its
+ * order, then the ones only later locales have
  *
  * @param catalogue - every locale's tree
+ * @param locales - the locales in the order to take them: `localeOrder`'s, the default first, as `list
+ * namespaces` and the studio show them; the catalogue's own order when left out
  *
  * @returns each namespace once
  */
-export const namespacesIn = (catalogue: Catalogue): NamespaceName[] => [
-	...new Set(Object.values(catalogue.locales).flatMap(tree => Object.keys(tree)))
-]
+export const namespacesIn = (
+	catalogue: Catalogue,
+	locales: readonly Locale[] = Object.keys(catalogue.locales)
+): NamespaceName[] => [...new Set(locales.flatMap(locale => Object.keys(catalogue.locales[locale] ?? {})))]

@@ -1,8 +1,9 @@
 import { useEffect } from 'react'
 import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
-import type { KeyPath, Locale, NamespaceName, Revision } from '@linguify/types'
+import type { KeyPath, NamespaceName, Revision } from '@linguify/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type ApiInputs, trpcClient, useTRPC } from './trpc'
+import { dismissWriteErrors } from './write-errors'
 
 /**
  * the revision of the files the studio last read or wrote — what every write says it expects
@@ -46,6 +47,8 @@ export const useFileWrite = <Input, Result extends { revision: Revision }>(
 		mutationFn: (input: Input) => write(input, known.revision),
 		onSuccess: async ({ revision }) => {
 			known.revision = revision
+			// what an earlier failure said no longer holds once a write goes through
+			dismissWriteErrors()
 			await queryClient.invalidateQueries({ queryKey: trpc.catalogue.get.queryKey() })
 		}
 	})
@@ -65,13 +68,11 @@ export const useEditKey = () =>
 /**
  * adds a key, with its text in every locale given and its description
  *
- * @param defaultLocale - the default locale, whose text is the key's value
- *
  * @returns the key to add, settled once it is written and the catalogue read again
  */
-export const useAddKey = (defaultLocale: Locale) =>
+export const useAddKey = () =>
 	useFileWrite((key: NewKey, expectedRevision: Revision) =>
-		trpcClient.key.add.mutate({ ...newKeyInput(key, defaultLocale), expectedRevision })
+		trpcClient.key.add.mutate({ ...newKeyInput(key), expectedRevision })
 	)
 
 /**
@@ -105,13 +106,19 @@ export const useRenameNamespace = () =>
 	)
 
 /**
+ * the revision a project action's plan was worked out on — the one its run expects, rather than the last
+ * known, so it does what the plan showed or is refused
+ */
+type Planned = { against: Revision }
+
+/**
  * brings every other locale in line with the default
  *
  * @returns the sync to run, settled once it is written and the catalogue read again
  */
 export const useSync = () =>
-	useFileWrite((input: SyncOptions, expectedRevision: Revision) =>
-		trpcClient.sync.mutate({ ...input, expectedRevision })
+	useFileWrite(({ against, ...input }: SyncOptions & Planned) =>
+		trpcClient.sync.mutate({ ...input, expectedRevision: against })
 	)
 
 /**
@@ -120,16 +127,22 @@ export const useSync = () =>
  * @returns the format to run, settled once it is written and the catalogue read again
  */
 export const useFormat = () =>
-	useFileWrite((_: null, expectedRevision: Revision) => trpcClient.format.mutate({ expectedRevision }))
+	useFileWrite(({ against }: Planned) => trpcClient.format.mutate({ expectedRevision: against }))
 
 /**
  * updates and adds keys from a table
  *
+ * @note `table`, the table's revision as the plan read it: the import is refused if the table changed since
+ *
  * @returns the import to run, settled once it is written and the catalogue read again
  */
 export const useImport = () =>
-	useFileWrite((input: TableTarget, expectedRevision: Revision) =>
-		trpcClient.import.mutate({ ...input, expectedRevision })
+	useFileWrite(({ against, table, ...input }: TableTarget & Planned & { table?: Revision }) =>
+		trpcClient.import.mutate({
+			...input,
+			expectedRevision: against,
+			...(table === undefined ? {} : { expectedTable: table })
+		})
 	)
 
 /**

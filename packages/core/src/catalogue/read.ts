@@ -1,5 +1,12 @@
 import type { Catalogue, LoadedConfig, Locale, Revision, TranslationTree } from '@linguify/types'
-import { computeRevision, type EngineContext, type FileContent, type FileSnapshot, getEngine } from '../engine'
+import {
+	computeRevision,
+	type EngineContext,
+	type FileContent,
+	type FileSnapshot,
+	getEngine,
+	readSnapshot
+} from '../engine'
 import { readDescriptions, serializeDescriptions } from './descriptions'
 
 /**
@@ -9,7 +16,8 @@ export type CatalogueReading = {
 	catalogue: Catalogue
 
 	/**
-	 * one hash over every file read — the translations and, when on, the descriptions
+	 * one hash over every file read — the translations, the descriptions when on, and the config, whose
+	 * default locale and options decide what a write means
 	 */
 	revision: Revision
 
@@ -27,10 +35,13 @@ export type CatalogueReading = {
  * @returns the catalogue, the files it came from, and their revision
  */
 export const readCatalogue = async (loaded: LoadedConfig): Promise<CatalogueReading> => {
-	const { locales, files } = await getEngine(loaded.config.engine).read(engineContext(loaded))
-	const { descriptions, snapshot } = await readDescriptions(loaded)
+	const [{ locales, files }, { descriptions, snapshot }, config] = await Promise.all([
+		getEngine(loaded.config.engine).read(engineContext(loaded)),
+		readDescriptions(loaded),
+		readSnapshot(loaded.file)
+	])
 	const all = snapshot === undefined ? files : [...files, snapshot]
-	return { catalogue: { locales, descriptions }, revision: computeRevision(all), files: all }
+	return { catalogue: { locales, descriptions }, revision: computeRevision([...all, config]), files: all }
 }
 
 /**

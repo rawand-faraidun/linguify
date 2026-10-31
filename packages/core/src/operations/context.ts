@@ -1,4 +1,4 @@
-import type { Config, EngineCapabilities, Locale } from '@linguify/types'
+import type { Config, EngineCapabilities } from '@linguify/types'
 import { getEngine } from '../engine'
 
 /**
@@ -42,13 +42,3 @@ export const createOperationContext = (config: Config): OperationContext => {
 		namespaceFiles: engine.capabilities.namespaces && engine.namespaceFiles(config.options)
 	}
 }
-
-/**
- * @param config - the resolved config
- *
- * @returns every configured locale, the default first and the rest in config order
- */
-export const localeOrder = (config: Config): Locale[] => [
-	config.default,
-	...config.locales.filter(locale => locale !== config.default)
-]

@@ -7,6 +7,7 @@ import {
 	readCatalogue,
 	readTable,
 	resolveIoTarget,
+	staleTable,
 	ValidationError,
 	writeFile
 } from '@linguify/core'
@@ -20,7 +21,8 @@ import { projectProcedure } from '../trpc'
  * but no `expectedRevision`. It replaces only an earlier export: never the project's own files, a
  * folder, or a file that is not a linguify table — `-p package.json` must not replace `package.json`
  *
- * @returns the format, the file's absolute path, how many rows, and whether it was written
+ * @returns the format, the file's absolute path, how many rows, whether it replaces an earlier export, and
+ * whether it was written
  */
 export const exportProcedure = projectProcedure
 	.input(exportInput.extend({ dryRun: mutationOptions.shape.dryRun }).optional())
@@ -28,20 +30,26 @@ export const exportProcedure = projectProcedure
 		const file = await exportCatalogue(ctx.operation, (await readCatalogue(ctx.loaded)).catalogue, input)
 		const path = resolve(ctx.cwd, file.path)
 		await requireOutsideProject(ctx.loaded, path, file.path)
-		await requireReplaceable(path, file.format, file.path)
+		const replaces = await requireReplaceable(path, file.format, file.path)
 		if (!dryRun) await writeFile(path, file.content)
-		return { format: file.format, path, rows: file.rows, written: !dryRun }
+		return { format: file.format, path, rows: file.rows, replaces, written: !dryRun }
 	})
 
 /**
  * `import` — updates and adds keys from a table; never removes one
+ *
+ * @note returns the table's revision beside the translations'; given back as `expectedTable`, a run is
+ * refused when the table changed since its dry run, so it imports what the dry run showed
  */
 export const importProcedure = projectProcedure
 	.input(importInput.extend(mutationOptions.shape).optional())
-	.mutation(async ({ ctx, input: { dryRun, expectedRevision, ...input } = {} }) => {
+	.mutation(async ({ ctx, input: { dryRun, expectedRevision, expectedTable, ...input } = {} }) => {
 		const target = resolveIoTarget(ctx.loaded.config, input)
 		const table = await readTable(resolve(ctx.cwd, target.path), target.format, target.path)
-		return run(ctx, importCatalogue, { table, file: target.path }, { dryRun, expectedRevision })
+		if (expectedTable !== undefined && expectedTable !== table.revision)
+			throw staleTable(target.path, expectedTable, table.revision)
+		const result = await run(ctx, importCatalogue, { table, file: target.path }, { dryRun, expectedRevision })
+		return { ...result, table: table.revision }
 	})
 
 /**
@@ -83,12 +91,14 @@ const requireOutsideProject = async (loaded: LoadedConfig, path: string, shownAs
  * @param format - the export's format
  * @param shownAs - the path as the person gave it, for messages
  *
+ * @returns whether there is an earlier export to replace
+ *
  * @throws {@link ValidationError} `INVALID_INPUT` for a folder, or for a file that is not a linguify table —
  * one that does not read as a table in the format, or has no `key` column
  */
-const requireReplaceable = async (path: string, format: IoFormat, shownAs: string): Promise<void> => {
+const requireReplaceable = async (path: string, format: IoFormat, shownAs: string): Promise<boolean> => {
 	const found = await stat(path).catch(() => undefined)
-	if (found === undefined) return
+	if (found === undefined) return false
 	if (found.isDirectory()) {
 		throw new ValidationError(`${shownAs} is a folder. Name a file to export to`, {
 			code: errorCodes.invalidInput,
@@ -99,7 +109,7 @@ const requireReplaceable = async (path: string, format: IoFormat, shownAs: strin
 		table => table.header,
 		(): string[] => []
 	)
-	if (header.includes(ioColumns.key)) return
+	if (header.includes(ioColumns.key)) return true
 	throw new ValidationError(
 		`${shownAs} already exists and is not a linguify export, so the export will not replace it. Name another file, or move it away first`,
 		{ code: errorCodes.invalidInput, details: { path } }

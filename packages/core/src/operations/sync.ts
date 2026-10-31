@@ -1,10 +1,10 @@
 import { changeKinds, emptyTranslation, errorCodes, warningCodes } from '@linguify/constants'
-import { flattenTree, joinKeyPath, readNode } from '@linguify/keys'
-import type { Catalogue, KeyPath, Locale, TranslationNode, TranslationTree } from '@linguify/types'
+import { flattenTree, joinKeyPath, localeOrder, readNode } from '@linguify/keys'
+import type { Catalogue, KeyChange, KeyPath, Locale, TranslationNode, TranslationTree, Warning } from '@linguify/types'
 import { ValidationError } from '../errors'
 import { getOwn } from '../utils'
-import { localeOrder, type OperationContext } from './context'
-import type { KeyChange, OperationResult, Warning } from './report'
+import type { OperationContext } from './context'
+import type { OperationResult } from './report'
 
 /**
  * `sync`'s input

@@ -8,7 +8,7 @@ export const numbers = new Intl.NumberFormat(studioLanguage)
 /**
  * counts in the studio's language — one key, two keys
  */
-const plural = new Intl.PluralRules(studioLanguage)
+const pluralRules = new Intl.PluralRules(studioLanguage)
 
 /**
  * puts values into a phrase from constants
@@ -26,7 +26,7 @@ export const fill = (phrase: string, values: Readonly<Record<string, string>>): 
  *
  * @returns the word for that many keys
  */
-export const keysWord = (count: number): string => studioText.keyCount[plural.select(count) === 'one' ? 'one' : 'other']
+export const keysWord = (count: number): string => plural(studioText.keyCount, count)
 
 /**
  * @param count - how many keys
@@ -41,5 +41,13 @@ export const countKeys = (count: number): string =>
  *
  * @returns that many files, in words — `1 file`, `360 files`
  */
-export const countFiles = (count: number): string =>
-	fill(actionText.fileCount[plural.select(count) === 'one' ? 'one' : 'other'], { count: numbers.format(count) })
+export const countFiles = (count: number): string => plural(actionText.fileCount, count)
+
+/**
+ * @param forms - a phrase for one and for any other count, naming the count `{count}` where it shows it
+ * @param count - how many
+ *
+ * @returns the phrase for that many, with the count in
+ */
+export const plural = (forms: { one: string; other: string }, count: number): string =>
+	fill(forms[pluralRules.select(count) === 'one' ? 'one' : 'other'], { count: numbers.format(count) })

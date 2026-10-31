@@ -1,5 +1,6 @@
-import { changeKinds, ioFormats, pathSeparators } from '@linguify/constants'
-import type { ChangeKind, IoFormat } from '@linguify/types'
+import { changeKinds } from '@linguify/constants'
+import { relativePath } from '@linguify/keys'
+import type { ChangeKind, Report } from '@linguify/types'
 
 /**
  * how many keys of each kind an operation changed, what a surface says before and after it
@@ -49,10 +50,7 @@ export type ActionPreview = {
  * @returns the counts, the files, the warnings, and whether there is nothing to do
  */
 export const actionPreview = (
-	result: {
-		report: { changes: readonly { kind: ChangeKind }[]; warnings: readonly { message: string }[] }
-		plan: { write: readonly { file: string }[]; delete: readonly string[] }
-	},
+	result: { report: Report; plan: { write: readonly { file: string }[]; delete: readonly string[] } },
 	from: string
 ): ActionPreview => {
 	const written = result.plan.write.map(({ file }) => relativePath(from, file))
@@ -65,27 +63,3 @@ export const actionPreview = (
 		nothing: written.length === 0 && removed.length === 0
 	}
 }
-
-/**
- * a file's path as a person reads it: from a folder when it is inside it, else whole
- *
- * @note inside means a separator straight after the folder — `/project2` is not inside `/project`
- *
- * @param from - the folder
- * @param file - an absolute path
- *
- * @returns the path from the folder, or the path itself
- */
-export const relativePath = (from: string, file: string): string => {
-	const base = pathSeparators.some(separator => from.endsWith(separator)) ? from.slice(0, -1) : from
-	const next = file.charAt(base.length)
-	return file.startsWith(base) && pathSeparators.includes(next) ? file.slice(base.length + 1) : file
-}
-
-/**
- * @param value - a format's name, as a control reports it or a file's extension gives it
- *
- * @returns whether it is a table format
- */
-export const isIoFormat = (value: string | undefined): value is IoFormat =>
-	Object.values(ioFormats).some(format => format === value)

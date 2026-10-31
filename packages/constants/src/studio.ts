@@ -84,8 +84,8 @@ export const studioText = {
 	search: 'Search keys and text',
 	clearSearch: 'Clear search',
 	namespaces: 'Namespaces',
-	untranslated: 'Untranslated',
-	untranslatedCount: '{count} untranslated',
+	untranslated: 'Missing',
+	untranslatedCount: '{count} missing',
 	extraCount: '{count} extra',
 	countSeparator: ' · ',
 	listSeparator: ', ',
@@ -101,8 +101,15 @@ export const studioText = {
 	deleteSelected: 'Delete',
 	clearSelection: 'Clear selection',
 	deleteTitle: 'Delete {keys}?',
-	deleteDescription: 'They are removed from every locale — {locales} — with their descriptions.',
-	deleteHidden: 'The filter hides {keys} of them; they go too.',
+	deleteDescription: 'Removed from every locale — {locales} — with descriptions.',
+	deleteHidden: {
+		one: 'The filter hides one of them, which goes too.',
+		other: 'The filter hides {count} of them, which go too.'
+	},
+	deleteAllHidden: {
+		one: 'The filter hides it, and it goes too.',
+		other: 'The filter hides them all, and they go too.'
+	},
 	deleted: 'Deleted {keys}.',
 	deleting: 'Deleting…',
 	deleteList: 'Keys to delete',
@@ -113,7 +120,7 @@ export const studioText = {
 	addNamespace: 'Add namespace',
 	addNamespaceTitle: 'Add a namespace',
 	addNamespaceDescription: 'An empty namespace, in every locale. Its keys are added as any other.',
-	renameNamespace: 'Rename {name}',
+	renameNamespace: 'Rename namespace {name}',
 	renameNamespaceDescription: 'Every key in it moves, in every locale, with its descriptions.',
 	namespaceName: 'Namespace name',
 	rename: 'Rename',
@@ -121,7 +128,7 @@ export const studioText = {
 	renaming: 'Renaming…',
 	namespaceSame: 'That is its name already.',
 	addedNamespace: 'Added the namespace {name}.',
-	addedNamespaceHidden: 'Added the namespace {name}; the search hides it, as it holds no key yet.',
+	addedNamespaceHidden: 'Added the namespace {name}; the filters hide it, as it holds no key yet.',
 	renamedNamespace: 'Renamed {from} to {to}.',
 	cancel: 'Cancel',
 	sortHint: 'Sorting orders the view only; the files are not changed.',
@@ -151,7 +158,8 @@ export const studioText = {
 	blank: 'blank text',
 	readAt: 'Read from disk at',
 	freshness: 'Avoid editing the files by hand while the studio runs; if you do, refresh. A new port needs a restart.',
-	refresh: 'Refresh'
+	refresh: 'Refresh',
+	refreshFailed: 'The files could not be read again, so what is shown may be out of date. Try again.'
 } as const
 
 /**

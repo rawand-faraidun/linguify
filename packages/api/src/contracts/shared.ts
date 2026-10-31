@@ -1,5 +1,6 @@
-import { localeCodePattern, reservedKeySegments, unprintableCharacter } from '@linguify/constants'
+import { keyPathProblemText, localeCodePattern, reservedKeySegments } from '@linguify/constants'
 import { findKeyPathReason, findNamespaceNameReason } from '@linguify/core'
+import { findNewNameProblem } from '@linguify/keys'
 import { z } from 'zod'
 
 /**
@@ -8,24 +9,25 @@ import { z } from 'zod'
  */
 export const keyPath = z.string().superRefine((path, context) => {
 	const reason = findKeyPathReason(path)
-	if (reason !== undefined) context.addIssue({ code: 'custom', message: `Not a usable key path: ${reason}` })
+	if (reason !== undefined) context.addIssue({ code: 'custom', message: `Not a usable key path. ${reason}` })
 })
 
 /**
  * a key path a change creates — never one holding a character a terminal acts on; an existing key with
  * one stays reachable through {@link keyPath}, so it can still be renamed or removed
  */
-export const newKeyPath = keyPath.refine(
-	path => !unprintableCharacter.test(path),
-	'Not a usable key path: it contains a control character'
-)
+export const newKeyPath = keyPath.superRefine((path, context) => {
+	const problem = findNewNameProblem(path)
+	if (problem !== undefined)
+		context.addIssue({ code: 'custom', message: `Not a usable key path. ${keyPathProblemText[problem]}` })
+})
 
 /**
  * a namespace name — one usable key segment
  */
 export const namespaceName = z.string().superRefine((name, context) => {
 	const reason = findNamespaceNameReason(name)
-	if (reason !== undefined) context.addIssue({ code: 'custom', message: `Not a usable namespace name: ${reason}` })
+	if (reason !== undefined) context.addIssue({ code: 'custom', message: `Not a usable namespace name. ${reason}` })
 })
 
 /**
@@ -74,7 +76,8 @@ export const mutationOptions = z.strictObject({
 /**
  * a namespace name a change creates — never one holding a character a terminal acts on
  */
-export const newNamespaceName = namespaceName.refine(
-	name => !unprintableCharacter.test(name),
-	'Not a usable namespace name: it contains a control character'
-)
+export const newNamespaceName = namespaceName.superRefine((name, context) => {
+	const problem = findNewNameProblem(name)
+	if (problem !== undefined)
+		context.addIssue({ code: 'custom', message: `Not a usable namespace name. ${keyPathProblemText[problem]}` })
+})

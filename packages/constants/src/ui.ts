@@ -1,5 +1,5 @@
 import { appName } from './app'
-import { keyPathProblems, keyPathStates, reservedKeySegments } from './keys'
+import { keyPathStates, translationGaps } from './keys'
 import { changeKinds } from './report'
 
 /**
@@ -108,17 +108,17 @@ export const tableMarks = {
 	/**
 	 * the default has the key and this locale does not — still to translate
 	 */
-	missing: 'missing',
+	missing: translationGaps.missing,
 
 	/**
 	 * the default has the key and this locale has it blank — still to translate
 	 */
-	empty: 'empty',
+	empty: translationGaps.empty,
 
 	/**
 	 * this locale has the key and the default does not — what `sync --remove-unused` removes
 	 */
-	extra: 'extra',
+	extra: translationGaps.extra,
 
 	/**
 	 * this locale lacks the key, and nothing expects it to have it: it is the default, or the default
@@ -183,20 +183,6 @@ export const searchFolds: Readonly<Record<string, string>> = {
  * changing what it says
  */
 export const searchIgnored: readonly string[] = ['\u200c', '\u0640']
-
-/**
- * why a key path cannot be used, as the studio and the extension say it
- */
-export const keyPathProblemText = {
-	[keyPathProblems.empty]: 'Type the key path.',
-	[keyPathProblems.emptySegment]: 'A segment is empty: two dots together, or one at either end.',
-	[keyPathProblems.reservedSegment]: `${reservedKeySegments.join(', ')} cannot be segments.`,
-	[keyPathProblems.namespaceOnly]: 'That names only a namespace; a key is its namespace, then its name.',
-	[keyPathProblems.tooDeep]: "This project's format cannot nest keys.",
-	[keyPathProblems.separator]: 'A namespace has no dots: the first one separates it from the key.',
-	[keyPathProblems.fileName]: 'Each namespace is a file here: no slashes, and not . or ..',
-	[keyPathProblems.caseClash]: 'Each namespace is a file here, and another differs from it only in case.'
-} as const
 
 /**
  * what is in a new key's way, in one locale, as the studio and the extension say it
@@ -334,16 +320,37 @@ export const projectActionText = {
  * what a whole-project action's dialog says, beside each action's own words
  */
 export const actionText = {
-	removeUnused: 'Also remove the keys the default no longer has, and their descriptions',
+	removeUnused: 'Also remove the extra keys — those the default does not have — and their descriptions',
 	tableFormat: 'Table format',
 	nothingToDo: 'Nothing to change.',
 	writes: 'Writes {files}',
 	removes: 'Removes {files}',
 	files: 'Files',
 	exportPlan: 'Writes {keys} to {path}',
+	exportReplaces: 'Writes {keys} to {path}, replacing the earlier export there',
 	fileCount: { one: '{count} file', other: '{count} files' },
 	nameAFile: 'Name a file.',
 	stillWorking: 'Still working out what it will do; press again once it shows.'
+} as const
+
+/**
+ * how a write the studio made failed
+ */
+export const writeFailures = {
+	/**
+	 * refused: the files changed on disk since they were read
+	 */
+	stale: 'stale',
+
+	/**
+	 * refused for any other reason, which linguify gave
+	 */
+	failed: 'failed',
+
+	/**
+	 * no answer came, so it may or may not have finished
+	 */
+	unsure: 'unsure'
 } as const
 
 /**

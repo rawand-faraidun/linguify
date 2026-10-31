@@ -1,6 +1,6 @@
-import { searchFolds, searchIgnored, tableMarks } from '@linguify/constants'
-import { splitNamespace } from '@linguify/keys'
-import type { KeyPath, KeyRow, Locale, NamespaceName, TableMark } from '@linguify/types'
+import { searchFolds, searchIgnored, tableMarks, translationGaps } from '@linguify/constants'
+import { splitNamespace, translationGap } from '@linguify/keys'
+import type { KeyPath, KeyRow, Locale, NamespaceName, TableMark, TranslationGap } from '@linguify/types'
 import type { KeySort } from './sort'
 
 /**
@@ -69,29 +69,35 @@ export type LocaleCounts = {
 }
 
 /**
+ * how a key's text in a locale falls short of the default's
+ *
+ * @param row - one key
+ * @param locale - any locale
+ * @param defaultLocale - the locale every other is compared against
+ *
+ * @returns missing, empty or extra — `diff`'s rule, from `@linguify/keys` — or nothing
+ */
+const gapOf = ({ values }: KeyRow, locale: Locale, defaultLocale: Locale): TranslationGap | undefined =>
+	locale === defaultLocale
+		? undefined
+		: translationGap(
+				Object.hasOwn(values, defaultLocale) ? values[defaultLocale] : undefined,
+				Object.hasOwn(values, locale) ? values[locale] : undefined
+			)
+
+/**
  * whether a key still needs translating in a locale
  *
  * @param row - one key
  * @param locale - a locale other than the default
  * @param defaultLocale - the locale every other is compared against
  *
- * @returns whether the key still needs translating there: the default has it, and the locale lacks it
- * or has it empty — `diff`'s missing and empty
+ * @returns whether the default has it and the locale lacks it or has it empty — `diff`'s missing and empty
  */
-export const isUntranslated = ({ values }: KeyRow, locale: Locale, defaultLocale: Locale): boolean =>
-	Object.hasOwn(values, defaultLocale) && (!Object.hasOwn(values, locale) || values[locale] === '')
-
-/**
- * whether a key is extra in a locale
- *
- * @param row - one key
- * @param locale - a locale other than the default
- * @param defaultLocale - the locale every other is compared against
- *
- * @returns whether the locale has it and the default does not — `diff`'s extra
- */
-export const isExtra = ({ values }: KeyRow, locale: Locale, defaultLocale: Locale): boolean =>
-	Object.hasOwn(values, locale) && !Object.hasOwn(values, defaultLocale)
+export const isUntranslated = (row: KeyRow, locale: Locale, defaultLocale: Locale): boolean => {
+	const gap = gapOf(row, locale, defaultLocale)
+	return gap === translationGaps.missing || gap === translationGaps.empty
+}
 
 /**
  * how a table marks a key's text in a locale — the same rules `diff` and the counters use
@@ -104,10 +110,10 @@ export const isExtra = ({ values }: KeyRow, locale: Locale, defaultLocale: Local
  */
 export const cellMark = (row: KeyRow, locale: Locale, defaultLocale: Locale): TableMark | undefined => {
 	const text = Object.hasOwn(row.values, locale) ? row.values[locale] : undefined
-	if (text === undefined) return isUntranslated(row, locale, defaultLocale) ? tableMarks.missing : tableMarks.absent
-	if (isExtra(row, locale, defaultLocale)) return tableMarks.extra
-	if (text !== '') return undefined
-	return locale !== defaultLocale && isUntranslated(row, locale, defaultLocale) ? tableMarks.empty : tableMarks.blank
+	const gap = gapOf(row, locale, defaultLocale)
+	if (gap !== undefined) return gap
+	if (text === undefined) return tableMarks.absent
+	return text === '' ? tableMarks.blank : undefined
 }
 
 /**

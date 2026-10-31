@@ -13,9 +13,8 @@ import {
 } from '@linguify/ui/components/alert-dialog'
 import { cn } from '@linguify/ui/lib/utils'
 import { destructiveClass, focusRingClass } from './classes'
-import { countKeys, fill, numbers } from './format'
-import { StaleNotice } from './stale-notice'
-import { isStaleWrite } from './write-errors'
+import { countKeys, fill, numbers, plural } from './format'
+import { WriteNotice } from './write-notice'
 
 /**
  * asks before a bulk delete: how many keys, which, from which locales — and how many of them the filter
@@ -23,7 +22,8 @@ import { isStaleWrite } from './write-errors'
  *
  * @note it holds still while the keys are written away: Delete pressed again does nothing, and Cancel and
  * Escape wait, so nothing is deleted after a person cancelled. A failure leaves it open, where it was
- * asked; refused because the files changed on disk, it says so with its own Refresh. On closing, the
+ * asked, and is said there — with its own Refresh when the files changed on disk. While it writes it keeps
+ * showing the keys it asked about, though the selection empties as they go. On closing, the
  * keyboard goes where `onCancelled` or `onDeleted` puts it — Radix gives it back only to a trigger of its
  * own
  *
@@ -56,9 +56,13 @@ export const DeleteKeys = ({
 	onCancelled: () => void
 }) => {
 	const [pending, setPending] = useState(false)
-	const [stale, setStale] = useState(false)
+	const [failure, setFailure] = useState<{ error: unknown }>()
 	const deleteAction = useRef<HTMLButtonElement>(null)
 	const done = useRef(false)
+	// what it asked about, held while it writes and closes
+	const asked = useRef({ keys, hidden })
+	if (open && !pending) asked.current = { keys, hidden }
+	const shown = asked.current
 	return (
 		<AlertDialog
 			open={open}
@@ -76,10 +80,18 @@ export const DeleteKeys = ({
 				}}
 			>
 				<AlertDialogHeader>
-					<AlertDialogTitle>{fill(studioText.deleteTitle, { keys: countKeys(keys.length) })}</AlertDialogTitle>
+					<AlertDialogTitle>{fill(studioText.deleteTitle, { keys: countKeys(shown.keys.length) })}</AlertDialogTitle>
 					<AlertDialogDescription>
 						{fill(studioText.deleteDescription, { locales: locales.join(studioText.listSeparator) })}
-						{hidden > 0 && <> {fill(studioText.deleteHidden, { keys: countKeys(hidden) })}</>}
+						{shown.hidden > 0 && (
+							<>
+								{' '}
+								{plural(
+									shown.hidden === shown.keys.length ? studioText.deleteAllHidden : studioText.deleteHidden,
+									shown.hidden
+								)}
+							</>
+						)}
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<ul
@@ -90,22 +102,23 @@ export const DeleteKeys = ({
 					className={cn('max-h-48 overflow-auto border p-2 font-mono text-xs', focusRingClass)}
 					dir="ltr"
 				>
-					{keys.slice(0, listed).map(key => (
+					{shown.keys.slice(0, listed).map(key => (
 						<li key={key} className="wrap-anywhere">
 							{key}
 						</li>
 					))}
-					{keys.length > listed && (
+					{shown.keys.length > listed && (
 						<li className="font-sans text-muted-foreground">
-							{fill(studioText.andMore, { count: numbers.format(keys.length - listed) })}
+							{fill(studioText.andMore, { count: numbers.format(shown.keys.length - listed) })}
 						</li>
 					)}
 				</ul>
-				{stale && (
-					<StaleNotice
+				{failure !== undefined && (
+					<WriteNotice
+						error={failure.error}
 						onRefreshed={() => {
 							// the notice goes, and the keyboard with it: back on Delete, to delete what is selected now
-							setStale(false)
+							setFailure(undefined)
 							deleteAction.current?.focus()
 						}}
 					/>
@@ -123,7 +136,7 @@ export const DeleteKeys = ({
 							event.preventDefault()
 							if (pending) return
 							setPending(true)
-							setStale(false)
+							setFailure(undefined)
 							void onDelete().then(
 								() => {
 									setPending(false)
@@ -131,7 +144,7 @@ export const DeleteKeys = ({
 									onOpenChange(false)
 								},
 								error => {
-									setStale(isStaleWrite(error))
+									setFailure({ error })
 									setPending(false)
 								}
 							)

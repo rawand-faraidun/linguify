@@ -26,3 +26,13 @@ export const computeRevision = (files: readonly FileSnapshot[]): Revision => {
 	}
 	return hash.digest(revisionHashing.encoding)
 }
+
+/**
+ * fingerprints one file's bytes — a table read for an import, which a run must find as its dry run did
+ *
+ * @param content - the file's bytes
+ *
+ * @returns its revision
+ */
+export const computeContentRevision = (content: Uint8Array): Revision =>
+	createHash(revisionHashing.algorithm).update(content).digest(revisionHashing.encoding)

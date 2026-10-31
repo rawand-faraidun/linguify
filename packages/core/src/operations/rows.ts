@@ -1,13 +1,12 @@
-import { flattenTree } from '@linguify/keys'
+import { keyRows } from '@linguify/keys'
 import type { Catalogue, KeyRow, Locale } from '@linguify/types'
-import { getOwn } from '../utils'
-import { localeOrder, type OperationContext } from './context'
+import type { OperationContext } from './context'
 
 /**
  * one row per key in the catalogue — what `list keys`, the studio table and an export show
  *
- * @note keys come in the default locale's order, then the keys only other locales have, in config
- * order, so a key missing from the default still gets a row
+ * @note `keyRows` from `@linguify/keys`, which the studio builds its table with: keys in the default
+ * locale's order, then the keys only other locales have, in config order
  *
  * @param context - the operation context
  * @param catalogue - the catalogue
@@ -18,22 +17,10 @@ import { localeOrder, type OperationContext } from './context'
 export const buildKeyRows = (
 	{ config }: OperationContext,
 	catalogue: Catalogue,
-	locales: readonly Locale[] = config.locales
-): KeyRow[] => {
-	const flat = localeOrder(config).map(locale => ({
-		locale,
-		translations: flattenTree(catalogue.locales[locale] ?? {})
-	}))
-	const keys = new Set(flat.flatMap(({ translations }) => Object.keys(translations)))
-	const shown = flat.filter(({ locale }) => locales.includes(locale))
-	return [...keys].map(key => {
-		const values = Object.fromEntries(
-			shown.flatMap(({ locale, translations }): [Locale, string][] => {
-				const text = getOwn(translations, key)
-				return text === undefined ? [] : [[locale, text]]
-			})
-		)
-		const description = config.description.enabled ? getOwn(catalogue.descriptions, key) : undefined
-		return description === undefined ? { key, values } : { key, description, values }
-	})
-}
+	locales?: readonly Locale[]
+): KeyRow[] =>
+	keyRows(
+		catalogue,
+		{ locales: config.locales, default: config.default, descriptions: config.description.enabled },
+		locales
+	)

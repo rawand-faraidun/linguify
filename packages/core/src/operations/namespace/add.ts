@@ -1,7 +1,7 @@
 import { changeKinds, warningCodes } from '@linguify/constants'
 import type { Catalogue, Locale, NamespaceName, TranslationTree } from '@linguify/types'
 import type { OperationContext } from '../context'
-import { requireNamespaceName } from '../guards'
+import { requireNamespaceFile, requireNamespaceName } from '../guards'
 import type { OperationResult } from '../report'
 import { findNamespaceHolders } from './shared'
 
@@ -34,6 +34,7 @@ export const addNamespace = (
 	{ name }: AddNamespaceInput
 ): OperationResult => {
 	requireNamespaceName(context, name)
+	requireNamespaceFile(context, catalogue, name)
 	const holders = findNamespaceHolders(context, catalogue, name)
 	if (holders.length > 0) {
 		const where = holders.map(locale => `\`${locale}\``).join(', ')

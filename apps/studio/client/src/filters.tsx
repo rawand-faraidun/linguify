@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { studioText } from '@linguify/constants'
+import { compositionKeyCode, studioText } from '@linguify/constants'
 import { isFiltered, type KeyFilter, type LocaleCounts, noFilter, toTranslate } from '@linguify/table'
 import type { Locale, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -72,6 +72,8 @@ export const Filters = ({
 						value={filter.search}
 						onChange={event => onChange({ ...filter, search: event.target.value })}
 						onKeyDown={event => {
+							// Escape that ends a composition is the input method's, not a clear
+							if (event.nativeEvent.isComposing || event.keyCode === compositionKeyCode) return
 							if (event.key === 'Escape' && filter.search !== '') {
 								event.preventDefault()
 								onChange({ ...filter, search: '' })

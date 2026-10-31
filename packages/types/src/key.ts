@@ -1,4 +1,4 @@
-import type { keyPathStates } from '@linguify/constants'
+import type { keyPathStates, translationGaps } from '@linguify/constants'
 import type { KeyPath, Locale } from './identifiers'
 import type { Values } from './values'
 
@@ -33,3 +33,18 @@ export type KeyConflict = {
 	 */
 	at: KeyPath
 }
+
+/**
+ * what a project's key paths must be: in a namespace when it has them, no deeper than its format nests, and
+ * where each namespace is a file, a name a file can have
+ */
+export type KeyRules = {
+	namespaced: boolean
+	nesting: boolean
+	namespaceFiles: boolean
+}
+
+/**
+ * how a locale's text for a key falls short of the default's
+ */
+export type TranslationGap = Values<typeof translationGaps>

@@ -1,5 +1,12 @@
-import { fileNamePattern, keyPathProblems, keySeparator, reservedKeySegments } from '@linguify/constants'
-import type { KeyPath, KeyPathProblem, NamespaceName } from '@linguify/types'
+import {
+	fileNamePattern,
+	keyPathProblems,
+	keySeparator,
+	reservedKeySegments,
+	unportableFileName,
+	unprintableCharacter
+} from '@linguify/constants'
+import type { KeyPath, KeyPathProblem, KeyRules, NamespaceName } from '@linguify/types'
 
 /**
  * splits a key path into its segments
@@ -61,7 +68,7 @@ export const findNamespaceNameProblem = (name: NamespaceName): KeyPathProblem | 
  */
 export const findProjectKeyPathProblem = (
 	path: KeyPath,
-	{ namespaced, nesting }: { namespaced: boolean; nesting: boolean }
+	{ namespaced, nesting }: Pick<KeyRules, 'namespaced' | 'nesting'>
 ): KeyPathProblem | undefined => {
 	const problem = findKeyPathProblem(path)
 	if (problem !== undefined) return problem
@@ -116,8 +123,20 @@ export const fileClash = (name: NamespaceName, others: readonly NamespaceName[])
 	others.find(other => other !== name && other.toLowerCase() === name.toLowerCase())
 
 /**
+ * says why a key path or namespace name cannot be created — a character a terminal acts on
+ *
+ * @note only for what a change creates: an existing key holding one stays reachable, to rename or remove
+ *
+ * @param name - a key path or namespace name a change creates
+ *
+ * @returns the problem, or `undefined` when nothing in it stops it being created
+ */
+export const findNewNameProblem = (name: string): KeyPathProblem | undefined =>
+	unprintableCharacter.test(name) ? keyPathProblems.unprintable : undefined
+
+/**
  * says why a name cannot be a namespace where each namespace is a file of its own — a path separator, `.`
- * or `..`, or another namespace differing from it only in case
+ * or `..`, a name some disk will not keep, or another namespace differing from it only in case
  *
  * @param name - a namespace name, usable as a namespace
  * @param others - the other namespaces
@@ -128,6 +147,6 @@ export const findNamespaceFileProblem = (
 	name: NamespaceName,
 	others: readonly NamespaceName[]
 ): KeyPathProblem | undefined => {
-	if (!fileNamePattern.test(name)) return keyPathProblems.fileName
+	if (!fileNamePattern.test(name) || unportableFileName.test(name)) return keyPathProblems.fileName
 	return fileClash(name, others) === undefined ? undefined : keyPathProblems.caseClash
 }

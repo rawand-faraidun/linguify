@@ -1,11 +1,13 @@
+import { localeOrder, namespacesIn } from '@linguify/keys'
 import type { Catalogue, NamespaceName } from '@linguify/types'
-import { localeOrder, type OperationContext } from '../context'
+import type { OperationContext } from '../context'
 import { requireNamespaces } from '../guards'
 
 /**
  * lists the namespaces
  *
- * @note an empty namespace is listed too — it exists, it only has no keys yet
+ * @note an empty namespace is listed too — it exists, it only has no keys yet. The order is the studio's:
+ * both come from `namespacesIn`
  *
  * @param context - the operation context
  * @param catalogue - the catalogue
@@ -17,5 +19,5 @@ import { requireNamespaces } from '../guards'
  */
 export const listNamespaces = (context: OperationContext, catalogue: Catalogue): NamespaceName[] => {
 	requireNamespaces(context)
-	return [...new Set(localeOrder(context.config).flatMap(locale => Object.keys(catalogue.locales[locale] ?? {})))]
+	return namespacesIn(catalogue, localeOrder(context.config))
 }

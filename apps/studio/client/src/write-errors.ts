@@ -1,5 +1,5 @@
 import type { AppRouter } from '@linguify/api'
-import { errorCodes, studioText } from '@linguify/constants'
+import { errorCodes, studioText, writeFailures } from '@linguify/constants'
 import { isTRPCClientError } from '@trpc/client'
 import { toast } from 'sonner'
 
@@ -8,8 +8,8 @@ import { toast } from 'sonner'
  * nothing was written, with a way to read them again; for any other refusal, that nothing was written and
  * why; and when no answer came — the connection lost — that it may not have finished
  *
- * @note these stay until dismissed: what they say holds until the person acts, and the keyboard needs the
- * time to reach them
+ * @note these stay until the person dismisses them, or until a refresh or a later write makes them untrue —
+ * {@link dismissWriteErrors}. One of each kind at most: a retry that fails again replaces it
  *
  * @param error - what the write threw
  * @param refresh - reads every shown query again
@@ -20,21 +20,30 @@ export const reportWriteError = (error: Error, refresh: () => void) => {
 	if (linguify?.code === errorCodes.staleCatalogue) {
 		toast.warning(studioText.staleTitle, {
 			...lasting,
-			id: errorCodes.staleCatalogue,
+			id: writeFailures.stale,
 			description: studioText.staleDescription,
 			action: { label: studioText.refresh, onClick: refresh }
 		})
 		return
 	}
 	if (linguify !== undefined) {
-		toast.error(studioText.writeFailed, { ...lasting, description: linguify.message })
+		toast.error(studioText.writeFailed, { ...lasting, id: writeFailures.failed, description: linguify.message })
 		return
 	}
 	toast.error(studioText.writeUnsure, {
 		...lasting,
+		id: writeFailures.unsure,
 		description: studioText.writeUnsureDescription,
 		action: { label: studioText.refresh, onClick: refresh }
 	})
+}
+
+/**
+ * takes down what failed writes said — once the files are read again, or a write has gone through; each
+ * kind's toast has the kind as its id
+ */
+export const dismissWriteErrors = () => {
+	for (const id of Object.values(writeFailures)) toast.dismiss(id)
 }
 
 /**
@@ -48,9 +57,13 @@ const linguifyError = (error: unknown) =>
 /**
  * @param error - what a write threw
  *
- * @returns whether it was refused because the files changed on disk since they were read
+ * @returns how it failed: refused as stale, refused for another reason, or with no answer
  */
-export const isStaleWrite = (error: unknown): boolean => linguifyError(error)?.code === errorCodes.staleCatalogue
+export const writeFailure = (error: unknown) => {
+	const linguify = linguifyError(error)
+	if (linguify === undefined) return writeFailures.unsure
+	return linguify.code === errorCodes.staleCatalogue ? writeFailures.stale : writeFailures.failed
+}
 
 /**
  * @param error - what a call threw

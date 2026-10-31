@@ -2,7 +2,7 @@ import { changeKinds, errorCodes } from '@linguify/constants'
 import type { Catalogue, Locale, NamespaceName, TranslationTree } from '@linguify/types'
 import { ConflictError } from '../../errors'
 import type { OperationContext } from '../context'
-import { requireNamespaceName } from '../guards'
+import { requireNamespaceFile, requireNamespaceName } from '../guards'
 import { invalid, moveDescriptions, renameInPlace } from '../key/shared'
 import type { OperationResult } from '../report'
 import { findNamespaceHolders, namespaceNotFound } from './shared'
@@ -50,6 +50,7 @@ export const renameNamespace = (
 			{ code: errorCodes.namespaceExists, details: { namespace: to, locales: taken } }
 		)
 	}
+	requireNamespaceFile(context, catalogue, to, from)
 
 	const locales = Object.fromEntries(
 		context.config.locales.map((locale): [Locale, TranslationTree] => {

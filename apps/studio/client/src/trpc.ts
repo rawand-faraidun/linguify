@@ -4,7 +4,7 @@ import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
 import { createTRPCContext } from '@trpc/tanstack-react-query'
-import { reportWriteError } from './write-errors'
+import { dismissWriteErrors, reportWriteError } from './write-errors'
 
 /**
  * the studio's API, typed by its router — calls go to the studio that served the page
@@ -19,18 +19,46 @@ export const trpcClient = createTRPCClient<AppRouter>({ links: [httpBatchLink({ 
  *
  * @note every write's failure is reported from here, once for all of them — a query's error handling never
  * sees a mutation's, and a write that fails unseen is a lost change
+ *
+ * @note reads and writes go out whatever the browser thinks of the network: the studio is on this machine,
+ * and a write held back while the Wi-Fi is down would wait unseen, what was typed with it
  */
 export const queryClient: QueryClient = new QueryClient({
-	defaultOptions: { queries: { refetchOnWindowFocus: false, retry: false } },
+	defaultOptions: {
+		queries: { refetchOnWindowFocus: false, retry: false, networkMode: 'always' },
+		mutations: { networkMode: 'always' }
+	},
 	mutationCache: new MutationCache({ onError: error => reportWriteError(error, refresh) })
 })
 
 /**
- * reads everything on screen from the files again
- *
- * @returns settled once every shown query is read again
+ * what to do whenever the files are read again at the person's asking
  */
-export const refresh = () => queryClient.refetchQueries({ type: 'active' })
+const refreshListeners = new Set<() => void>()
+
+/**
+ * @param listener - called on every refresh, before the files are read again
+ *
+ * @returns what stops it being called
+ */
+export const onRefresh = (listener: () => void) => {
+	refreshListeners.add(listener)
+	return () => {
+		refreshListeners.delete(listener)
+	}
+}
+
+/**
+ * reads everything on screen from the files again — what failed writes said goes with it, as it no longer
+ * holds
+ *
+ * @returns settled once every shown query is read again; rejected when one could not be
+ */
+export const refresh = () => {
+	dismissWriteErrors()
+	for (const listener of refreshListeners) listener()
+	return queryClient.refetchQueries({ type: 'active' }, { throwOnError: true })
+}
 
 /**
  * `TRPCProvider` and `useTRPC` — the API as TanStack Query options

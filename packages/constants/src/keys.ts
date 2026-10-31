@@ -84,7 +84,49 @@ export const keyPathProblems = {
 	 * a namespace that would be a file differing from another only in case — one file on a
 	 * case-insensitive disk
 	 */
-	caseClash: 'case-clash'
+	caseClash: 'case-clash',
+
+	/**
+	 * a new key path or namespace holding an {@link unprintableCharacter} — an existing one stays reachable
+	 */
+	unprintable: 'unprintable'
+} as const
+
+/**
+ * why a key path or namespace name cannot be used, as every surface says it — the CLI and the API after
+ * the name, the studio and the extension under the field
+ */
+export const keyPathProblemText = {
+	[keyPathProblems.empty]: 'It is empty.',
+	[keyPathProblems.emptySegment]: 'A segment is empty: two dots together, or one at either end.',
+	[keyPathProblems.reservedSegment]: `${reservedKeySegments.join(', ')} cannot be segments.`,
+	[keyPathProblems.namespaceOnly]: `That names only a namespace; a key is its namespace, then its name: ${exampleKeyPath}.`,
+	[keyPathProblems.tooDeep]: "This project's format cannot nest keys.",
+	[keyPathProblems.separator]: 'A namespace has no dots: the first one separates it from the key.',
+	[keyPathProblems.fileName]:
+		'Each namespace is a file here: no slashes, not . or .., no dot or space at the end, and not a name Windows keeps, such as CON or NUL.',
+	[keyPathProblems.caseClash]: 'Each namespace is a file here, and another differs from it only in case.',
+	[keyPathProblems.unprintable]: 'It holds a control character, which a terminal would act on.'
+} as const
+
+/**
+ * how a locale's text for a key falls short of the default's — `diff`'s three lists, and the table's marks
+ */
+export const translationGaps = {
+	/**
+	 * the default has the key and the locale does not
+	 */
+	missing: 'missing',
+
+	/**
+	 * the default has the key and the locale has it blank
+	 */
+	empty: 'empty',
+
+	/**
+	 * the locale has the key and the default does not
+	 */
+	extra: 'extra'
 } as const
 
 /**

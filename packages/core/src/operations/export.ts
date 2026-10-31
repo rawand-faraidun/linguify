@@ -1,7 +1,8 @@
 import { emptyTranslation, ioColumns } from '@linguify/constants'
+import { localeOrder } from '@linguify/keys'
 import type { Catalogue, IoFormat } from '@linguify/types'
 import { encodeTable, type IoTarget, resolveIoTarget, type Table } from '../io'
-import { localeOrder, type OperationContext } from './context'
+import type { OperationContext } from './context'
 import { buildKeyRows } from './rows'
 
 /**

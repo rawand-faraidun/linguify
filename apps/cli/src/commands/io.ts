@@ -36,9 +36,9 @@ export const exportCommand = new Command('export')
 		respond(
 			command,
 			() => callerFor(command).export({ format: options.format, path: options.path, dryRun: options.dryRun }),
-			({ path, rows, written }) => {
+			({ path, rows, replaces, written }) => {
 				const where = shownPath(projectFolder(command), path)
-				const what = `${counted(rows, 'key')} to ${where}`
+				const what = `${counted(rows, 'key')} to ${where}${replaces ? ', replacing the earlier export' : ''}`
 				return written ? `${dim('exported')}  ${what}\n` : `${dim('would export')}  ${what}\n\n${dim(cliDryRunNote)}\n`
 			}
 		)

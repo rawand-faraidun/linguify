@@ -1,5 +1,5 @@
-import { extname } from 'node:path'
 import { errorCodes, ioDefaultPaths, ioFormats } from '@linguify/constants'
+import { formatOfFile } from '@linguify/keys'
 import type { Config, IoFormat } from '@linguify/types'
 import { ValidationError } from '../errors'
 
@@ -45,14 +45,4 @@ export const resolveIoTarget = (
 	}
 	const resolved = format ?? named ?? io.format
 	return { format: resolved, path: path ?? ioDefaultPaths[resolved] }
-}
-
-/**
- * @param path - a file path
- *
- * @returns the format its extension names, or `undefined` for any other extension
- */
-const formatOfFile = (path: string): IoFormat | undefined => {
-	const extension = extname(path).slice(1).toLowerCase()
-	return Object.values(ioFormats).find(format => format === extension)
 }

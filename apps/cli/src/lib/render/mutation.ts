@@ -1,8 +1,7 @@
 import { styleText } from 'node:util'
 import type { MutationResult } from '@linguify/api'
 import { changeKinds, cliDryRunNote } from '@linguify/constants'
-import type { KeyChange, Report } from '@linguify/core'
-import type { ChangeKind } from '@linguify/types'
+import type { ChangeKind, KeyChange, Report } from '@linguify/types'
 import type { TextStyle } from './table'
 import { columnWidth, dim, padToWidth, printable, shownPath } from './text'
 

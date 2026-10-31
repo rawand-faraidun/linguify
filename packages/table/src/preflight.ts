@@ -4,22 +4,15 @@ import {
 	findDuplicate,
 	findNamespaceFileProblem,
 	findNamespaceNameProblem,
+	findNewNameProblem,
 	findProjectKeyPathProblem,
 	hasNamespace,
 	namespaceHolders,
 	namespacesIn,
 	splitNamespace
 } from '@linguify/keys'
-import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, Locale, NamespaceName } from '@linguify/types'
+import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, KeyRules, Locale, NamespaceName } from '@linguify/types'
 import type { NewKey } from './edit'
-
-/**
- * what a project's key paths must be: in a namespace when it has them, no deeper than its format nests
- */
-export type KeyRules = {
-	namespaced: boolean
-	nesting: boolean
-}
 
 /**
  * what stands in the way of writing a key, found before anything is sent
@@ -27,7 +20,7 @@ export type KeyRules = {
 export type KeyCheck = {
 	/**
 	 * why the path is unusable in this project — empty, a segment empty, a reserved name, a namespace alone,
-	 * too deep — or nothing
+	 * too deep, a control character, or a namespace it starts that cannot be a file here — or nothing
 	 */
 	problem?: KeyPathProblem
 
@@ -55,18 +48,25 @@ export type KeyCheck = {
  *
  * @param catalogue - every locale's tree
  * @param path - the key path
- * @param rules - whether the project has namespaces, and whether its format nests keys
+ * @param rules - whether the project has namespaces, whether its format nests keys, and whether each
+ * namespace is a file
  *
  * @returns what stands in the way; an unusable path is not checked further
  */
 export const checkNewKey = (catalogue: Catalogue, path: KeyPath, rules: KeyRules): KeyCheck => {
-	const problem = findProjectKeyPathProblem(path, rules)
-	if (problem !== undefined) return { problem, duplicate: [], conflicts: [] }
 	const namespace = rules.namespaced ? splitNamespace(path).namespace : undefined
+	const created = namespace !== undefined && !hasNamespace(catalogue, namespace) ? namespace : undefined
+	const problem =
+		findProjectKeyPathProblem(path, rules) ??
+		findNewNameProblem(path) ??
+		(created !== undefined && rules.namespaceFiles
+			? findNamespaceFileProblem(created, namespacesIn(catalogue))
+			: undefined)
+	if (problem !== undefined) return { problem, duplicate: [], conflicts: [] }
 	return {
 		duplicate: findDuplicate(catalogue, path),
 		conflicts: findConflicts(catalogue, path),
-		...(namespace === undefined || hasNamespace(catalogue, namespace) ? {} : { namespace })
+		...(created === undefined ? {} : { namespace: created })
 	}
 }
 
@@ -169,6 +169,7 @@ export const checkNamespaceName = (
 	const same = from !== undefined && name === from
 	const problem =
 		findNamespaceNameProblem(name) ??
+		findNewNameProblem(name) ??
 		(namespaceFiles && !same
 			? findNamespaceFileProblem(
 					name,

@@ -10,6 +10,7 @@
 	"dependencies": {
 		"@linguify/constants": "workspace:*",
 		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@trpc/server": "catalog:",
 		"zod": "catalog:"

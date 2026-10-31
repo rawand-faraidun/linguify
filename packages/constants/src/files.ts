@@ -31,6 +31,12 @@ export const maxIndentation = 10
 export const fileNamePattern = /^(?!\.{1,2}$)[^/\\]+$/
 
 /**
+ * a file name some disk will not keep as it is: a dot or a space at the end, which Windows drops, or a name
+ * Windows keeps for a device, with or without an extension
+ */
+export const unportableFileName = /[. ]$|^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i
+
+/**
  * the invisible character some editors — Windows Notepad among them — put at the start of a UTF-8
  * file; `JSON.parse` rejects it, so it is dropped before parsing
  */
@@ -111,6 +117,11 @@ export const defaultFileFormat = {
 } as const
 
 /**
- * what separates a path's parts, on any platform the studio's server may run on
+ * what separates a path's parts, on any platform linguify may run on
  */
-export const pathSeparators: readonly string[] = ['/', '\\']
+export const pathSeparator = /[\\/]/
+
+/**
+ * the separators a path is shown with: Windows' own, and every other platform's
+ */
+export const shownSeparators = { windows: '\\', other: '/' } as const
