@@ -177,6 +177,9 @@ importers:
       '@linguify/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@linguify/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@linguify/table':
         specifier: workspace:*
         version: link:../../packages/table

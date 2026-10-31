@@ -6,6 +6,16 @@ import { appName } from './app'
 export const settingsPrefix = appName
 
 /**
+ * joins a setting's parts — the prefix, then the config's path to the option
+ */
+export const settingSeparator = '.'
+
+/**
+ * how far each editor setting reaches: per folder, so each root of a multi-root workspace can have its own
+ */
+export const settingScope = 'resource'
+
+/**
  * the command palette entries the extension contributes
  */
 export const extensionCommands = {

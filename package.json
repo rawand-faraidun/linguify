@@ -12,7 +12,7 @@
 		"typecheck": "turbo run typecheck",
 		"check": "biome check .",
 		"format": "biome format --write .",
-		"verify": "pnpm lint && pnpm typecheck && pnpm build"
+		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm --filter linguify-vs manifest --check"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.14",

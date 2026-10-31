@@ -6,7 +6,7 @@ import { configObject } from './schema'
 /**
  * a JSON Schema document, as plain data
  */
-type JsonSchema = Record<string, unknown>
+export type JsonSchema = Record<string, unknown>
 
 /**
  * generates the config's JSON Schema, for `$schema` completion and validation in editors

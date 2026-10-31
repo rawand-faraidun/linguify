@@ -1,4 +1,4 @@
 {
 	"extends": "@linguify/tsconfig/extension",
-	"include": ["src"]
+	"include": ["src", "scripts"]
 }
