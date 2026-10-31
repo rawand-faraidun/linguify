@@ -138,6 +138,9 @@ importers:
       '@linguify/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@linguify/studio-client':
+        specifier: workspace:*
+        version: link:../studio/client
       '@linguify/studio-server':
         specifier: workspace:*
         version: link:../studio/server
