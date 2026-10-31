@@ -24,6 +24,7 @@ catalog:
   read-excel-file: ^9.3.10
   sonner: ^2.0.8
   tailwindcss: ^4.3.3
+  tsdown: ^0.23.0
   typescript: ^6.0.3
   write-excel-file: ^4.1.1
   write-file-atomic: ^7.0.1

@@ -1,9 +1,13 @@
 {
 	"name": "linguify-vs",
+	"displayName": "Linguify",
 	"version": "0.0.0",
+	"description": "Developer-first translation file manager, in the editor.",
+	"publisher": "rawand-faraidun",
 	"private": true,
-	"type": "module",
+	"main": "./dist/index.js",
 	"scripts": {
+		"build": "tsdown",
 		"typecheck": "tsc"
 	},
 	"devDependencies": {
@@ -14,6 +18,14 @@
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",
+		"@types/vscode": "1.90.0",
+		"tsdown": "catalog:",
 		"typescript": "catalog:"
-	}
+	},
+	"engines": {
+		"vscode": "^1.90.0"
+	},
+	"activationEvents": [
+		"workspaceContains:**/linguify.config.json"
+	]
 }

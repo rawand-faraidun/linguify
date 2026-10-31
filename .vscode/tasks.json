@@ -1,0 +1,11 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Build the extension",
+			"type": "shell",
+			"command": "pnpm turbo run build --filter linguify-vs",
+			"problemMatcher": []
+		}
+	]
+}
