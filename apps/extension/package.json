@@ -6,23 +6,37 @@
 	"publisher": "rawand-faraidun",
 	"private": true,
 	"main": "./dist/index.js",
+	"extensionKind": [
+		"workspace"
+	],
 	"scripts": {
-		"build": "tsdown",
+		"build": "tsdown && vite build --configLoader runner",
 		"manifest": "tsx scripts/write-manifest.mts",
-		"typecheck": "tsc"
+		"typecheck": "tsc && tsc -p tsconfig.webview.json"
 	},
 	"devDependencies": {
 		"@linguify/api": "workspace:*",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/constants": "workspace:*",
 		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
 		"@linguify/table": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
+		"@tanstack/react-query": "catalog:",
+		"@trpc/client": "catalog:",
+		"@trpc/server": "catalog:",
+		"@trpc/tanstack-react-query": "catalog:",
 		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
 		"@types/vscode": "1.90.0",
+		"@vitejs/plugin-react": "catalog:",
+		"react": "catalog:",
+		"react-dom": "catalog:",
 		"tsdown": "catalog:",
-		"typescript": "catalog:"
+		"typescript": "catalog:",
+		"vite": "catalog:"
 	},
 	"engines": {
 		"vscode": "^1.90.0"
@@ -30,6 +44,13 @@
 	"activationEvents": [
 		"workspaceContains:**/linguify.config.json"
 	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": false,
+			"description": "Linguify reads and writes the project's translation files."
+		},
+		"virtualWorkspaces": false
+	},
 	"contributes": {
 		"configuration": {
 			"title": "Linguify",
@@ -208,6 +229,13 @@
 					"order": 18
 				}
 			}
-		}
+		},
+		"commands": [
+			{
+				"command": "linguify.open",
+				"title": "Open",
+				"category": "Linguify"
+			}
+		]
 	}
 }

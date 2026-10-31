@@ -1,3 +1,4 @@
+export type * from './bridge'
 export type * from './catalogue'
 export type * from './config'
 export type * from './engine'

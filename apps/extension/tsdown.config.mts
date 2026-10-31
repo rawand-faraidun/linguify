@@ -7,6 +7,7 @@ export default defineConfig({
 	target: 'node20',
 	outDir: 'dist',
 	fixedExtension: false,
+	clean: ['dist/index.js', 'dist/index.js.map'],
 	sourcemap: true,
 	deps: { neverBundle: ['vscode'] }
 })

@@ -1,6 +1,7 @@
 import { appRouter } from './router'
 import { createCallerFactory } from './trpc'
 
+export * from './bridge'
 export type { Context } from './context'
 export * from './contracts'
 export { toApiError } from './errors'

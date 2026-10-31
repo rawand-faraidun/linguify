@@ -1,6 +1,12 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { configFileName, extensionDisplayName, generatedFileFormat } from '@linguify/constants'
+import {
+	configFileName,
+	extensionCommands,
+	extensionCommandTitles,
+	extensionDisplayName,
+	generatedFileFormat
+} from '@linguify/constants'
 import { editorSettings, formatJson, writeFile } from '@linguify/core'
 
 // with --check, nothing is written: a manifest that differs from what would be written fails the run
@@ -12,6 +18,12 @@ const manifest = JSON.parse(written)
 manifest.activationEvents = [`workspaceContains:**/${configFileName}`]
 manifest.contributes = {
 	...manifest.contributes,
+	// each command the palette shows, named for the extension — `Linguify: Open`
+	commands: Object.entries(extensionCommandTitles).map(([name, title]) => ({
+		command: extensionCommands[name as keyof typeof extensionCommandTitles],
+		title,
+		category: extensionDisplayName
+	})),
 	configuration: {
 		title: extensionDisplayName,
 		properties: Object.fromEntries(editorSettings().map(({ key, schema }, order) => [key, { ...schema, order }]))

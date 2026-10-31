@@ -1,0 +1,7 @@
+{
+	"extends": "@linguify/tsconfig/web",
+	"compilerOptions": {
+		"lib": ["DOM", "DOM.Iterable", "ES2023"]
+	},
+	"include": ["src/webview"]
+}
