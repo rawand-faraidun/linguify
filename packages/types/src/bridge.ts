@@ -1,4 +1,4 @@
-import type { bridgeCallKinds, bridgeMessageType } from '@linguify/constants'
+import type { bridgeCallKinds, bridgeChangedType, bridgeMessageType } from '@linguify/constants'
 import type { Values } from './values'
 
 /**
@@ -36,4 +36,12 @@ export type BridgeReply = {
 	session: string
 	id: number
 	envelope: { result: { data: unknown } } | { error: unknown }
+}
+
+/**
+ * what the host tells a panel when a palette command has written its project's files, so it reads them again
+ * rather than learn of it from a refused write
+ */
+export type BridgeChanged = {
+	type: typeof bridgeChangedType
 }

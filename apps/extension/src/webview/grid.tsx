@@ -17,7 +17,6 @@ import {
 	canExpand,
 	cellMark,
 	cellText,
-	controlAfter,
 	countKeys,
 	type Expansion,
 	fill,
@@ -25,8 +24,6 @@ import {
 	type KeyEdit,
 	type KeySort,
 	type KeyTableRow,
-	keepTableStop,
-	rove,
 	rowFeatures,
 	rowOptionsFor,
 	type Selection,
@@ -37,7 +34,7 @@ import {
 	type TableRow,
 	toExpandedState
 } from '@linguify/table'
-import { useEditable } from '@linguify/table/react'
+import { controlAfter, keepTableStop, rove, useEditable } from '@linguify/table/react'
 import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 

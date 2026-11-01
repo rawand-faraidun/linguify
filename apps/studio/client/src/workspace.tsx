@@ -7,8 +7,6 @@ import {
 	countKeys,
 	expandedExpansion,
 	fill,
-	focusSection,
-	focusTableStop,
 	hiddenByView,
 	isFiltered,
 	type KeyEdit,
@@ -19,11 +17,10 @@ import {
 	noFilter,
 	pinnedKeys,
 	rowId,
-	rowSelector,
 	searchExpansion,
 	withWarnings
 } from '@linguify/table'
-import { useSelection, useTableView } from '@linguify/table/react'
+import { focusSection, focusTableStop, rowSelector, useSelection, useTableView } from '@linguify/table/react'
 import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'

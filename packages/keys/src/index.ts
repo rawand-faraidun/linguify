@@ -1,3 +1,4 @@
+export * from './diff'
 export * from './inspect'
 export * from './io'
 export * from './path'

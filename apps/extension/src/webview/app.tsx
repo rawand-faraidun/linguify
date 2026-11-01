@@ -15,8 +15,6 @@ import {
 	countKeys,
 	expandedExpansion,
 	fill,
-	focusSection,
-	focusTableStop,
 	hiddenByView,
 	type KeyEdit,
 	movedPaths,
@@ -25,11 +23,17 @@ import {
 	namespaceWrittenText,
 	noFilter,
 	rowId,
-	rowSelector,
 	usableViewMode,
 	withWarnings
 } from '@linguify/table'
-import { useKnownRevision, useSelection, useTableView } from '@linguify/table/react'
+import {
+	focusSection,
+	focusTableStop,
+	rowSelector,
+	useKnownRevision,
+	useSelection,
+	useTableView
+} from '@linguify/table/react'
 import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'

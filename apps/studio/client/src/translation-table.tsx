@@ -17,7 +17,6 @@ import {
 	canExpand,
 	cellMark,
 	cellText,
-	controlAfter,
 	countKeys,
 	type Expansion,
 	fill,
@@ -25,9 +24,7 @@ import {
 	type KeyEdit,
 	type KeySort,
 	type KeyTableRow,
-	keepTableStop,
 	type TableRow as Row,
-	rove,
 	rowFeatures,
 	rowOptionsFor,
 	type Selection,
@@ -37,7 +34,7 @@ import {
 	shownState,
 	toExpandedState
 } from '@linguify/table'
-import { useEditable } from '@linguify/table/react'
+import { controlAfter, keepTableStop, rove, useEditable } from '@linguify/table/react'
 import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'

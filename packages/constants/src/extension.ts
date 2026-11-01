@@ -41,8 +41,19 @@ export const panelViewType = `${appName}.panel`
  * the words the extension's commands are shown with in the palette, after its name — `Linguify: Open`
  */
 export const extensionCommandTitles = {
-	open: 'Open'
+	open: 'Open',
+	sync: 'Sync',
+	format: 'Format',
+	diff: 'Diff',
+	export: 'Export',
+	import: 'Import'
 } as const
+
+/**
+ * how many files a palette command's confirmation lists before saying how many more there are — the
+ * editor's own dialog does not scroll
+ */
+export const extensionListLimit = 20
 
 /**
  * the webview's built files: the folder inside the extension's `dist`, and the script and stylesheet in it —
@@ -100,3 +111,9 @@ export const bridgeCallKinds = {
  * @note lets each side ignore messages that other code posts on the same channel
  */
 export const bridgeMessageType = `${appName}:rpc`
+
+/**
+ * the tag on the message the host posts a panel when a palette command has written its project's files —
+ * the panel reads them again
+ */
+export const bridgeChangedType = `${appName}:changed`

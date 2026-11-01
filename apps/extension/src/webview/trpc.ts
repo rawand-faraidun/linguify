@@ -1,4 +1,6 @@
 import type { AppRouter } from '@linguify/api'
+import { bridgeChangedType } from '@linguify/constants'
+import type { BridgeChanged } from '@linguify/types'
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { createTRPCClient } from '@trpc/client'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -51,6 +53,12 @@ export const queryClient: QueryClient = new QueryClient({
  * @returns settled once every shown query is read again; rejected when one could not be
  */
 export const refresh = () => queryClient.refetchQueries({ type: 'active' }, { throwOnError: true })
+
+// a palette command wrote the files: what is shown is read again, so the next write expects what is there
+window.addEventListener('message', ({ data }: MessageEvent<unknown>) => {
+	if (typeof data === 'object' && data !== null && (data as Partial<BridgeChanged>).type === bridgeChangedType)
+		void queryClient.invalidateQueries()
+})
 
 /**
  * `TRPCProvider` and `useTRPC` — the API as TanStack Query options

@@ -10,7 +10,8 @@ import {
 	window
 } from 'vscode'
 import { answerBridge } from '@linguify/api'
-import { extensionDisplayName, panelViewType, webviewFiles } from '@linguify/constants'
+import { bridgeChangedType, extensionDisplayName, panelViewType, webviewFiles } from '@linguify/constants'
+import type { BridgeChanged } from '@linguify/types'
 import { panelHtml } from './html'
 
 /**
@@ -80,4 +81,14 @@ export const openPanel = (context: ExtensionContext, folder: Uri, log: LogOutput
 		})
 	]
 	panels.set(key, panel)
+}
+
+/**
+ * tells the panel open on a project, if any, that a palette command wrote its files, so it reads them again
+ *
+ * @param folder - the folder holding the project's config
+ */
+export const projectChanged = (folder: Uri) => {
+	const changed: BridgeChanged = { type: bridgeChangedType }
+	void panels.get(folder.toString())?.webview.postMessage(changed)
 }

@@ -36,3 +36,21 @@ export const warningCodes = {
 	 */
 	structureConflict: 'STRUCTURE_CONFLICT'
 } as const
+
+/**
+ * the ways a locale can differ from the default, in the order they are shown
+ */
+export const diffKinds = ['missing', 'extra', 'empty'] as const
+
+/**
+ * what a diff says, wherever it is shown
+ */
+export const diffText = {
+	title: 'Compare each locale with the default',
+	pending: 'Comparing the locales…',
+	inSync: 'in sync',
+	separator: ' · ',
+	onlyDefault: 'There is only the default locale — nothing to compare it with',
+	localeInSync: '{locale} is in sync with the default',
+	allInSync: 'Every locale is in sync with the default'
+} as const

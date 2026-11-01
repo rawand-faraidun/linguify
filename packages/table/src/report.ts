@@ -1,8 +1,16 @@
-import { changeKinds, namespaceActions, studioText } from '@linguify/constants'
+import {
+	actionText,
+	changeKinds,
+	changeKindText,
+	namespaceActions,
+	type projectActions,
+	projectActionText,
+	studioText
+} from '@linguify/constants'
 import { relativePath } from '@linguify/keys'
-import type { ChangeKind, NamespaceName, Report } from '@linguify/types'
+import type { ChangeKind, NamespaceName, ProjectAction, Report } from '@linguify/types'
 import type { NamespaceAction } from './preflight'
-import { fill } from './words'
+import { countFiles, fill, numbers } from './words'
 
 /**
  * how many keys of each kind an operation changed, what a surface says before and after it
@@ -95,3 +103,40 @@ export const namespaceWrittenText = (
 			: fill(hidden ? studioText.addedNamespaceHidden : studioText.addedNamespace, { name }),
 		report
 	)
+
+/**
+ * @param preview - an action's outcome
+ *
+ * @returns how many keys of each kind it changes, in words
+ */
+export const actionCountsText = (preview: ActionPreview): string[] =>
+	preview.counts.map(({ kind, count }) => fill(changeKindText[kind], { count: numbers.format(count) }))
+
+/**
+ * @param preview - a dry run's outcome
+ *
+ * @returns what it would do, in words: the counts, then how many files it writes and removes — the files
+ * themselves listed apart
+ */
+export const actionPlanText = (preview: ActionPreview): string[] => [
+	...actionCountsText(preview),
+	...(preview.written.length > 0 ? [fill(actionText.writes, { files: countFiles(preview.written.length) })] : []),
+	...(preview.removed.length > 0 ? [fill(actionText.removes, { files: countFiles(preview.removed.length) })] : [])
+]
+
+/**
+ * @param action - a sync, format or import
+ * @param done - its run's outcome
+ *
+ * @returns what it did, in words — the counts, or, when no key changed, how many files
+ */
+export const actionDoneText = (
+	action: Exclude<ProjectAction, typeof projectActions.export>,
+	done: ActionPreview
+): string => {
+	const counts = actionCountsText(done)
+	return fill(projectActionText[action].done, {
+		summary:
+			counts.length > 0 ? counts.join(studioText.listSeparator) : countFiles(done.written.length + done.removed.length)
+	})
+}

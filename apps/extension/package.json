@@ -238,6 +238,31 @@
 				"command": "linguify.open",
 				"title": "Open",
 				"category": "Linguify"
+			},
+			{
+				"command": "linguify.sync",
+				"title": "Sync",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.format",
+				"title": "Format",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.diff",
+				"title": "Diff",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.export",
+				"title": "Export",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.import",
+				"title": "Import",
+				"category": "Linguify"
 			}
 		]
 	}

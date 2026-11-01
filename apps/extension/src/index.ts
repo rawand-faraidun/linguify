@@ -1,6 +1,15 @@
-import { commands, type ExtensionContext, Uri, window, workspace } from 'vscode'
+import { commands, type ExtensionContext, type LogOutputChannel, Uri, window, workspace } from 'vscode'
 import { configFileName, extensionCommands, extensionDisplayName, extensionText, fileScheme } from '@linguify/constants'
-import { openPanel, panelsDisposable } from './panel'
+import {
+	diffCommand,
+	exportCommand,
+	formatCommand,
+	importCommand,
+	type ProjectCommand,
+	runCommand,
+	syncCommand
+} from './commands'
+import { openPanel, panelsDisposable, projectChanged } from './panel'
 
 /**
  * starts the extension — when a workspace holds a linguify config, or one of its commands is run
@@ -22,9 +31,32 @@ export const activate = (context: ExtensionContext) => {
 				return
 			}
 			openPanel(context, folder, log)
-		})
+		}),
+		...Object.entries({
+			[extensionCommands.sync]: syncCommand,
+			[extensionCommands.format]: formatCommand,
+			[extensionCommands.diff]: diffCommand,
+			[extensionCommands.export]: exportCommand,
+			[extensionCommands.import]: importCommand
+		}).map(([name, command]) => commands.registerCommand(name, () => onProject(log, command)))
 	)
 	log.info(`${extensionDisplayName} is active`)
+}
+
+/**
+ * runs a palette command on the workspace's project, and has its open panel read the files again when the
+ * command wrote them
+ *
+ * @param log - the extension's log
+ * @param command - the command
+ */
+const onProject = async (log: LogOutputChannel, command: ProjectCommand) => {
+	const folder = await findProject()
+	if (folder === undefined) {
+		await window.showErrorMessage(extensionText.noConfig)
+		return
+	}
+	if (await runCommand(folder, log, command)) projectChanged(folder)
 }
 
 /**

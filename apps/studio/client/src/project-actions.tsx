@@ -1,7 +1,6 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import {
 	actionText,
-	changeKindText,
 	compositionKeyCode,
 	ioDefaultPaths,
 	ioFormats,
@@ -15,12 +14,12 @@ import {
 import { formatOfFile, isIoFormat, relativePath } from '@linguify/keys'
 import {
 	type ActionPreview,
+	actionDoneText,
+	actionPlanText,
 	actionPreview,
-	countFiles,
 	countKeys,
 	errorMessage,
 	fill,
-	numbers,
 	writeFailure
 } from '@linguify/table'
 import type { IoFormat, ProjectAction, Revision } from '@linguify/types'
@@ -266,16 +265,7 @@ const ActionDialog = ({
 							...(planned.table === undefined ? {} : { table: planned.table })
 						})
 				}
-				const done = actionPreview(await runs[action](), cwd)
-				const counts = summary(done)
-				onDone(
-					fill(projectActionText[action].done, {
-						summary:
-							counts.length > 0
-								? counts.join(studioText.listSeparator)
-								: countFiles(done.written.length + done.removed.length)
-					})
-				)
+				onDone(actionDoneText(action, actionPreview(await runs[action](), cwd)))
 			}
 			setPending(false)
 			setOpen(false)
@@ -479,24 +469,12 @@ const ActionDialog = ({
 }
 
 /**
- * @param preview - a run's outcome
- *
- * @returns how many keys of each kind changed, in words
- */
-const summary = (preview: ActionPreview): string[] =>
-	preview.counts.map(({ kind, count }) => fill(changeKindText[kind], { count: numbers.format(count) }))
-
-/**
  * @param preview - a dry run's outcome
  *
  * @returns it as the dialog shows it: the counts and how many files in the summary, the files listed
  */
 const shownOf = (preview: ActionPreview): Shown => ({
-	summary: [
-		...summary(preview),
-		...(preview.written.length > 0 ? [fill(actionText.writes, { files: countFiles(preview.written.length) })] : []),
-		...(preview.removed.length > 0 ? [fill(actionText.removes, { files: countFiles(preview.removed.length) })] : [])
-	],
+	summary: actionPlanText(preview),
 	files: [...preview.written, ...preview.removed],
 	warnings: preview.warnings,
 	nothing: preview.nothing

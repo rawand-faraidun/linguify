@@ -1,6 +1,6 @@
 import { rowKinds, tableControls, tableId } from '@linguify/constants'
 import type { NamespaceName } from '@linguify/types'
-import { rowId } from './rows'
+import { rowId } from '../rows'
 
 /**
  * the table's columns that are not a locale's, as the keyboard tells them apart
