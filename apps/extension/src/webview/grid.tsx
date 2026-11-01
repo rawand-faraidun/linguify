@@ -1,6 +1,8 @@
 import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
 import {
 	rowKinds,
+	sortColumns,
+	sortDirections,
 	studioText,
 	tableId,
 	tableMarkClasses,
@@ -20,11 +22,13 @@ import {
 	fill,
 	isExpanded,
 	type KeyEdit,
+	type KeySort,
 	type KeyTableRow,
 	keepTableStop,
 	rove,
 	rowFeatures,
 	rowOptionsFor,
+	sameColumn,
 	type TableRow,
 	toExpandedState
 } from '@linguify/table'
@@ -52,6 +56,8 @@ export const Grid = ({
 	source,
 	expansion,
 	onToggle,
+	sort,
+	onSort,
 	onEdit
 }: {
 	rows: TableRow[]
@@ -59,6 +65,8 @@ export const Grid = ({
 	source: RowSource
 	expansion: Expansion
 	onToggle: (id: string) => void
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
 	onEdit: (edit: KeyEdit) => Promise<unknown>
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
@@ -86,6 +94,9 @@ export const Grid = ({
 			<span id={editHintIds.keys} hidden>
 				{studioText.editKeys}
 			</span>
+			<span id={sortHintId} hidden>
+				{studioText.sortHint}
+			</span>
 			<table
 				ref={tableRef}
 				id={tableId}
@@ -101,16 +112,16 @@ export const Grid = ({
 			>
 				<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
 					<tr>
-						<th scope="col" className={headClass}>
+						<SortableHead column={{ by: sortColumns.key }} sort={sort} onSort={onSort}>
 							{studioText.key}
-						</th>
+						</SortableHead>
 						{descriptions && (
 							<th scope="col" className={headClass}>
 								{studioText.description}
 							</th>
 						)}
 						{shown.map(locale => (
-							<th key={locale} scope="col" className={headClass}>
+							<SortableHead key={locale} column={{ by: sortColumns.locale, locale }} sort={sort} onSort={onSort}>
 								{locale}
 								{locale === source.default && (
 									<>
@@ -118,7 +129,7 @@ export const Grid = ({
 										<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
 									</>
 								)}
-							</th>
+							</SortableHead>
 						))}
 					</tr>
 				</thead>
@@ -156,6 +167,44 @@ export const Grid = ({
 		</>
 	)
 }
+
+/**
+ * a column's head that orders the grid by it when pressed — on screen only, the files untouched; its arrow
+ * says which way, `aria-sort` on the sorted head only
+ */
+const SortableHead = ({
+	column,
+	sort,
+	onSort,
+	children
+}: {
+	column: KeySort['column']
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
+	children: ReactNode
+}) => {
+	const direction = sort !== undefined && sameColumn(sort.column, column) ? sort.direction : undefined
+	return (
+		<th scope="col" aria-sort={direction} className={headClass}>
+			<button
+				type="button"
+				aria-describedby={sortHintId}
+				onClick={() => onSort(column)}
+				className="inline-flex items-center gap-1 text-start font-semibold"
+			>
+				<span>{children}</span>
+				<span aria-hidden="true" className={direction === undefined ? 'text-muted-foreground' : undefined}>
+					{direction === undefined ? '↕' : direction === sortDirections.ascending ? '↑' : '↓'}
+				</span>
+			</button>
+		</th>
+	)
+}
+
+/**
+ * the id of the words every sortable head points to: what sorting does, and does not
+ */
+const sortHintId = 'sort-hint'
 
 /**
  * a section or a group: its name and how many keys it holds, opening and closing what is under it

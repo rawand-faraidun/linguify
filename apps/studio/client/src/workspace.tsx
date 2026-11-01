@@ -1,35 +1,25 @@
-import { memo, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { namespaceActions, rowKinds, studioText, tableId, tableOpenLimit, viewModes } from '@linguify/constants'
-import { keyRows, localeOrder, namespacesIn, type RowSource } from '@linguify/keys'
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { namespaceActions, rowKinds, studioText, tableId } from '@linguify/constants'
+import { localeOrder, type RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
-	buildRows,
 	bulkDelete,
 	collapsedExpansion,
-	columnShown,
 	countKeys,
-	countUntranslated,
 	type Expansion,
-	emptyNamespacesShown,
 	expandedExpansion,
 	fill,
-	filterKeys,
 	focusTableStop,
 	hiddenByView,
 	isFiltered,
 	type KeyEdit,
-	type KeyFilter,
-	type KeySort,
 	keepExisting,
-	keepUnchangedRows,
 	movedExpansion,
 	movedFilter,
 	movedPaths,
 	movedSelection,
 	type NamespaceAction,
 	type NewKey,
-	narrowsView,
-	nextSort,
 	noFilter,
 	pinnedKeys,
 	revealKey,
@@ -37,14 +27,12 @@ import {
 	rowId,
 	type Selection,
 	searchExpansion,
-	sectionsExpansion,
-	sortKeys,
 	type TableRow,
 	toggleAll,
-	toggleExpansion,
 	toggleSelection
 } from '@linguify/table'
-import type { KeyPath, KeyRow, NamespaceName, ViewMode } from '@linguify/types'
+import { useTableView } from '@linguify/table/react'
+import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
 import { FolderPlusIcon, ListChevronsDownUpIcon, ListChevronsUpDownIcon, PlusIcon, Trash2Icon } from 'lucide-react'
@@ -112,91 +100,35 @@ export const Workspace = memo(
 			}),
 			[config]
 		)
-		// rows a write left as they were stay the same rows, so only the changed ones are drawn again
-		const earlier = useRef<readonly KeyRow[]>([])
-		const keys = useMemo(() => {
-			const read = keepUnchangedRows(earlier.current, keyRows(catalogue.catalogue, source))
-			earlier.current = read
-			return read
-		}, [catalogue, source])
-		const counts = useMemo(() => countUntranslated(keys, source.locales, source.default), [keys, source])
-		const namespaces = useMemo(
-			() => (config.namespaced ? namespacesIn(catalogue.catalogue, localeOrder(source)) : []),
-			[catalogue, config.namespaced, source]
-		)
-		const [chosen, setChosen] = useState<KeyFilter>(noFilter)
-		// a namespace or locale gone since it was chosen — renamed, deleted, or out of the config — is let go
-		const filter = useMemo((): KeyFilter => {
-			const kept = chosen.namespaces?.filter(namespace => namespaces.includes(namespace))
-			return {
-				search: chosen.search,
-				untranslatedIn: chosen.untranslatedIn.filter(locale => Object.hasOwn(counts, locale)),
-				namespaces: kept === undefined || kept.length === 0 ? undefined : kept
-			}
-		}, [chosen, counts, namespaces])
-		const [sort, setSort] = useState<KeySort>()
-		const search = useDeferredValue(filter.search)
-		const sorted = useMemo(() => (sort === undefined ? keys : sortKeys(keys, sort)), [keys, sort])
-		const [pinned, setPinned] = useState<readonly KeyPath[]>()
+		// the rows, the filter, the sort and what is open — the view the extension's panel shares
+		const {
+			keys,
+			counts,
+			namespaces,
+			filter,
+			search,
+			sort,
+			visible,
+			rows,
+			expansion,
+			latest,
+			toggle,
+			expand,
+			changeFilter,
+			onSort,
+			viewChanged,
+			pin,
+			setChosen,
+			setPinned,
+			setExpansions,
+			setLayers
+		} = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
 		// a refresh shows the files as they are: rows held behind an earlier edit are let go
-		useEffect(() => onRefresh(() => setPinned(undefined)), [])
-		const visible = useMemo(() => {
-			if (pinned !== undefined) return pinnedKeys(keys, pinned)
-			return filterKeys(
-				sorted,
-				{ search, untranslatedIn: filter.untranslatedIn, namespaces: filter.namespaces },
-				source.default
-			)
-		}, [pinned, keys, sorted, search, filter.untranslatedIn, filter.namespaces, source.default])
-		const emptyNamespaces = useMemo(
-			() => emptyNamespacesShown(namespaces, keys, { ...filter, search }),
-			[namespaces, keys, filter, search]
-		)
-		const rows = useMemo(
-			() => buildRows(mode, visible, { namespaced: config.namespaced, emptyNamespaces }),
-			[mode, visible, config.namespaced, emptyNamespaces]
-		)
-
-		// a large project opens with its sections closed: every key open is seconds of the browser's work a change
-		const large = keys.length > tableOpenLimit
-		const initial = useMemo(
-			() => (large ? collapsedExpansion : mode === viewModes.compact ? sectionsExpansion(rows) : expandedExpansion),
-			[large, mode, rows]
-		)
-		const [expansions, setExpansions] = useState<Partial<Record<ViewMode, Expansion>>>({})
-		const base = expansions[mode] ?? initial
-		const revealing = revealsMatches({ ...filter, search })
-		const revealed = useMemo(() => searchExpansion(base, rows, mode), [base, rows, mode])
-		const [layers, setLayers] = useState<Partial<Record<ViewMode, Expansion>>>({})
-		const expansion = revealing ? (layers[mode] ?? revealed) : base
-		const narrowed = narrowsView(filter, sort)
-		const latest = useRef({ mode, initial, revealing, revealed, visible, narrowed })
-		latest.current = { mode, initial, revealing, revealed, visible, narrowed }
-		const toggle = useCallback((id: string) => {
-			const { mode, initial, revealing, revealed } = latest.current
-			if (revealing) setLayers(current => ({ ...current, [mode]: toggleExpansion(current[mode] ?? revealed, id) }))
-			else setExpansions(current => ({ ...current, [mode]: toggleExpansion(current[mode] ?? initial, id) }))
-		}, [])
-		const expand = (next: Expansion) =>
-			revealing
-				? setLayers(current => ({ ...current, [mode]: next }))
-				: setExpansions(current => ({ ...current, [mode]: next }))
-		const changeFilter = (next: KeyFilter) => {
-			if (!revealsMatches(next)) setLayers({})
-			setPinned(undefined)
-			setChosen(next)
-		}
+		useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
 		const changeMode = (next: ViewMode) => {
 			pick(next)
-			setPinned(undefined)
-			setSort(current =>
-				current !== undefined && columnShown(current.column, next, source.default) ? current : undefined
-			)
+			viewChanged(next)
 		}
-		const onSort = useCallback((column: KeySort['column']) => {
-			setPinned(undefined)
-			setSort(current => nextSort(current, column))
-		}, [])
 		useKnownRevision(catalogue.revision)
 		const editKey = useEditKey()
 		const addKey = useAddKey()
@@ -341,12 +273,11 @@ export const Workspace = memo(
 		}, [lastAdded])
 		const onEdit = useCallback(
 			(edit: KeyEdit) => {
-				const { visible, narrowed } = latest.current
-				if (narrowed) setPinned(current => current ?? visible.map(row => row.key))
+				pin()
 				setSaid(undefined)
 				return editKey(edit)
 			},
-			[editKey]
+			[editKey, pin]
 		)
 		return (
 			<>
