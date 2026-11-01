@@ -14,6 +14,7 @@ import {
 	expandedExpansion,
 	fill,
 	filterKeys,
+	focusTableStop,
 	hiddenByView,
 	isFiltered,
 	type KeyEdit,
@@ -54,7 +55,7 @@ import { Filters, searchId } from './filters'
 import { NamespaceDialog } from './namespace-dialog'
 import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
-import { focusTableStop, rowSelector, selectedRow, TranslationTable } from './translation-table'
+import { rowSelector, selectedRow, TranslationTable } from './translation-table'
 import { type ApiOutputs, onRefresh } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
@@ -260,7 +261,8 @@ export const Workspace = memo(
 			if (target !== null) {
 				target.focus()
 				target.scrollIntoView({ block: 'nearest' })
-			} else if (action?.kind === namespaceActions.add || !focusTableStop()) addNamespaceButton.current?.focus()
+			} else if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
+				addNamespaceButton.current?.focus()
 		}
 		const locales = useMemo(() => localeOrder(source), [source])
 		const rules = useMemo(
@@ -330,7 +332,8 @@ export const Workspace = memo(
 					? null
 					: document.querySelector<HTMLElement>(`${rowSelector(after.current)} [data-select] [role="checkbox"]`)
 			if (next !== null) next.focus()
-			else if (!focusTableStop()) (document.getElementById(searchId) ?? addButton.current)?.focus()
+			else if (!focusTableStop(document.getElementById(tableId)))
+				(document.getElementById(searchId) ?? addButton.current)?.focus()
 		}
 		useLayoutEffect(() => {
 			if (lastAdded === undefined) return

@@ -1,0 +1,84 @@
+import { tableControls } from '@linguify/constants'
+
+/**
+ * the table's columns that are not a locale's, as the keyboard tells them apart
+ */
+const fixedColumns = { select: 'select', description: 'description' } as const
+
+/**
+ * gives a table its one stop for Tab when it has none — a text a person can open when there is one, so the
+ * hint on moving is heard on the way in, else its first control
+ *
+ * @note the studio and the extension draw their own tables; both mark their controls with the attributes in
+ * `tableControls`, and move between them with these functions
+ *
+ * @param table - the table
+ */
+export const keepTableStop = (table: HTMLElement) => {
+	if (table.querySelector(tableControls.stop) !== null) return
+	;(table.querySelector(tableControls.text) ?? table.querySelector(tableControls.cell))?.setAttribute('tabindex', '0')
+}
+
+/**
+ * gives the keyboard to a table, on its one stop for Tab
+ *
+ * @param table - the table, or nothing when it is not on the page
+ *
+ * @returns whether there was a stop to give it to — none when the table shows nothing
+ */
+export const focusTableStop = (table: ParentNode | null): boolean => {
+	const stop = table?.querySelector<HTMLElement>(tableControls.stop) ?? null
+	stop?.focus()
+	return stop !== null
+}
+
+/**
+ * makes the control just focused the table's one stop for Tab — all the others are reached with the arrow keys,
+ * so the table is one step in the page however many texts it holds
+ *
+ * @param table - the table
+ * @param target - what was focused
+ */
+export const rove = (table: HTMLElement, target: EventTarget | null) => {
+	if (!(target instanceof HTMLElement) || !target.matches(tableControls.cell)) return
+	for (const other of table.querySelectorAll(tableControls.stop)) other.setAttribute('tabindex', '-1')
+	target.setAttribute('tabindex', '0')
+}
+
+/**
+ * @param control - a control in a cell
+ *
+ * @returns its column: the checkboxes', a locale, the description, or the key's
+ */
+const columnOf = (control: Element): string =>
+	control.closest('[data-select]') !== null
+		? fixedColumns.select
+		: (control.closest('[data-locale]')?.getAttribute('data-locale') ??
+			(control.closest('[data-description]') === null ? '' : fixedColumns.description))
+
+/**
+ * where a key moves the keyboard between a table's controls: left and right along a row, up and down a
+ * column, Home and End to a row's ends
+ *
+ * @param table - the table
+ * @param from - what has the keyboard
+ * @param key - the key pressed
+ *
+ * @returns the control to move to, or nothing when the key does not move or there is nowhere to go
+ */
+export const controlAfter = (table: HTMLElement, from: EventTarget | null, key: string): HTMLElement | undefined => {
+	if (!(from instanceof HTMLElement) || !from.matches(tableControls.cell)) return undefined
+	const controls = [...table.querySelectorAll<HTMLElement>(tableControls.cell)]
+	const at = controls.indexOf(from)
+	const row = from.closest('tr')
+	const sameRow = controls.filter(control => control.closest('tr') === row)
+	const column = columnOf(from)
+	const below = (control: HTMLElement) => control.closest('tr') !== row && columnOf(control) === column
+	if (key === 'ArrowRight') return sameRow[sameRow.indexOf(from) + 1]
+	if (key === 'ArrowLeft') return sameRow[sameRow.indexOf(from) - 1]
+	if (key === 'ArrowDown') return controls.slice(at + 1).find(below)
+	if (key === 'ArrowUp') return controls.slice(0, at).reverse().find(below)
+	if (key === 'Home') return sameRow[0]
+	if (key === 'End') return sameRow.at(-1)
+	return undefined
+}

@@ -1,4 +1,4 @@
-import { type KeyboardEvent, memo, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
 	compositionKeyCode,
 	rowKinds,
@@ -18,6 +18,7 @@ import {
 	canExpand,
 	cellMark,
 	cellText,
+	controlAfter,
 	countKeys,
 	type Expansion,
 	editedText,
@@ -26,7 +27,9 @@ import {
 	type KeyEdit,
 	type KeySort,
 	type KeyTableRow,
+	keepTableStop,
 	type TableRow as Row,
+	rove,
 	rowFeatures,
 	rowOptionsFor,
 	type Selection,
@@ -93,9 +96,7 @@ export const TranslationTable = memo(function TranslationTable({
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
 	useLayoutEffect(() => {
-		const table = tableRef.current
-		if (table !== null && table.querySelector(rovingControl) === null)
-			(table.querySelector(editableText) ?? table.querySelector(cellControl))?.setAttribute('tabindex', '0')
+		if (tableRef.current !== null) keepTableStop(tableRef.current)
 	})
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
@@ -123,7 +124,12 @@ export const TranslationTable = memo(function TranslationTable({
 			<table
 				ref={tableRef}
 				onFocus={event => rove(event.currentTarget, event.target)}
-				onKeyDown={moveBetweenControls}
+				onKeyDown={event => {
+					const to = controlAfter(event.currentTarget, event.target, event.key)
+					if (to === undefined) return
+					event.preventDefault()
+					to.focus()
+				}}
 				id={tableId}
 				aria-label={studioText.translations}
 				className="w-full caption-bottom text-xs"
@@ -196,19 +202,6 @@ export const TranslationTable = memo(function TranslationTable({
 })
 
 /**
- * every control in the table's cells — a key's checkbox, a text a person can open — the texts alone, and the
- * one the keyboard reaches the table on, a text when there is one, so the hint on moving is heard on the way in
- */
-const cellControl = '[data-cell]'
-const editableText = '[data-edit]'
-const rovingControl = '[data-cell][tabindex="0"]'
-
-/**
- * the table's columns that are not a locale's, as the keyboard tells them apart
- */
-const fixedColumns = { select: 'select', description: 'description' } as const
-
-/**
  * how a row says it is selected — the state the table primitive styles
  */
 export const selectedRow = 'selected'
@@ -219,77 +212,6 @@ export const selectedRow = 'selected'
  * @returns the selector of that row in the table
  */
 export const rowSelector = (id: string): string => `#${tableId} tr[data-row="${CSS.escape(id)}"]`
-
-/**
- * gives the keyboard to the table, on its one stop for Tab
- *
- * @returns whether there was a stop to give it to — none when the table shows nothing
- */
-export const focusTableStop = (): boolean => {
-	const stop = document.querySelector<HTMLElement>(`#${tableId} ${rovingControl}`)
-	stop?.focus()
-	return stop !== null
-}
-
-/**
- * makes the control just focused the table's one stop for Tab — all the others are reached with the arrow keys,
- * so the table is one step in the page however many texts it holds
- *
- * @param table - the table
- * @param target - what was focused
- */
-const rove = (table: HTMLElement, target: EventTarget) => {
-	if (!(target instanceof HTMLElement) || !target.matches(cellControl)) return
-	for (const other of table.querySelectorAll(rovingControl)) other.setAttribute('tabindex', '-1')
-	target.setAttribute('tabindex', '0')
-}
-
-/**
- * @param control - a control in a cell
- *
- * @returns its column: the checkboxes', a locale, or the description
- */
-const columnOf = (control: Element): string =>
-	control.closest('[data-select]') !== null
-		? fixedColumns.select
-		: (control.closest('[data-locale]')?.getAttribute('data-locale') ??
-			(control.closest('[data-description]') === null ? '' : fixedColumns.description))
-
-/**
- * moves the keyboard between the cells' controls: left and right along a row, up and down a column, Home
- * and End to a row's ends
- *
- * @param event - a key pressed in the table
- */
-const moveBetweenControls = (event: KeyboardEvent<HTMLTableElement>) => {
-	const from = event.target
-	if (!(from instanceof HTMLElement) || !from.matches(cellControl)) return
-	const texts = [...event.currentTarget.querySelectorAll<HTMLElement>(cellControl)]
-	const at = texts.indexOf(from)
-	const row = from.closest('tr')
-	const sameRow = texts.filter(text => text.closest('tr') === row)
-	const column = columnOf(from)
-	const to =
-		event.key === 'ArrowRight'
-			? sameRow[sameRow.indexOf(from) + 1]
-			: event.key === 'ArrowLeft'
-				? sameRow[sameRow.indexOf(from) - 1]
-				: event.key === 'ArrowDown'
-					? texts.slice(at + 1).find(text => text.closest('tr') !== row && columnOf(text) === column)
-					: event.key === 'ArrowUp'
-						? texts
-								.slice(0, at)
-								.reverse()
-								.find(text => text.closest('tr') !== row && columnOf(text) === column)
-						: event.key === 'Home'
-							? sameRow[0]
-							: event.key === 'End'
-								? sameRow.at(-1)
-								: undefined
-	if (to === undefined) return
-	event.preventDefault()
-	to.focus()
-}
 
 /**
  * a column's header that orders the table by it when pressed — on screen only

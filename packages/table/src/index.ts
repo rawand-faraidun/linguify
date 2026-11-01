@@ -1,6 +1,7 @@
 export * from './edit'
 export * from './expansion'
 export * from './filter'
+export * from './keyboard'
 export * from './preflight'
 export * from './rename'
 export * from './report'

@@ -379,6 +379,16 @@ export const previewStates = {
 export const tableId = 'translations'
 
 /**
+ * how a table marks what the keyboard moves between: every control in its cells, the texts a person can
+ * open, and the one control Tab reaches it on
+ */
+export const tableControls = {
+	cell: '[data-cell]',
+	text: '[data-edit]',
+	stop: '[data-cell][tabindex="0"]'
+} as const
+
+/**
  * the blocks a table cell's text and a row's key are drawn in: bounded inside the cell, wrapping — a long
  * key or text never widens the table past its locales
  *

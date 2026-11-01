@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useLayoutEffect, useMemo, useRef } from 'react'
 import {
 	rowKinds,
 	studioText,
@@ -14,10 +14,13 @@ import {
 	canExpand,
 	cellMark,
 	cellText,
+	controlAfter,
 	countKeys,
 	type Expansion,
 	isExpanded,
 	type KeyTableRow,
+	keepTableStop,
+	rove,
 	rowFeatures,
 	rowOptionsFor,
 	type TableRow,
@@ -31,7 +34,9 @@ import { tableFeatures, useTable } from '@tanstack/react-table'
  * default locale first and each text marked as the studio marks it, in the editor's own colours
  *
  * @note few nodes a row, as the studio's measurements at 20,000 keys taught: plain cells, no component per
- * text. Its head sticks to the top of the box it scrolls in. Editing and the keyboard's moves come with 13.5
+ * text. Its head sticks to the top of the box it scrolls in. The keyboard moves as in the studio, with the
+ * same shared functions: the grid is one stop for Tab, the arrows move between its controls, Home and End to
+ * a row's ends
  *
  * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion` and `onToggle`,
  * which keeps its identity, so a toggle redraws only the rows it changes
@@ -52,6 +57,10 @@ export const Grid = ({
 	onToggle: (id: string) => void
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
+	const tableRef = useRef<HTMLTableElement>(null)
+	useLayoutEffect(() => {
+		if (tableRef.current !== null) keepTableStop(tableRef.current)
+	})
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
 		columns: [],
@@ -65,7 +74,19 @@ export const Grid = ({
 	const shown = useMemo(() => (compact ? locales.slice(0, 1) : locales), [compact, locales])
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
-		<table id={tableId} aria-label={studioText.translations} className="w-full border-collapse text-start">
+		<table
+			ref={tableRef}
+			id={tableId}
+			aria-label={studioText.translations}
+			className="w-full border-collapse text-start"
+			onFocus={event => rove(event.currentTarget, event.target)}
+			onKeyDown={event => {
+				const to = controlAfter(event.currentTarget, event.target, event.key)
+				if (to === undefined) return
+				event.preventDefault()
+				to.focus()
+			}}
+		>
 			<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
 				<tr>
 					<th scope="col" className={headClass}>
@@ -256,6 +277,8 @@ const Disclosure = ({
 }) => (
 	<button
 		type="button"
+		tabIndex={-1}
+		data-cell
 		data-disclosure
 		aria-expanded={open}
 		onClick={onToggle}
