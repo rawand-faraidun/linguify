@@ -1,6 +1,5 @@
-import { memo, type ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
 import {
-	compositionKeyCode,
 	rowKinds,
 	selectionStates,
 	sortColumns,
@@ -21,7 +20,6 @@ import {
 	controlAfter,
 	countKeys,
 	type Expansion,
-	editedText,
 	fill,
 	isExpanded,
 	type KeyEdit,
@@ -39,6 +37,7 @@ import {
 	shownState,
 	toExpandedState
 } from '@linguify/table'
+import { useEditable } from '@linguify/table/react'
 import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
@@ -517,61 +516,17 @@ const Editable = ({
 	onCommit: (text: string) => Promise<unknown>
 	children: ReactNode
 }) => {
-	const [draft, setDraft] = useState<string>()
-	const [base, setBase] = useState(text)
-	const [saving, setSaving] = useState(false)
-	const editing = useRef(false)
-	const pending = useRef(false)
-	const failed = useRef<string | undefined>(undefined)
-	const button = useRef<HTMLButtonElement>(null)
-	const [roving, setRoving] = useState(false)
-	const changed = draft !== undefined && text !== base
-	if (draft !== undefined && changed && draft === base) {
-		// nothing typed yet: the text from the files is simply the new start
-		setBase(text)
-		setDraft(text)
-	}
-	const close = (giveBack: boolean) => {
-		editing.current = false
-		failed.current = undefined
-		setDraft(undefined)
-		if (giveBack) requestAnimationFrame(() => button.current?.focus())
-	}
-	const commit = async (typed: string, how: 'enter' | 'leave') => {
-		if (!editing.current || pending.current) return
-		if (how === 'leave' && (changed || typed === failed.current)) return
-		// the field gives line breaks back as line feeds: unchanged text writes nothing, and \r\n stays
-		const written = editedText(typed, text)
-		if (written === undefined) return close(how === 'enter')
-		pending.current = true
-		setSaving(true)
-		try {
-			await onCommit(written)
-			close(how === 'enter')
-		} catch {
-			// reported once for every write; what was typed stays to try again
-			failed.current = typed
-			setBase(text)
-		} finally {
-			pending.current = false
-			setSaving(false)
-		}
-	}
-	if (draft === undefined)
+	const edit = useEditable(text, onCommit)
+	if (edit.draft === undefined)
 		return (
 			<button
-				ref={button}
+				ref={edit.control}
 				type="button"
-				tabIndex={roving ? 0 : -1}
+				tabIndex={edit.roving ? 0 : -1}
 				data-edit
 				data-cell
 				aria-describedby={editHintIds.open}
-				onClick={event => {
-					setRoving(event.currentTarget.tabIndex === 0)
-					editing.current = true
-					setBase(text)
-					setDraft(text)
-				}}
+				onClick={event => edit.open(event.currentTarget.tabIndex === 0)}
 				className={cn('block min-h-5 w-full text-start', plainFocusClass)}
 			>
 				{children}
@@ -583,35 +538,24 @@ const Editable = ({
 			<Textarea
 				autoFocus
 				data-editor
-				value={draft}
+				value={edit.draft}
 				dir="auto"
 				lang={lang}
 				aria-label={label}
-				aria-describedby={changed ? `${editHintIds.keys} ${editHintIds.onDisk}` : editHintIds.keys}
-				aria-invalid={changed}
-				aria-busy={saving}
-				readOnly={saving}
+				aria-describedby={edit.changed ? `${editHintIds.keys} ${editHintIds.onDisk}` : editHintIds.keys}
+				aria-invalid={edit.changed}
+				aria-busy={edit.saving}
+				readOnly={edit.saving}
 				className={cn(
 					'field-sizing-content min-h-0 resize-none rounded-none border-0 p-0 shadow-none ring-2 ring-ring focus-visible:ring-2 focus-visible:ring-ring',
 					textWidthClass
 				)}
 				onFocus={event => event.currentTarget.select()}
-				onChange={event => setDraft(event.target.value)}
-				onKeyDown={event => {
-					const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
-					if (composing) return
-					if (event.key === 'Enter' && !event.shiftKey) {
-						event.preventDefault()
-						setBase(text)
-						void commit(draft, 'enter')
-					} else if (event.key === 'Escape' && !saving) {
-						event.preventDefault()
-						close(true)
-					}
-				}}
-				onBlur={() => void commit(draft, 'leave')}
+				onChange={event => edit.type(event.target.value)}
+				onKeyDown={edit.keyDown}
+				onBlur={edit.leave}
 			/>
-			{changed && (
+			{edit.changed && (
 				<span id={editHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
 					{fill(studioText.onDisk, { text })}
 				</span>

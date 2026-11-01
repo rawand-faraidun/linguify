@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { studioText, writeFailures } from '@linguify/constants'
+import { errorMessage, writeFailure } from '@linguify/table'
 import { Button } from '@linguify/ui/components/button'
 import { focusRingClass } from './classes'
 import { refresh } from './trpc'
-import { errorMessage, writeFailure } from './write-errors'
 
 /**
  * what a dialog says when its write failed — inside it, as a modal dialog keeps the page's toast out of reach

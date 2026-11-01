@@ -1,6 +1,5 @@
-import type { AppRouter } from '@linguify/api'
-import { errorCodes, studioText, writeFailures } from '@linguify/constants'
-import { isTRPCClientError } from '@trpc/client'
+import { studioText, writeFailures } from '@linguify/constants'
+import { errorMessage, writeFailure } from '@linguify/table'
 import { toast } from 'sonner'
 
 /**
@@ -15,9 +14,9 @@ import { toast } from 'sonner'
  * @param refresh - reads every shown query again
  */
 export const reportWriteError = (error: Error, refresh: () => void) => {
-	const linguify = linguifyError(error)
+	const kind = writeFailure(error)
 	const lasting = { duration: Number.POSITIVE_INFINITY, closeButton: true }
-	if (linguify?.code === errorCodes.staleCatalogue) {
+	if (kind === writeFailures.stale) {
 		toast.warning(studioText.staleTitle, {
 			...lasting,
 			id: writeFailures.stale,
@@ -26,8 +25,8 @@ export const reportWriteError = (error: Error, refresh: () => void) => {
 		})
 		return
 	}
-	if (linguify !== undefined) {
-		toast.error(studioText.writeFailed, { ...lasting, id: writeFailures.failed, description: linguify.message })
+	if (kind === writeFailures.failed) {
+		toast.error(studioText.writeFailed, { ...lasting, id: writeFailures.failed, description: errorMessage(error) })
 		return
 	}
 	toast.error(studioText.writeUnsure, {
@@ -45,30 +44,3 @@ export const reportWriteError = (error: Error, refresh: () => void) => {
 export const dismissWriteErrors = () => {
 	for (const id of Object.values(writeFailures)) toast.dismiss(id)
 }
-
-/**
- * @param error - what a call threw
- *
- * @returns the linguify error the API put in it — nothing when no answer came
- */
-const linguifyError = (error: unknown) =>
-	error instanceof Error && isTRPCClientError<AppRouter>(error) ? error.data?.linguify : undefined
-
-/**
- * @param error - what a write threw
- *
- * @returns how it failed: refused as stale, refused for another reason, or with no answer
- */
-export const writeFailure = (error: unknown) => {
-	const linguify = linguifyError(error)
-	if (linguify === undefined) return writeFailures.unsure
-	return linguify.code === errorCodes.staleCatalogue ? writeFailures.stale : writeFailures.failed
-}
-
-/**
- * @param error - what a call threw
- *
- * @returns what to tell a person: linguify's own message — or, when no answer came, that it may not have
- * finished
- */
-export const errorMessage = (error: unknown): string => linguifyError(error)?.message ?? studioText.writeUnsure

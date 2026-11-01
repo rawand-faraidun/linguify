@@ -8,15 +8,19 @@ import {
 	type Expansion,
 	emptyNamespacesShown,
 	expandedExpansion,
+	type KeyEdit,
 	noFilter,
 	sectionsExpansion,
 	toggleExpansion,
 	usableViewMode
 } from '@linguify/table'
+import { useKnownRevision } from '@linguify/table/react'
 import type { ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
 import { Grid } from './grid'
+import { WriteNotice } from './notice'
 import { type ApiOutputs, useTRPC } from './trpc'
+import { useEditKey } from './writes'
 
 /**
  * the panel: the project's translations, read through the host, in the view the config names
@@ -50,6 +54,9 @@ const Panel = ({
 	config: ApiOutputs['config']['get']
 	catalogue: ApiOutputs['catalogue']['get']
 }) => {
+	useKnownRevision(catalogue.revision)
+	const editKey = useEditKey()
+	const onEdit = useCallback((edit: KeyEdit) => editKey(edit), [editKey])
 	const available = availableViewModes(config.capabilities)
 	const [mode, setMode] = useState<ViewMode>(usableViewMode(config.config.extension.defaultView, config.capabilities))
 	const source = useMemo(
@@ -102,8 +109,9 @@ const Panel = ({
 					{studioText.collapseAll}
 				</button>
 			</div>
+			<WriteNotice />
 			<div className="relative min-h-0 flex-1 overflow-auto">
-				<Grid rows={rows} mode={mode} source={source} expansion={expansion} onToggle={onToggle} />
+				<Grid rows={rows} mode={mode} source={source} expansion={expansion} onToggle={onToggle} onEdit={onEdit} />
 			</div>
 		</div>
 	)

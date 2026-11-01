@@ -1,5 +1,6 @@
 export * from './edit'
 export * from './expansion'
+export * from './failure'
 export * from './filter'
 export * from './keyboard'
 export * from './preflight'

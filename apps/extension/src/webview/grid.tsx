@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useMemo, useRef } from 'react'
+import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
 import {
 	rowKinds,
 	studioText,
@@ -17,7 +17,9 @@ import {
 	controlAfter,
 	countKeys,
 	type Expansion,
+	fill,
 	isExpanded,
+	type KeyEdit,
 	type KeyTableRow,
 	keepTableStop,
 	rove,
@@ -26,6 +28,7 @@ import {
 	type TableRow,
 	toExpandedState
 } from '@linguify/table'
+import { useEditable } from '@linguify/table/react'
 import type { Locale, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 
@@ -38,8 +41,8 @@ import { tableFeatures, useTable } from '@tanstack/react-table'
  * same shared functions: the grid is one stop for Tab, the arrows move between its controls, Home and End to
  * a row's ends
  *
- * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion` and `onToggle`,
- * which keeps its identity, so a toggle redraws only the rows it changes
+ * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion`; `onToggle` and
+ * `onEdit`, which keep their identity, so a toggle or an edit redraws only the rows it changes
  *
  * @returns the grid
  */
@@ -48,13 +51,15 @@ export const Grid = ({
 	mode,
 	source,
 	expansion,
-	onToggle
+	onToggle,
+	onEdit
 }: {
 	rows: TableRow[]
 	mode: ViewMode
 	source: RowSource
 	expansion: Expansion
 	onToggle: (id: string) => void
+	onEdit: (edit: KeyEdit) => Promise<unknown>
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -74,72 +79,81 @@ export const Grid = ({
 	const shown = useMemo(() => (compact ? locales.slice(0, 1) : locales), [compact, locales])
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
-		<table
-			ref={tableRef}
-			id={tableId}
-			aria-label={studioText.translations}
-			className="w-full border-collapse text-start"
-			onFocus={event => rove(event.currentTarget, event.target)}
-			onKeyDown={event => {
-				const to = controlAfter(event.currentTarget, event.target, event.key)
-				if (to === undefined) return
-				event.preventDefault()
-				to.focus()
-			}}
-		>
-			<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
-				<tr>
-					<th scope="col" className={headClass}>
-						{studioText.key}
-					</th>
-					{descriptions && (
+		<>
+			<span id={editHintIds.open} hidden>
+				{studioText.editHint}
+			</span>
+			<span id={editHintIds.keys} hidden>
+				{studioText.editKeys}
+			</span>
+			<table
+				ref={tableRef}
+				id={tableId}
+				aria-label={studioText.translations}
+				className="w-full border-collapse text-start"
+				onFocus={event => rove(event.currentTarget, event.target)}
+				onKeyDown={event => {
+					const to = controlAfter(event.currentTarget, event.target, event.key)
+					if (to === undefined) return
+					event.preventDefault()
+					to.focus()
+				}}
+			>
+				<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
+					<tr>
 						<th scope="col" className={headClass}>
-							{studioText.description}
+							{studioText.key}
 						</th>
-					)}
-					{shown.map(locale => (
-						<th key={locale} scope="col" className={headClass}>
-							{locale}
-							{locale === source.default && (
-								<>
-									{' '}
-									<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
-								</>
-							)}
-						</th>
-					))}
-				</tr>
-			</thead>
-			<tbody>
-				{table
-					.getRowModel()
-					.rows.map(({ id, depth, original }) =>
-						original.kind === rowKinds.key ? (
-							<KeyLine
-								key={id}
-								row={original}
-								depth={depth}
-								locales={locales}
-								shown={shown}
-								defaultLocale={source.default}
-								descriptions={descriptions}
-								open={compact && isExpanded(expansion, id)}
-								compact={compact}
-								onToggle={onToggle}
-							/>
-						) : (
-							<GroupLine
-								key={id}
-								row={original}
-								depth={depth}
-								columns={columns}
-								open={canExpand(mode, original) && isExpanded(expansion, id)}
-								onToggle={onToggle}
-							/>
-						)
-					)}
-			</tbody>
-		</table>
+						{descriptions && (
+							<th scope="col" className={headClass}>
+								{studioText.description}
+							</th>
+						)}
+						{shown.map(locale => (
+							<th key={locale} scope="col" className={headClass}>
+								{locale}
+								{locale === source.default && (
+									<>
+										{' '}
+										<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
+									</>
+								)}
+							</th>
+						))}
+					</tr>
+				</thead>
+				<tbody>
+					{table
+						.getRowModel()
+						.rows.map(({ id, depth, original }) =>
+							original.kind === rowKinds.key ? (
+								<KeyLine
+									key={id}
+									row={original}
+									depth={depth}
+									locales={locales}
+									shown={shown}
+									defaultLocale={source.default}
+									descriptions={descriptions}
+									open={compact && isExpanded(expansion, id)}
+									compact={compact}
+									onToggle={onToggle}
+									onEdit={onEdit}
+								/>
+							) : (
+								<GroupLine
+									key={id}
+									row={original}
+									depth={depth}
+									columns={columns}
+									open={canExpand(mode, original) && isExpanded(expansion, id)}
+									onToggle={onToggle}
+								/>
+							)
+						)}
+				</tbody>
+			</table>
+		</>
 	)
 }
 
@@ -199,7 +213,8 @@ const KeyLine = memo(
 		descriptions,
 		open,
 		compact,
-		onToggle
+		onToggle,
+		onEdit
 	}: {
 		row: KeyTableRow
 		depth: number
@@ -210,8 +225,32 @@ const KeyLine = memo(
 		open: boolean
 		compact: boolean
 		onToggle: (id: string) => void
+		onEdit: (edit: KeyEdit) => Promise<unknown>
 	}) => {
 		const label = <KeyLabel row={row} />
+		const description = (
+			<Editable
+				text={row.description ?? ''}
+				label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
+				onCommit={text => onEdit({ key: row.key, description: text })}
+			>
+				{row.description === undefined || row.description === '' ? (
+					<span className="sr-only">{studioText.noDescription}</span>
+				) : (
+					<Text text={row.description} />
+				)}
+			</Editable>
+		)
+		const value = (locale: Locale) => (
+			<Editable
+				text={row.values[locale] ?? ''}
+				lang={locale}
+				label={fill(studioText.editLabel, { column: locale, key: row.key })}
+				onCommit={text => onEdit({ key: row.key, locale, text })}
+			>
+				<Value row={row} locale={locale} defaultLocale={defaultLocale} />
+			</Editable>
+		)
 		return (
 			<tr data-row={row.id} className={`${lineClass} align-top`}>
 				<th
@@ -230,28 +269,26 @@ const KeyLine = memo(
 				</th>
 				{descriptions && (
 					<td data-description className={`${cellClass} text-muted-foreground`}>
-						{row.description !== undefined && <Text text={row.description} />}
+						{description}
 					</td>
 				)}
 				{shown.map(locale => (
 					<td key={locale} data-locale={locale} className={cellClass}>
-						<Value row={row} locale={locale} defaultLocale={defaultLocale} />
+						{value(locale)}
 						{open && (
 							<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
 								{row.description !== undefined && (
 									<>
 										<dt className="text-muted-foreground">{studioText.description}</dt>
 										<dd data-description className="text-muted-foreground">
-											<Text text={row.description} />
+											{description}
 										</dd>
 									</>
 								)}
 								{locales.slice(1).map(other => (
 									<div key={other} className="contents" data-locale={other}>
 										<dt className="text-muted-foreground">{other}</dt>
-										<dd>
-											<Value row={row} locale={other} defaultLocale={defaultLocale} />
-										</dd>
+										<dd>{value(other)}</dd>
 									</div>
 								))}
 							</dl>
@@ -262,6 +299,76 @@ const KeyLine = memo(
 		)
 	}
 )
+
+/**
+ * a text a person can change in place — the shared editor's behaviour, in the panel's look: a click or Enter
+ * opens it, Enter saves, Shift+Enter starts a new line, Escape cancels, leaving saves a change; the text now
+ * on disk said beneath when the files brought another while it was open
+ */
+const Editable = ({
+	text,
+	lang,
+	label,
+	onCommit,
+	children
+}: {
+	text: string
+	lang?: Locale
+	label: string
+	onCommit: (text: string) => Promise<unknown>
+	children: ReactNode
+}) => {
+	const edit = useEditable(text, onCommit)
+	if (edit.draft === undefined)
+		return (
+			<button
+				ref={edit.control}
+				type="button"
+				tabIndex={edit.roving ? 0 : -1}
+				data-edit
+				data-cell
+				aria-describedby={editHintIds.open}
+				onClick={event => edit.open(event.currentTarget.tabIndex === 0)}
+				className="block min-h-5 w-full text-start"
+			>
+				{children}
+				<span className="sr-only">{`, ${label}`}</span>
+			</button>
+		)
+	return (
+		<>
+			<textarea
+				// biome-ignore lint/a11y/noAutofocus: opened by the person, the field takes the keyboard they opened it with
+				autoFocus
+				data-editor
+				value={edit.draft}
+				dir="auto"
+				lang={lang}
+				aria-label={label}
+				aria-describedby={edit.changed ? `${editHintIds.keys} ${editHintIds.onDisk}` : editHintIds.keys}
+				aria-invalid={edit.changed}
+				aria-busy={edit.saving}
+				readOnly={edit.saving}
+				className={`field-sizing-content block w-full resize-none border border-focus bg-input px-1 text-input-foreground ${tableTextClasses.text}`}
+				onFocus={event => event.currentTarget.select()}
+				onChange={event => edit.type(event.target.value)}
+				onKeyDown={edit.keyDown}
+				onBlur={edit.leave}
+			/>
+			{edit.changed && (
+				<span id={editHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
+					{fill(studioText.onDisk, { text })}
+				</span>
+			)}
+		</>
+	)
+}
+
+/**
+ * the ids of the words an editable text and its field point to: how to open it, the keys in it, and the
+ * text now on disk
+ */
+const editHintIds = { open: 'edit-hint', keys: 'edit-keys', onDisk: 'edit-on-disk' } as const
 
 /**
  * a button that opens and closes a row, its chevron turning with it

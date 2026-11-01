@@ -3,7 +3,10 @@
 	"version": "0.0.0",
 	"private": true,
 	"type": "module",
-	"exports": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts",
+		"./react": "./src/react/index.ts"
+	},
 	"scripts": {
 		"typecheck": "tsc"
 	},
@@ -11,11 +14,14 @@
 		"@linguify/constants": "workspace:*",
 		"@linguify/keys": "workspace:*",
 		"@linguify/types": "workspace:*",
-		"@tanstack/table-core": "9.2.8"
+		"@tanstack/react-query": "catalog:",
+		"@tanstack/table-core": "9.2.8",
+		"react": "catalog:"
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
+		"@types/react": "catalog:",
 		"typescript": "catalog:"
 	}
 }

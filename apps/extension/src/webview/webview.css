@@ -13,6 +13,8 @@
 	--color-muted-foreground: var(--vscode-descriptionForeground);
 	--color-border: var(--vscode-panel-border, var(--vscode-editorWidget-border));
 	--color-focus: var(--vscode-focusBorder);
+	--color-input: var(--vscode-input-background);
+	--color-input-foreground: var(--vscode-input-foreground);
 	--color-control: var(--vscode-button-secondaryBackground);
 	--color-control-foreground: var(--vscode-button-secondaryForeground);
 	--color-control-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
