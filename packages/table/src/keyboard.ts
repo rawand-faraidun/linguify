@@ -1,4 +1,4 @@
-import { tableControls } from '@linguify/constants'
+import { tableControls, tableId } from '@linguify/constants'
 
 /**
  * the table's columns that are not a locale's, as the keyboard tells them apart
@@ -82,3 +82,10 @@ export const controlAfter = (table: HTMLElement, from: EventTarget | null, key: 
 	if (key === 'End') return sameRow.at(-1)
 	return undefined
 }
+
+/**
+ * @param id - a row's id
+ *
+ * @returns the selector of that row in the table
+ */
+export const rowSelector = (id: string): string => `#${tableId} tr[data-row="${CSS.escape(id)}"]`

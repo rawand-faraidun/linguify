@@ -1,14 +1,6 @@
-import { type FormEvent, useMemo, useRef, useState } from 'react'
-import {
-	compositionKeyCode,
-	exampleKeyPath,
-	keyConflictText,
-	keyPathProblemText,
-	newKeyNotes,
-	studioDelays,
-	studioText
-} from '@linguify/constants'
-import { checkNewKeyForm, fill, type NewKey, type NewKeyNote, stopsAdd } from '@linguify/table'
+import { compositionKeyCode, exampleKeyPath, studioText } from '@linguify/constants'
+import { checkNewKeyForm, fill, type NewKey, noteText, stopsAdd } from '@linguify/table'
+import { useNewKeyForm } from '@linguify/table/react'
 import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { Input } from '@linguify/ui/components/input'
@@ -16,7 +8,6 @@ import { Label } from '@linguify/ui/components/label'
 import { cn } from '@linguify/ui/lib/utils'
 import { fieldWidthClass, focusRingClass, inputFocusClass, textWidthClass } from './classes'
 import { ignoreComposingEnter } from './composition'
-import { useSettled } from './settled'
 
 /**
  * the id of the form that adds a key, which the button opening it controls
@@ -66,52 +57,21 @@ export const AddKey = ({
 	onClearFilters: () => void
 	onClose: () => void
 }) => {
-	const [path, setPath] = useState('')
-	const [description, setDescription] = useState('')
-	const [texts, setTexts] = useState<Record<Locale, string>>({})
-	const [saving, setSaving] = useState(false)
-	const [tried, setTried] = useState(false)
-	const [defaultLeft, setDefaultLeft] = useState(false)
-	const keyInput = useRef<HTMLInputElement>(null)
-	const defaultInput = useRef<HTMLInputElement>(null)
-	const check = useMemo(
-		() => checkNewKeyForm(catalogue, { path, description, texts }, { ...rules, defaultLocale }),
-		[catalogue, path, description, texts, rules, defaultLocale]
-	)
-	const shown = check.notes.filter(note =>
-		note.kind === newKeyNotes.defaultRequired ? tried || defaultLeft : path !== '' || tried
-	)
-	const pathNotes = shown.filter(note => note.kind !== newKeyNotes.defaultRequired)
-	const defaultMissing = shown.some(note => note.kind === newKeyNotes.defaultRequired)
-	const pathBlocked = pathNotes.some(stopsAdd)
-	const ready = check.ready && !saving
-	const blocking = shown.find(stopsAdd)
-	const spoken = useSettled(blocking === undefined ? '' : noteText(blocking), studioDelays.saying)
-	const submit = async (event: FormEvent) => {
-		event.preventDefault()
-		if (saving) return
-		setTried(true)
-		if (!check.ready) {
-			const pathAtFault = check.notes.some(note => note.kind !== newKeyNotes.defaultRequired && stopsAdd(note))
-			const field = pathAtFault ? keyInput : defaultInput
-			field.current?.focus()
-			return
-		}
-		setSaving(true)
-		try {
-			await onAdd({ path, description, texts })
-			setPath('')
-			setDescription('')
-			setTexts({})
-			setTried(false)
-			setDefaultLeft(false)
-			keyInput.current?.focus()
-		} catch {
-			// reported once for every write; what was typed stays to try again
-		} finally {
-			setSaving(false)
-		}
-	}
+	const form = useNewKeyForm({ catalogue, rules, defaultLocale, onAdd })
+	const {
+		path,
+		description,
+		texts,
+		saving,
+		pathNotes,
+		pathBlocked,
+		defaultMissing,
+		ready,
+		spoken,
+		submit,
+		keyInput,
+		defaultInput
+	} = form
 	const close = () => {
 		if (!saving) onClose()
 	}
@@ -144,7 +104,7 @@ export const AddKey = ({
 					aria-describedby={rules.namespaced ? `${addNoteIds.path} ${addNoteIds.hint}` : addNoteIds.path}
 					value={path}
 					onChange={event => {
-						setPath(event.target.value)
+						form.setPath(event.target.value)
 						onTyping()
 					}}
 				/>
@@ -170,7 +130,7 @@ export const AddKey = ({
 						readOnly={saving}
 						className={cn(fieldWidthClass, inputFocusClass)}
 						value={description}
-						onChange={event => setDescription(event.target.value)}
+						onChange={event => form.setDescription(event.target.value)}
 					/>
 				</div>
 			)}
@@ -198,9 +158,9 @@ export const AddKey = ({
 							aria-invalid={isDefault && defaultMissing}
 							aria-describedby={isDefault && defaultMissing ? addNoteIds.default : undefined}
 							value={texts[locale] ?? ''}
-							onChange={event => setTexts(current => ({ ...current, [locale]: event.target.value }))}
+							onChange={event => form.setText(locale, event.target.value)}
 							onBlur={() => {
-								if (isDefault) setDefaultLeft(true)
+								if (isDefault) form.leftDefault()
 							}}
 						/>
 						{isDefault && defaultMissing && (
@@ -255,26 +215,6 @@ export const AddKey = ({
 			</div>
 		</form>
 	)
-}
-
-/**
- * @param note - one thing the form says
- *
- * @returns it in the studio's words
- */
-const noteText = (note: NewKeyNote): string => {
-	switch (note.kind) {
-		case newKeyNotes.problem:
-			return keyPathProblemText[note.problem]
-		case newKeyNotes.duplicate:
-			return fill(studioText.duplicate, { locales: note.locales.join(studioText.listSeparator) })
-		case newKeyNotes.conflict:
-			return fill(keyConflictText[note.conflict.state], { at: note.conflict.at, locale: note.conflict.locale })
-		case newKeyNotes.newNamespace:
-			return fill(note.allowed ? studioText.newNamespace : studioText.namespaceMissing, { namespace: note.namespace })
-		case newKeyNotes.defaultRequired:
-			return studioText.defaultRequired
-	}
 }
 
 /**

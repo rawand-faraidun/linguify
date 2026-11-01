@@ -6,6 +6,7 @@ import {
 	collapsedExpansion,
 	type Expansion,
 	expandedExpansion,
+	revealKey,
 	searchExpansion,
 	sectionsExpansion,
 	toggleExpansion
@@ -133,6 +134,21 @@ export const useTableView = ({
 		)
 	}
 	/**
+	 * brings a key just added into sight: held rows take it in, and its section and groups open
+	 *
+	 * @param path - the key added
+	 */
+	const reveal = (path: KeyPath) => {
+		const { mode, revealing, revealed, initial } = latest.current
+		setPinned(current => (current === undefined ? undefined : [...current, path]))
+		const opened = (current: Partial<Record<ViewMode, Expansion>>, start: Expansion) => ({
+			...current,
+			[mode]: revealKey(current[mode] ?? start, path, { mode, namespaced })
+		})
+		if (revealing) setLayers(current => opened(current, revealed))
+		else setExpansions(current => opened(current, initial))
+	}
+	/**
 	 * holds the rows on screen in place while a person edits under a filter or a sort
 	 */
 	const pin = useCallback(() => {
@@ -160,6 +176,7 @@ export const useTableView = ({
 		onSort,
 		viewChanged,
 		pin,
+		reveal,
 		latest,
 		setChosen,
 		setPinned,

@@ -1,4 +1,5 @@
 export * from './editable'
+export * from './new-key'
 export * from './selection'
 export * from './view'
 export * from './writes'

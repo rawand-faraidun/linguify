@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { extensionText, studioText, tableId, viewModeLabels, viewModes } from '@linguify/constants'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { extensionText, rowKinds, studioText, tableId, viewModeLabels, viewModes } from '@linguify/constants'
 import type { RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
@@ -8,19 +8,25 @@ import {
 	expandedExpansion,
 	fill,
 	focusTableStop,
+	hiddenByView,
 	type KeyEdit,
+	type NewKey,
+	noFilter,
+	rowId,
+	rowSelector,
 	usableViewMode,
 	withWarnings
 } from '@linguify/table'
 import { useKnownRevision, useSelection, useTableView } from '@linguify/table/react'
-import type { ViewMode } from '@linguify/types'
+import type { KeyPath, ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
+import { AddKey } from './add-key'
 import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
 import { Grid, selectedRow } from './grid'
 import { WriteNotice } from './notice'
 import { type ApiOutputs, useTRPC } from './trpc'
-import { useEditKey, useRemoveKeys } from './writes'
+import { useAddKey, useEditKey, useRemoveKeys } from './writes'
 
 /**
  * the panel: the project's translations, read through the host, in the view the config names
@@ -69,6 +75,15 @@ const Panel = ({
 		[config]
 	)
 	const view = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
+	const rules = useMemo(
+		() => ({
+			namespaced: config.namespaced,
+			nesting: config.capabilities.nesting,
+			namespaceFiles: config.namespaceFiles,
+			createNamespace: config.config.keys.createNamespace
+		}),
+		[config]
+	)
 	const editKey = useEditKey()
 	const { pin } = view
 	// what the last write did, said until the next selection begins or the next edit
@@ -81,6 +96,26 @@ const Panel = ({
 		},
 		[pin, editKey]
 	)
+	const addKey = useAddKey()
+	const [adding, setAdding] = useState(false)
+	const addButton = useRef<HTMLButtonElement>(null)
+	const [lastAdded, setLastAdded] = useState<KeyPath>()
+	const added = useMemo(
+		() =>
+			lastAdded === undefined
+				? undefined
+				: { key: lastAdded, hidden: hiddenByView(view.keys, view.visible, lastAdded) },
+		[lastAdded, view.keys, view.visible]
+	)
+	const onAdd = async (key: NewKey) => {
+		await addKey(key)
+		view.reveal(key.path)
+		setLastAdded(key.path)
+	}
+	useLayoutEffect(() => {
+		if (lastAdded === undefined) return
+		document.querySelector(rowSelector(rowId(rowKinds.key, lastAdded)))?.scrollIntoView({ block: 'nearest' })
+	}, [lastAdded])
 	const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys } = useSelection({
 		keys: view.keys,
 		rows: view.rows,
@@ -114,9 +149,7 @@ const Panel = ({
 		const next =
 			after.current === undefined
 				? null
-				: document.querySelector<HTMLElement>(
-						`#${tableId} tr[data-row="${CSS.escape(after.current)}"] [data-select] input`
-					)
+				: document.querySelector<HTMLElement>(`${rowSelector(after.current)} [data-select] input`)
 		if (next !== null) next.focus()
 		else focusTableStop(document.getElementById(tableId))
 	}
@@ -132,6 +165,16 @@ const Panel = ({
 						view.viewChanged(next)
 					}}
 				/>
+				<button
+					ref={addButton}
+					type="button"
+					aria-expanded={adding}
+					aria-controls="add-key"
+					className={controlClass}
+					onClick={() => setAdding(open => !open)}
+				>
+					{studioText.addKey}
+				</button>
 				<button type="button" onClick={() => view.expand(expandedExpansion)} className={controlClass}>
 					{studioText.expandAll}
 				</button>
@@ -172,6 +215,23 @@ const Panel = ({
 					total={view.keys.length}
 				/>
 			</div>
+			{adding && (
+				<AddKey
+					catalogue={catalogue.catalogue}
+					locales={source.locales}
+					defaultLocale={source.default}
+					descriptions={source.descriptions}
+					rules={rules}
+					added={added}
+					onAdd={onAdd}
+					onTyping={() => setLastAdded(undefined)}
+					onClearFilters={() => view.changeFilter(noFilter)}
+					onClose={() => {
+						setAdding(false)
+						addButton.current?.focus()
+					}}
+				/>
+			)}
 			<WriteNotice />
 			<div className="relative min-h-0 flex-1 overflow-auto">
 				<Grid

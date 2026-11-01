@@ -20,9 +20,9 @@ import {
 	type NewKey,
 	noFilter,
 	pinnedKeys,
-	revealKey,
 	revealsMatches,
 	rowId,
+	rowSelector,
 	searchExpansion,
 	withWarnings
 } from '@linguify/table'
@@ -38,7 +38,7 @@ import { Filters, searchId } from './filters'
 import { NamespaceDialog } from './namespace-dialog'
 import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
-import { rowSelector, selectedRow, TranslationTable } from './translation-table'
+import { selectedRow, TranslationTable } from './translation-table'
 import { type ApiOutputs, onRefresh } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
@@ -106,13 +106,13 @@ export const Workspace = memo(
 			visible,
 			rows,
 			expansion,
-			latest,
 			toggle,
 			expand,
 			changeFilter,
 			onSort,
 			viewChanged,
 			pin,
+			reveal,
 			setChosen,
 			setPinned,
 			setExpansions,
@@ -208,15 +208,7 @@ export const Workspace = memo(
 		)
 		const onAdd = async (key: NewKey) => {
 			await addKey(key)
-			const { mode, revealing } = latest.current
-			// held rows take the new key in; its section and groups open, so it is in sight
-			setPinned(current => (current === undefined ? undefined : [...current, key.path]))
-			const reveal = (current: Partial<Record<ViewMode, Expansion>>, start: Expansion) => ({
-				...current,
-				[mode]: revealKey(current[mode] ?? start, key.path, { mode, namespaced: config.namespaced })
-			})
-			if (revealing) setLayers(current => reveal(current, latest.current.revealed))
-			else setExpansions(current => reveal(current, latest.current.initial))
+			reveal(key.path)
 			setLastAdded(key.path)
 		}
 		// what the last write did, said until the next selection begins

@@ -206,13 +206,6 @@ export const TranslationTable = memo(function TranslationTable({
 export const selectedRow = 'selected'
 
 /**
- * @param id - a row's id
- *
- * @returns the selector of that row in the table
- */
-export const rowSelector = (id: string): string => `#${tableId} tr[data-row="${CSS.escape(id)}"]`
-
-/**
  * a column's header that orders the table by it when pressed — on screen only
  *
  * @note the button is named by the header's own words, and described by what sorting does; `aria-sort`

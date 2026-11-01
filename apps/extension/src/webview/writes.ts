@@ -1,4 +1,4 @@
-import { type KeyEdit, keyEditInput } from '@linguify/table'
+import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
 import { useFileWrite } from '@linguify/table/react'
 import type { KeyPath, Revision } from '@linguify/types'
 import { useQueryClient } from '@tanstack/react-query'
@@ -38,4 +38,14 @@ export const useEditKey = () =>
 export const useRemoveKeys = () =>
 	usePanelWrite((paths: KeyPath[], expectedRevision: Revision) =>
 		trpcClient.key.remove.mutate({ paths, expectedRevision })
+	)
+
+/**
+ * adds a key, with its text in every locale given and its description
+ *
+ * @returns the key to add, settled once it is written and the catalogue read again
+ */
+export const useAddKey = () =>
+	usePanelWrite((key: NewKey, expectedRevision: Revision) =>
+		trpcClient.key.add.mutate({ ...newKeyInput(key), expectedRevision })
 	)

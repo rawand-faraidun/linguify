@@ -1,4 +1,10 @@
-import { type namespaceActions, newKeyNotes } from '@linguify/constants'
+import {
+	keyConflictText,
+	keyPathProblemText,
+	type namespaceActions,
+	newKeyNotes,
+	studioText
+} from '@linguify/constants'
 import {
 	findConflicts,
 	findDuplicate,
@@ -13,6 +19,7 @@ import {
 } from '@linguify/keys'
 import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, KeyRules, Locale, NamespaceName } from '@linguify/types'
 import type { NewKey } from './edit'
+import { fill } from './words'
 
 /**
  * what stands in the way of writing a key, found before anything is sent
@@ -182,5 +189,25 @@ export const checkNamespaceName = (
 		taken,
 		same,
 		ready: problem === undefined && !same && taken.length === 0
+	}
+}
+
+/**
+ * @param note - one thing a new key's form says
+ *
+ * @returns it in words — the studio's and the extension's alike
+ */
+export const noteText = (note: NewKeyNote): string => {
+	switch (note.kind) {
+		case newKeyNotes.problem:
+			return keyPathProblemText[note.problem]
+		case newKeyNotes.duplicate:
+			return fill(studioText.duplicate, { locales: note.locales.join(studioText.listSeparator) })
+		case newKeyNotes.conflict:
+			return fill(keyConflictText[note.conflict.state], { at: note.conflict.at, locale: note.conflict.locale })
+		case newKeyNotes.newNamespace:
+			return fill(note.allowed ? studioText.newNamespace : studioText.namespaceMissing, { namespace: note.namespace })
+		case newKeyNotes.defaultRequired:
+			return studioText.defaultRequired
 	}
 }
