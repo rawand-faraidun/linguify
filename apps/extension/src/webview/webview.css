@@ -18,6 +18,9 @@
 	--color-control: var(--vscode-button-secondaryBackground);
 	--color-control-foreground: var(--vscode-button-secondaryForeground);
 	--color-control-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+	--color-input-border: var(--vscode-input-border, var(--vscode-contrastBorder, var(--vscode-panel-border)));
+	--color-widget-border: var(--vscode-editorWidget-border, var(--vscode-contrastBorder, var(--vscode-panel-border)));
+	--color-widget-shadow: var(--vscode-widget-shadow, transparent);
 	--color-chosen: var(--vscode-inputOption-activeBackground);
 	--color-chosen-foreground: var(--vscode-inputOption-activeForeground);
 	--color-chosen-border: var(--vscode-inputOption-activeBorder);

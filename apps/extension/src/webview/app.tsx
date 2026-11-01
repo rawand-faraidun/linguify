@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
 	extensionText,
 	namespaceActions,
@@ -13,6 +13,7 @@ import {
 	availableViewModes,
 	collapsedExpansion,
 	countKeys,
+	emptyViewText,
 	expandedExpansion,
 	fill,
 	hiddenByView,
@@ -39,10 +40,11 @@ import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'
 import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
+import { Freshness } from './freshness'
 import { Grid, selectedRow } from './grid'
 import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
-import { type ApiOutputs, useTRPC } from './trpc'
+import { type ApiOutputs, onRefresh, useTRPC } from './trpc'
 import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameNamespace } from './writes'
 
 /**
@@ -55,10 +57,20 @@ export const App = () => {
 	const trpc = useTRPC()
 	const config = useQuery(trpc.config.get.queryOptions())
 	const catalogue = useQuery(trpc.catalogue.get.queryOptions())
-	const error = config.error ?? catalogue.error
-	if (error !== null) return <p role="alert">{error.data?.linguify?.message ?? error.message}</p>
-	if (config.data === undefined || catalogue.data === undefined) return <p>{extensionText.reading}</p>
-	return <Panel config={config.data} catalogue={catalogue.data} />
+	const failed = config.error ?? catalogue.error
+	const error = failed === null ? undefined : (failed.data?.linguify?.message ?? failed.message)
+	// what was read stays on screen when a refresh fails, the error above it, as in the studio
+	if (config.data !== undefined && catalogue.data !== undefined)
+		return (
+			<Panel
+				config={config.data}
+				catalogue={catalogue.data}
+				error={error}
+				readAt={Math.min(config.dataUpdatedAt, catalogue.dataUpdatedAt)}
+			/>
+		)
+	if (error !== undefined) return <p role="alert">{error}</p>
+	return <p>{extensionText.reading}</p>
 }
 
 /**
@@ -75,10 +87,14 @@ export const App = () => {
  */
 const Panel = ({
 	config,
-	catalogue
+	catalogue,
+	error,
+	readAt
 }: {
 	config: ApiOutputs['config']['get']
 	catalogue: ApiOutputs['catalogue']['get']
+	error: string | undefined
+	readAt: number
 }) => {
 	useKnownRevision(catalogue.revision)
 	const available = availableViewModes(config.capabilities)
@@ -102,7 +118,9 @@ const Panel = ({
 		[config]
 	)
 	const editKey = useEditKey()
-	const { pin } = view
+	const { pin, setPinned } = view
+	// a refresh shows the files as they are: rows held behind an earlier edit are let go
+	useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
 	// what the last write did, said until the next selection begins or the next edit
 	const [said, setSaid] = useState<string>()
 	const onEdit = useCallback(
@@ -207,7 +225,6 @@ const Panel = ({
 		if (next !== null) next.focus()
 		else focusTableStop(document.getElementById(tableId))
 	}
-	if (view.keys.length === 0 && view.namespaces.length === 0) return <p>{studioText.noKeys}</p>
 	return (
 		<div className="flex h-screen flex-col">
 			<div className="flex shrink-0 flex-wrap items-center gap-2 px-2 py-1.5">
@@ -266,11 +283,6 @@ const Panel = ({
 				>
 					{studioText.clearSelection}
 				</button>
-				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
-					{[selection.size > 0 ? fill(studioText.selectedCount, { keys: countKeys(selection.size) }) : undefined, said]
-						.filter(part => part !== undefined)
-						.join(studioText.countSeparator)}
-				</span>
 				<Filters
 					filter={view.filter}
 					onChange={view.changeFilter}
@@ -279,6 +291,11 @@ const Panel = ({
 					shown={view.visible.length}
 					total={view.keys.length}
 				/>
+				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
+					{[selection.size > 0 ? fill(studioText.selectedCount, { keys: countKeys(selection.size) }) : undefined, said]
+						.filter(part => part !== undefined)
+						.join(studioText.countSeparator)}
+				</span>
 			</div>
 			{adding && (
 				<AddKey
@@ -297,23 +314,35 @@ const Panel = ({
 					}}
 				/>
 			)}
+			{error !== undefined && (
+				<p id="error" role="alert" className="shrink-0 px-2 py-1.5 font-semibold">
+					{error}
+				</p>
+			)}
 			<WriteNotice />
-			<div className="relative min-h-0 flex-1 overflow-auto">
-				<Grid
-					rows={view.rows}
-					mode={mode}
-					source={source}
-					expansion={view.expansion}
-					onToggle={view.toggle}
-					sort={view.sort}
-					onSort={view.onSort}
-					onEdit={onEdit}
-					selection={selection}
-					onSelect={onSelect}
-					onSelectAll={onSelectAll}
-					onRename={onRename}
-				/>
+			<div className="relative min-h-0 flex-1 scroll-pt-10 overflow-auto">
+				{view.rows.length === 0 ? (
+					<p id="empty" className="p-2 text-muted-foreground">
+						{emptyViewText(view.filter)}
+					</p>
+				) : (
+					<Grid
+						rows={view.rows}
+						mode={mode}
+						source={source}
+						expansion={view.expansion}
+						onToggle={view.toggle}
+						sort={view.sort}
+						onSort={view.onSort}
+						onEdit={onEdit}
+						selection={selection}
+						onSelect={onSelect}
+						onSelectAll={onSelectAll}
+						onRename={onRename}
+					/>
+				)}
 			</div>
+			<Freshness readAt={readAt} />
 			{namespaceAction !== undefined && (
 				<NamespaceDialog
 					key={namespaceAction.opening}

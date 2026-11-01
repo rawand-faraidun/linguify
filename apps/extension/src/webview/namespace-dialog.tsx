@@ -56,7 +56,7 @@ export const NamespaceDialog = ({
 			ref={dialog}
 			aria-labelledby="namespace-title"
 			aria-describedby="namespace-description"
-			className="m-auto max-h-[calc(100dvh-2rem)] w-full max-w-md border border-control-border bg-background p-4 text-foreground backdrop:bg-black/40"
+			className="m-auto max-h-[calc(100dvh-2rem)] w-full max-w-md border border-widget-border bg-background p-4 text-foreground shadow-[0_2px_8px_var(--color-widget-shadow)] backdrop:bg-black/40"
 			onCancel={event => {
 				if (form.pending) event.preventDefault()
 			}}
@@ -90,7 +90,7 @@ export const NamespaceDialog = ({
 						readOnly={form.pending}
 						aria-invalid={form.notes.length > 0}
 						aria-describedby="namespace-notes"
-						className="border border-control-border bg-input px-1.5 py-0.5 font-mono text-input-foreground"
+						className="border border-input-border bg-input px-1.5 py-0.5 font-mono text-input-foreground"
 						value={form.name}
 						onChange={event => form.setName(event.target.value)}
 					/>

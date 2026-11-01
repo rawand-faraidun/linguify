@@ -1,4 +1,4 @@
-import { searchFolds, searchIgnored, tableMarks, translationGaps } from '@linguify/constants'
+import { searchFolds, searchIgnored, studioText, tableMarks, translationGaps } from '@linguify/constants'
 import { splitNamespace, translationGap } from '@linguify/keys'
 import type { KeyPath, KeyRow, Locale, NamespaceName, TableMark, TranslationGap } from '@linguify/types'
 import type { KeySort } from './sort'
@@ -36,6 +36,14 @@ export const noFilter: KeyFilter = { search: '', untranslatedIn: [], namespaces:
  * @returns whether anything is narrowed
  */
 export const isFiltered = (filter: KeyFilter): boolean => revealsMatches(filter) || filter.namespaces !== undefined
+
+/**
+ * @param filter - the view's filter
+ *
+ * @returns what an empty view says: that nothing matches the filter, or that there are no keys yet
+ */
+export const emptyViewText = (filter: KeyFilter): string =>
+	isFiltered(filter) ? studioText.noMatches : studioText.noKeys
 
 /**
  * whether the filter looks inside keys — a search, or the still-to-translate filter — so every match must

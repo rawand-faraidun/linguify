@@ -5,10 +5,10 @@ import {
 	availableViewModes,
 	collapsedExpansion,
 	countKeys,
+	emptyViewText,
 	expandedExpansion,
 	fill,
 	hiddenByView,
-	isFiltered,
 	type KeyEdit,
 	movedPaths,
 	type NamespaceAction,
@@ -351,7 +351,7 @@ export const Workspace = memo(
 					)}
 					{rows.length === 0 ? (
 						<p id="empty" className="p-4 text-muted-foreground">
-							{isFiltered(filter) ? studioText.noMatches : studioText.noKeys}
+							{emptyViewText(filter)}
 						</p>
 					) : (
 						<TranslationTable

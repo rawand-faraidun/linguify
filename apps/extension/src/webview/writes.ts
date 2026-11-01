@@ -2,7 +2,7 @@ import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/
 import { useFileWrite } from '@linguify/table/react'
 import type { KeyPath, NamespaceName, Revision } from '@linguify/types'
 import { useQueryClient } from '@tanstack/react-query'
-import { trpcClient, useTRPC } from './trpc'
+import { session, trpcClient, useTRPC } from './trpc'
 
 /**
  * a write to the files, queued and checked as every surface's — once it goes through, the catalogue is read
@@ -17,7 +17,10 @@ const usePanelWrite = <Input, Result extends { revision: Revision }>(
 ) => {
 	const trpc = useTRPC()
 	const queryClient = useQueryClient()
-	return useFileWrite(write, () => queryClient.invalidateQueries({ queryKey: trpc.catalogue.get.queryKey() }))
+	return useFileWrite(write, () => {
+		session.dismiss()
+		return queryClient.invalidateQueries({ queryKey: trpc.catalogue.get.queryKey() })
+	})
 }
 
 /**

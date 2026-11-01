@@ -56,7 +56,7 @@ export const AddKey = ({
 				}
 				if (event.key === 'Escape' && !form.saving) onClose()
 			}}
-			className="flex shrink-0 flex-wrap items-start gap-3 border-border border-b px-2 py-2"
+			className="flex max-h-[50dvh] shrink-0 flex-wrap items-start gap-3 overflow-auto border-border border-b px-2 py-2"
 		>
 			<div className="flex max-w-80 flex-col gap-1">
 				<label htmlFor="new-key">{studioText.keyPath}</label>
@@ -184,5 +184,5 @@ export const AddKey = ({
 	)
 }
 
-const fieldClass = 'border border-control-border bg-input px-1.5 py-0.5 text-input-foreground'
+const fieldClass = 'border border-input-border bg-input px-1.5 py-0.5 text-input-foreground'
 const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'

@@ -13,7 +13,7 @@ import { toast } from 'sonner'
  * @param error - what the write threw
  * @param refresh - reads every shown query again
  */
-export const reportWriteError = (error: Error, refresh: () => void) => {
+export const reportWriteError = (error: unknown, refresh: () => void) => {
 	const kind = writeFailure(error)
 	const lasting = { duration: Number.POSITIVE_INFINITY, closeButton: true }
 	if (kind === writeFailures.stale) {

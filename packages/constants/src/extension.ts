@@ -71,30 +71,23 @@ export const webviewFiles = {
 export const extensionText = {
 	noConfig: 'No linguify config in this workspace. Run `linguify init` in a terminal, then open Linguify again.',
 	reading: 'Reading the translations…',
-	key: 'Key'
+	freshness: 'Linguify watches nothing: after editing the files by hand or running the CLI, refresh.'
 } as const
 
 /**
- * the API procedures the webview may call — reads and changes within the project. `export` and `import`
- * name files anywhere, and `init` creates a project, so the host runs those itself, with the file the person
- * picks in the editor's own dialog: a page that could name any path could write or read any file
+ * the API procedures the webview may call — exactly what the panel reads and writes, no more. `export` and
+ * `import` name files anywhere, and `init` creates a project, so the host runs those itself, with the file
+ * the person picks in the editor's own dialog; whole-project writes — `sync`, `format` — are the palette's,
+ * asked first in the editor's own modal: a page that could call them could run them unasked
  */
 export const bridgeProcedures: readonly string[] = [
 	'config.get',
 	'catalogue.get',
-	'list.locales',
-	'list.namespaces',
-	'list.keys',
-	'diff',
 	'key.add',
 	'key.set',
-	'key.rename',
 	'key.remove',
 	'namespace.add',
-	'namespace.rename',
-	'namespace.remove',
-	'sync',
-	'format'
+	'namespace.rename'
 ]
 
 /**

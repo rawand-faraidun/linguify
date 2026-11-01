@@ -37,3 +37,19 @@ export const writeFailure = (error: unknown) => {
  * finished
  */
 export const errorMessage = (error: unknown): string => linguifyError(error)?.message ?? studioText.writeUnsure
+
+/**
+ * @param error - what a write threw
+ *
+ * @returns what to say of it — the files changed on disk, no answer came, or linguify's reason for refusing
+ * — and whether reading the files again is the way on
+ */
+export const failureText = (error: unknown): { said: string; refreshable: boolean } => {
+	const kind = writeFailure(error)
+	const said = {
+		[writeFailures.stale]: `${studioText.staleTitle}. ${studioText.staleDescription}`,
+		[writeFailures.unsure]: `${studioText.writeUnsure}. ${studioText.writeUnsureDescription}`,
+		[writeFailures.failed]: `${studioText.writeFailed}: ${errorMessage(error)}`
+	}
+	return { said: said[kind], refreshable: kind !== writeFailures.failed }
+}

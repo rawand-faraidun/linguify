@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { studioText, writeFailures } from '@linguify/constants'
-import { errorMessage, writeFailure } from '@linguify/table'
+import { studioText } from '@linguify/constants'
+import { failureText } from '@linguify/table'
 import { Button } from '@linguify/ui/components/button'
 import { focusRingClass } from './classes'
 import { refresh } from './trpc'
@@ -19,16 +19,11 @@ import { refresh } from './trpc'
  */
 export const WriteNotice = ({ error, onRefreshed }: { error: unknown; onRefreshed: () => void }) => {
 	const [failed, setFailed] = useState(false)
-	const kind = writeFailure(error)
-	const said = {
-		[writeFailures.stale]: `${studioText.staleTitle}. ${studioText.staleDescription}`,
-		[writeFailures.unsure]: `${studioText.writeUnsure}. ${studioText.writeUnsureDescription}`,
-		[writeFailures.failed]: `${studioText.writeFailed}: ${errorMessage(error)}`
-	}
+	const { said, refreshable } = failureText(error)
 	return (
 		<div role="alert" className="flex items-center gap-2 border border-destructive p-2 text-destructive text-xs">
-			<p className="wrap-anywhere flex-1">{failed ? studioText.refreshFailed : said[kind]}</p>
-			{kind !== writeFailures.failed && (
+			<p className="wrap-anywhere flex-1">{failed ? studioText.refreshFailed : said}</p>
+			{refreshable && (
 				<Button
 					type="button"
 					variant="outline"

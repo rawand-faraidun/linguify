@@ -1,4 +1,4 @@
-import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
+import { memo, type ReactNode, useMemo, useRef } from 'react'
 import {
 	rowKinds,
 	selectionStates,
@@ -34,7 +34,7 @@ import {
 	shownState,
 	toExpandedState
 } from '@linguify/table'
-import { controlAfter, keepTableStop, rove, useEditable } from '@linguify/table/react'
+import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
 import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
@@ -91,9 +91,7 @@ export const TranslationTable = memo(function TranslationTable({
 }) {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
-	useLayoutEffect(() => {
-		if (tableRef.current !== null) keepTableStop(tableRef.current)
-	})
+	useTableStop(tableRef)
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
 		columns: [],
@@ -121,7 +119,7 @@ export const TranslationTable = memo(function TranslationTable({
 				ref={tableRef}
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={event => {
-					const to = controlAfter(event.currentTarget, event.target, event.key)
+					const to = controlAfter(event.currentTarget, event)
 					if (to === undefined) return
 					event.preventDefault()
 					to.focus()

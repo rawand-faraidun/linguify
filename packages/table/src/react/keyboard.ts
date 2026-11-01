@@ -1,3 +1,4 @@
+import { type RefObject, useLayoutEffect } from 'react'
 import { rowKinds, tableControls, tableId } from '@linguify/constants'
 import type { NamespaceName } from '@linguify/types'
 import { rowId } from '../rows'
@@ -8,8 +9,9 @@ import { rowId } from '../rows'
 const fixedColumns = { select: 'select', description: 'description' } as const
 
 /**
- * gives a table its one stop for Tab when it has none — a text a person can open when there is one, so the
- * hint on moving is heard on the way in, else its first control
+ * keeps a table at exactly one stop for Tab: given one when it has none — a text a person can open when
+ * there is one, so the hint on moving is heard on the way in, else its first control — and, when a control
+ * came back as the stop beside another, the one with the keyboard kept, else the first
  *
  * @note the studio and the extension draw their own tables; both mark their controls with the attributes in
  * `tableControls`, and move between them with these functions
@@ -17,8 +19,25 @@ const fixedColumns = { select: 'select', description: 'description' } as const
  * @param table - the table
  */
 export const keepTableStop = (table: HTMLElement) => {
-	if (table.querySelector(tableControls.stop) !== null) return
-	;(table.querySelector(tableControls.text) ?? table.querySelector(tableControls.cell))?.setAttribute('tabindex', '0')
+	const stops = [...table.querySelectorAll<HTMLElement>(tableControls.stop)]
+	if (stops.length === 0) {
+		;(table.querySelector(tableControls.text) ?? table.querySelector(tableControls.cell))?.setAttribute('tabindex', '0')
+		return
+	}
+	const kept = stops.find(stop => stop === document.activeElement) ?? stops[0]
+	for (const stop of stops) if (stop !== kept) stop.setAttribute('tabindex', '-1')
+}
+
+/**
+ * keeps a table at one stop for Tab each time it is drawn — an editor that closes either draws it again, its
+ * text written, or takes the keyboard back to its control, which `rove` makes the stop
+ *
+ * @param table - the table's ref
+ */
+export const useTableStop = (table: RefObject<HTMLElement | null>) => {
+	useLayoutEffect(() => {
+		if (table.current !== null) keepTableStop(table.current)
+	})
 }
 
 /**
@@ -62,13 +81,26 @@ const columnOf = (control: Element): string =>
  * where a key moves the keyboard between a table's controls: left and right along a row, up and down a
  * column, Home and End to a row's ends
  *
+ * @note a key held with a modifier is left alone — Ctrl+Home, Alt+Arrow and a screen reader's own keys
+ * belong to the browser and the reader
+ *
  * @param table - the table
- * @param from - what has the keyboard
- * @param key - the key pressed
+ * @param event - the key pressed, where, and with which modifiers
  *
  * @returns the control to move to, or nothing when the key does not move or there is nowhere to go
  */
-export const controlAfter = (table: HTMLElement, from: EventTarget | null, key: string): HTMLElement | undefined => {
+export const controlAfter = (
+	table: HTMLElement,
+	{
+		target: from,
+		key,
+		altKey,
+		ctrlKey,
+		metaKey,
+		shiftKey
+	}: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'shiftKey'> & { target: EventTarget | null }
+): HTMLElement | undefined => {
+	if (altKey || ctrlKey || metaKey || shiftKey) return undefined
 	if (!(from instanceof HTMLElement) || !from.matches(tableControls.cell)) return undefined
 	const controls = [...table.querySelectorAll<HTMLElement>(tableControls.cell)]
 	const at = controls.indexOf(from)

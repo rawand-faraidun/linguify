@@ -1,5 +1,6 @@
 import type { AppRouter } from '@linguify/api'
 import { studioRoutes } from '@linguify/constants'
+import { writeSession } from '@linguify/table/react'
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server'
@@ -28,25 +29,21 @@ export const queryClient: QueryClient = new QueryClient({
 		queries: { refetchOnWindowFocus: false, retry: false, networkMode: 'always' },
 		mutations: { networkMode: 'always' }
 	},
-	mutationCache: new MutationCache({ onError: error => reportWriteError(error, refresh) })
+	mutationCache: new MutationCache({ onError: error => session.failed(error) })
 })
 
 /**
- * what to do whenever the files are read again at the person's asking
+ * the studio's writes' failures and refreshes — said as toasts, taken down once they no longer hold
  */
-const refreshListeners = new Set<() => void>()
+export const session = writeSession(queryClient)
+session.onFailure(notice => (notice === undefined ? dismissWriteErrors() : reportWriteError(notice.error, refresh)))
 
 /**
  * @param listener - called on every refresh, before the files are read again
  *
  * @returns what stops it being called
  */
-export const onRefresh = (listener: () => void) => {
-	refreshListeners.add(listener)
-	return () => {
-		refreshListeners.delete(listener)
-	}
-}
+export const onRefresh = session.onRefresh
 
 /**
  * reads everything on screen from the files again — what failed writes said goes with it, as it no longer
@@ -54,11 +51,7 @@ export const onRefresh = (listener: () => void) => {
  *
  * @returns settled once every shown query is read again; rejected when one could not be
  */
-export const refresh = () => {
-	dismissWriteErrors()
-	for (const listener of refreshListeners) listener()
-	return queryClient.refetchQueries({ type: 'active' }, { throwOnError: true })
-}
+export const refresh = session.refresh
 
 /**
  * `TRPCProvider` and `useTRPC` — the API as TanStack Query options

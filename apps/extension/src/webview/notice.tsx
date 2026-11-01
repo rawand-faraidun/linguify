@@ -1,26 +1,45 @@
-import { useEffect, useState } from 'react'
-import { studioText, writeFailures } from '@linguify/constants'
-import { errorMessage, writeFailure } from '@linguify/table'
-import { onWriteFailure, refresh } from './trpc'
+import { useEffect, useRef, useState } from 'react'
+import { studioText, tableId } from '@linguify/constants'
+import { failureText } from '@linguify/table'
+import { focusTableStop, type WriteFailureNotice } from '@linguify/table/react'
+import { refresh, session } from './trpc'
 
 /**
  * what the panel says when a write failed — the files changed on disk, or no answer came, each with a
  * Refresh; any other refusal with linguify's reason — in the panel itself: a toast library would bring its
  * own styles, which the panel's policy refuses
  *
- * @note it goes once a refresh reads the files again, or when the person closes it
+ * @note it goes once a refresh reads the files again, a later write goes through, or the person closes it;
+ * after its Refresh the keyboard goes back where it was when the write failed — else to the grid
  *
  * @returns the notice, or nothing
  */
 export const WriteNotice = () => {
-	const [failure, setFailure] = useState<{ error: unknown }>()
-	useEffect(() => onWriteFailure(error => setFailure({ error })), [])
-	if (failure === undefined) return null
+	// each failure drawn afresh, so a repeat is said again and a refresh that failed before is not carried over
+	const [failure, setFailure] = useState<{ notice: WriteFailureNotice; count: number }>({ notice: undefined, count: 0 })
+	// where the keyboard was when the write failed — an editor left open, a field — to go back to after Refresh
+	const before = useRef<Element | null>(null)
+	useEffect(
+		() =>
+			session.onFailure(notice => {
+				if (notice !== undefined) before.current = document.activeElement
+				setFailure(current => ({ notice, count: current.count + 1 }))
+			}),
+		[]
+	)
+	if (failure.notice === undefined) return null
+	const close = () => setFailure(current => ({ ...current, notice: undefined }))
 	return (
 		<FailureNotice
-			error={failure.error}
-			onRefreshed={() => setFailure(undefined)}
-			onClose={() => setFailure(undefined)}
+			key={failure.count}
+			error={failure.notice.error}
+			onRefreshed={() => {
+				close()
+				const back = before.current
+				if (back instanceof HTMLElement && back.isConnected) back.focus()
+				else focusTableStop(document.getElementById(tableId))
+			}}
+			onClose={close}
 		/>
 	)
 }
@@ -46,16 +65,11 @@ export const FailureNotice = ({
 	onClose?: () => void
 }) => {
 	const [refreshFailed, setRefreshFailed] = useState(false)
-	const kind = writeFailure(error)
-	const said = {
-		[writeFailures.stale]: `${studioText.staleTitle}. ${studioText.staleDescription}`,
-		[writeFailures.unsure]: `${studioText.writeUnsure}. ${studioText.writeUnsureDescription}`,
-		[writeFailures.failed]: `${studioText.writeFailed}: ${errorMessage(error)}`
-	}
+	const { said, refreshable } = failureText(error)
 	return (
 		<div role="alert" className="flex shrink-0 items-center gap-2 border border-missing-border bg-missing px-2 py-1.5">
-			<p className="wrap-anywhere flex-1">{refreshFailed ? studioText.refreshFailed : said[kind]}</p>
-			{kind !== writeFailures.failed && (
+			<p className="wrap-anywhere flex-1">{refreshFailed ? studioText.refreshFailed : said}</p>
+			{refreshable && (
 				<button
 					type="button"
 					className="border border-control-border bg-control px-2 py-0.5 text-control-foreground"

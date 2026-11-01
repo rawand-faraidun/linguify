@@ -408,6 +408,12 @@ export const tableTextClasses = {
 export const deleteListLimit = 200
 
 /**
+ * the `data-state` a selected row carries — what both tables style, and what a bulk delete looks for to find
+ * the row after the last one it removes
+ */
+export const selectedRowState = 'selected'
+
+/**
  * how many keys a table opens on with every section open; above it, the sections start closed — a person
  * opens the one they want in a moment, and a table of 20,000 open keys takes the browser seconds a change
  */

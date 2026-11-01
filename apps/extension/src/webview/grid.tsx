@@ -1,4 +1,4 @@
-import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
+import { memo, type ReactNode, useMemo, useRef } from 'react'
 import {
 	rowKinds,
 	selectionStates,
@@ -34,7 +34,7 @@ import {
 	type TableRow,
 	toExpandedState
 } from '@linguify/table'
-import { controlAfter, keepTableStop, rove, useEditable } from '@linguify/table/react'
+import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
 import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 
@@ -82,9 +82,7 @@ export const Grid = ({
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
-	useLayoutEffect(() => {
-		if (tableRef.current !== null) keepTableStop(tableRef.current)
-	})
+	useTableStop(tableRef)
 	const table = useTable({
 		features: tableFeatures(rowFeatures),
 		columns: [],
@@ -115,7 +113,7 @@ export const Grid = ({
 				className="w-full border-collapse text-start"
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={event => {
-					const to = controlAfter(event.currentTarget, event.target, event.key)
+					const to = controlAfter(event.currentTarget, event)
 					if (to === undefined) return
 					event.preventDefault()
 					to.focus()
@@ -164,7 +162,7 @@ export const Grid = ({
 									locales={locales}
 									shown={shown}
 									defaultLocale={source.default}
-									descriptions={descriptions}
+									descriptions={source.descriptions}
 									open={compact && isExpanded(expansion, id)}
 									compact={compact}
 									onToggle={onToggle}
@@ -380,7 +378,7 @@ const KeyLine = memo(
 						label
 					)}
 				</th>
-				{descriptions && (
+				{descriptions && !compact && (
 					<td data-description className={`${cellClass} text-muted-foreground`}>
 						{description}
 					</td>
@@ -390,7 +388,7 @@ const KeyLine = memo(
 						{value(locale)}
 						{open && (
 							<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-								{row.description !== undefined && (
+								{descriptions && (
 									<>
 										<dt className="text-muted-foreground">{studioText.description}</dt>
 										<dd data-description className="text-muted-foreground">

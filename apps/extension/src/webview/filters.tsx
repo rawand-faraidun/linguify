@@ -48,7 +48,7 @@ export const Filters = ({
 				dir="auto"
 				aria-label={studioText.search}
 				placeholder={studioText.search}
-				className="min-w-40 border border-control-border bg-input px-1.5 py-0.5 text-input-foreground"
+				className="min-w-40 border border-input-border bg-input px-1.5 py-0.5 text-input-foreground"
 				value={filter.search}
 				onChange={event => onChange({ ...filter, search: event.target.value })}
 				onKeyDown={event => {
@@ -159,6 +159,21 @@ const Choices = ({
 			ref={details}
 			id={id}
 			className="relative"
+			onToggle={event => {
+				// opened near the panel's edge, it moves back by what would be cut off — never past the other edge
+				const menu = event.currentTarget.querySelector('fieldset')
+				if (!event.currentTarget.open || menu === null) return
+				menu.style.left = ''
+				const { left, right } = menu.getBoundingClientRect()
+				const over = right - document.documentElement.clientWidth
+				if (over > 0) menu.style.left = `${-Math.min(over, left)}px`
+			}}
+			onBlur={event => {
+				// closed once the keyboard leaves it, so it never covers the column heads Tab reaches next
+				const next = event.relatedTarget
+				if (event.currentTarget.open && !(next instanceof Node && event.currentTarget.contains(next)))
+					event.currentTarget.open = false
+			}}
 			onKeyDown={event => {
 				// Escape closes it, the keyboard back on its button
 				if (event.key !== 'Escape' || !event.currentTarget.open) return
@@ -168,7 +183,7 @@ const Choices = ({
 			}}
 		>
 			<summary className={`${controlClass} cursor-default list-none`}>{label}</summary>
-			<fieldset className="absolute z-20 mt-1 flex min-w-max flex-col gap-1 border border-control-border bg-background p-2">
+			<fieldset className="absolute z-20 mt-1 flex w-max max-w-[calc(100vw-1rem)] flex-col gap-1 border border-widget-border bg-background p-2 shadow-[0_2px_8px_var(--color-widget-shadow)]">
 				<legend className="sr-only">{label}</legend>
 				{options.map(option => (
 					<label key={option.value} className="flex items-center gap-2">

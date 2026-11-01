@@ -2,8 +2,7 @@ import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/
 import { useFileWrite as useSharedFileWrite } from '@linguify/table/react'
 import type { KeyPath, NamespaceName, Revision } from '@linguify/types'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { type ApiInputs, trpcClient, useTRPC } from './trpc'
-import { dismissWriteErrors } from './write-errors'
+import { type ApiInputs, session, trpcClient, useTRPC } from './trpc'
 
 export { useKnownRevision } from '@linguify/table/react'
 
@@ -21,7 +20,7 @@ const useFileWrite = <Input, Result extends { revision: Revision }>(
 	const trpc = useTRPC()
 	const queryClient = useQueryClient()
 	return useSharedFileWrite(write, () => {
-		dismissWriteErrors()
+		session.dismiss()
 		return queryClient.invalidateQueries({ queryKey: trpc.catalogue.get.queryKey() })
 	})
 }

@@ -1,5 +1,6 @@
 import type { AppRouter } from '@linguify/api'
 import { bridgeChangedType } from '@linguify/constants'
+import { writeSession } from '@linguify/table/react'
 import type { BridgeChanged } from '@linguify/types'
 import { MutationCache, QueryClient } from '@tanstack/react-query'
 import { createTRPCClient } from '@trpc/client'
@@ -13,23 +14,6 @@ import { bridgeLink } from './bridge-link'
 export const trpcClient = createTRPCClient<AppRouter>({ links: [bridgeLink()] })
 
 /**
- * who hears of a write that failed — the panel's notice; one at a time
- */
-const failureListeners = new Set<(error: unknown) => void>()
-
-/**
- * @param listener - told of every write that fails
- *
- * @returns what stops it being told
- */
-export const onWriteFailure = (listener: (error: unknown) => void) => {
-	failureListeners.add(listener)
-	return () => {
-		failureListeners.delete(listener)
-	}
-}
-
-/**
  * the query cache every view reads through
  *
  * @note calls go out whatever the browser thinks of the network: they never touch it. Every write's failure
@@ -40,19 +24,28 @@ export const queryClient: QueryClient = new QueryClient({
 		queries: { refetchOnWindowFocus: false, retry: false, networkMode: 'always' },
 		mutations: { networkMode: 'always' }
 	},
-	mutationCache: new MutationCache({
-		onError: error => {
-			for (const listener of failureListeners) listener(error)
-		}
-	})
+	mutationCache: new MutationCache({ onError: error => session.failed(error) })
 })
 
 /**
- * reads everything on screen from the files again
+ * the panel's writes' failures and refreshes — said in the panel's notice, taken down once they no longer
+ * hold
+ */
+export const session = writeSession(queryClient)
+
+/**
+ * @param listener - called on every refresh, before the files are read again
+ *
+ * @returns what stops it being called
+ */
+export const onRefresh = session.onRefresh
+
+/**
+ * reads everything on screen from the files again — what failed writes said goes with it
  *
  * @returns settled once every shown query is read again; rejected when one could not be
  */
-export const refresh = () => queryClient.refetchQueries({ type: 'active' }, { throwOnError: true })
+export const refresh = session.refresh
 
 // a palette command wrote the files: what is shown is read again, so the next write expects what is there
 window.addEventListener('message', ({ data }: MessageEvent<unknown>) => {
