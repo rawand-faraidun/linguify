@@ -1,7 +1,7 @@
-import { type FormEvent, useRef, useState } from 'react'
-import { compositionKeyCode, keyPathProblemText, namespaceActions, studioDelays, studioText } from '@linguify/constants'
-import { checkNamespaceName, fill, type NamespaceAction } from '@linguify/table'
-import { useSettled } from '@linguify/table/react'
+import { useRef, useState } from 'react'
+import { compositionKeyCode, studioText } from '@linguify/constants'
+import { fill, type NamespaceAction } from '@linguify/table'
+import { useNamespaceForm } from '@linguify/table/react'
 import type { Catalogue, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import {
@@ -52,42 +52,19 @@ export const NamespaceDialog = ({
 	onSubmit: (name: NamespaceName) => Promise<unknown>
 	onClosed: (written: NamespaceName | undefined) => void
 }) => {
-	const renaming = action.kind === namespaceActions.rename ? action.from : undefined
-	const [name, setName] = useState(renaming ?? '')
 	const [open, setOpen] = useState(true)
-	const [pending, setPending] = useState(false)
-	const [failure, setFailure] = useState<{ error: unknown }>()
-	const field = useRef<HTMLInputElement>(null)
 	const written = useRef<NamespaceName | undefined>(undefined)
-	const check = checkNamespaceName(catalogue, name, { from: renaming, namespaceFiles })
-	const notes = [
-		...(name !== '' && check.problem !== undefined ? [keyPathProblemText[check.problem]] : []),
-		...(check.taken.length > 0
-			? [fill(studioText.duplicate, { locales: check.taken.join(studioText.listSeparator) })]
-			: [])
-	]
-	const spoken = useSettled(notes[0] ?? '', studioDelays.saying)
-	const submit = async (event: FormEvent) => {
-		event.preventDefault()
-		if (pending) return
-		if (!check.ready) {
-			// back on the name, which is read with what stands in its way
-			field.current?.focus()
-			return
-		}
-		setPending(true)
-		setFailure(undefined)
-		try {
-			await onSubmit(name)
-			written.current = name
-			setPending(false)
-			setOpen(false)
-		} catch (error) {
-			// reported once for every write, and said here; what was typed stays to try again
-			setFailure({ error })
-			setPending(false)
-		}
-	}
+	const { renaming, name, setName, notes, same, ready, spoken, pending, failure, refreshed, submit, field } =
+		useNamespaceForm({
+			action,
+			catalogue,
+			namespaceFiles,
+			onSubmit,
+			onWritten: name => {
+				written.current = name
+				setOpen(false)
+			}
+		})
 	const cancel = () => {
 		if (!pending) setOpen(false)
 	}
@@ -144,22 +121,13 @@ export const NamespaceDialog = ({
 									{note}
 								</li>
 							))}
-							{check.same && <li className="text-muted-foreground">{studioText.namespaceSame}</li>}
+							{same && <li className="text-muted-foreground">{studioText.namespaceSame}</li>}
 						</ul>
 						<span role="status" className="sr-only">
 							{spoken}
 						</span>
 					</div>
-					{failure !== undefined && (
-						<WriteNotice
-							error={failure.error}
-							onRefreshed={() => {
-								// the notice goes, and the keyboard with it: back on the name, to make the change again
-								setFailure(undefined)
-								field.current?.focus()
-							}}
-						/>
-					)}
+					{failure !== undefined && <WriteNotice error={failure.error} onRefreshed={refreshed} />}
 					<DialogFooter>
 						<Button
 							type="button"
@@ -170,11 +138,7 @@ export const NamespaceDialog = ({
 						>
 							{studioText.cancel}
 						</Button>
-						<Button
-							type="submit"
-							className={cn(focusRingClass, 'aria-disabled:opacity-50')}
-							aria-disabled={pending || !check.ready}
-						>
+						<Button type="submit" className={cn(focusRingClass, 'aria-disabled:opacity-50')} aria-disabled={!ready}>
 							{pending
 								? adding
 									? studioText.adding

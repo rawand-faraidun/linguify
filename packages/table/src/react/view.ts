@@ -21,6 +21,7 @@ import {
 	pinnedKeys,
 	revealsMatches
 } from '../filter'
+import { movedExpansion, movedFilter, movedPaths } from '../rename'
 import { buildRows, keepUnchangedRows } from '../rows'
 import { columnShown, type KeySort, nextSort, sortKeys } from '../sort'
 
@@ -155,9 +156,29 @@ export const useTableView = ({
 		const { visible, narrowed } = latest.current
 		if (narrowed) setPinned(current => current ?? visible.map(row => row.key))
 	}, [])
+	const namespaceRenamed = useCallback((from: NamespaceName, to: NamespaceName) => {
+		const move = (current: Partial<Record<ViewMode, Expansion>>) =>
+			Object.fromEntries(
+				Object.entries(current).map(([view, expansion]) => [view, movedExpansion(expansion, from, to)])
+			)
+		setPinned(current => current && movedPaths(current, from, to))
+		setChosen(current => movedFilter(current, from, to))
+		setExpansions(move)
+		setLayers(move)
+	}, [])
+	// a namespace filter on: the new one joins it, as a person adding it means to see it
+	const namespaceAdded = useCallback(
+		(name: NamespaceName) =>
+			setChosen(current =>
+				current.namespaces === undefined ? current : { ...current, namespaces: [...current.namespaces, name] }
+			),
+		[]
+	)
 	return {
 		keys,
 		counts,
+		namespaceRenamed,
+		namespaceAdded,
 		namespaces,
 		filter,
 		search,

@@ -5,22 +5,19 @@ import {
 	availableViewModes,
 	collapsedExpansion,
 	countKeys,
-	type Expansion,
 	expandedExpansion,
 	fill,
+	focusSection,
 	focusTableStop,
 	hiddenByView,
 	isFiltered,
 	type KeyEdit,
-	movedExpansion,
-	movedFilter,
 	movedPaths,
-	movedSelection,
 	type NamespaceAction,
 	type NewKey,
+	namespaceWrittenText,
 	noFilter,
 	pinnedKeys,
-	revealsMatches,
 	rowId,
 	rowSelector,
 	searchExpansion,
@@ -101,7 +98,6 @@ export const Workspace = memo(
 			counts,
 			namespaces,
 			filter,
-			search,
 			sort,
 			visible,
 			rows,
@@ -113,10 +109,10 @@ export const Workspace = memo(
 			viewChanged,
 			pin,
 			reveal,
-			setChosen,
-			setPinned,
-			setExpansions,
-			setLayers
+			revealing,
+			namespaceRenamed,
+			namespaceAdded,
+			setPinned
 		} = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
 		// a refresh shows the files as they are: rows held behind an earlier edit are let go
 		useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
@@ -143,52 +139,27 @@ export const Workspace = memo(
 		)
 		const writeNamespace = async (name: NamespaceName) => {
 			const action = namespaceAction?.action
-			if (action?.kind === namespaceActions.rename) {
+			if (action === undefined) return
+			if (action.kind === namespaceActions.rename) {
 				const { from } = action
 				const renamed = await renameNamespace({ from, to: name })
-				const move = (current: Partial<Record<ViewMode, Expansion>>) =>
-					Object.fromEntries(
-						Object.entries(current).map(([view, expansion]) => [view, movedExpansion(expansion, from, name)])
-					)
-				setChosenKeys(current => movedSelection(current, from, name))
-				setPinned(current => current && movedPaths(current, from, name))
-				setChosen(current => movedFilter(current, from, name))
-				setExpansions(move)
-				setLayers(move)
+				namespaceRenamed(from, name)
+				selectionRenamed(from, name)
 				setLastAdded(current => current && movedPaths([current], from, name)[0])
-				setSaid(withWarnings(fill(studioText.renamedNamespace, { from, to: name }), renamed.report))
+				setSaid(namespaceWrittenText(action, name, renamed.report, false))
 				return
 			}
 			const added = await addNamespace(name)
-			// a namespace filter on: the new one joins it, as a person adding it means to see it
-			setChosen(current =>
-				current.namespaces === undefined ? current : { ...current, namespaces: [...current.namespaces, name] }
-			)
-			setSaid(
-				withWarnings(
-					fill(revealsMatches({ ...filter, search }) ? studioText.addedNamespaceHidden : studioText.addedNamespace, {
-						name
-					}),
-					added.report
-				)
-			)
+			namespaceAdded(name)
+			setSaid(namespaceWrittenText(action, name, added.report, revealing))
 		}
 		const namespaceClosed = (written: NamespaceName | undefined) => {
 			const action = namespaceAction?.action
 			setNamespaceAction(undefined)
 			const named = written ?? (action?.kind === namespaceActions.rename ? action.from : undefined)
-			// the written section, on its disclosure — or its rename, when it holds no key — or, cancelled, the
-			// button that opened the dialog
-			const row = named === undefined ? null : document.querySelector(rowSelector(rowId(rowKinds.section, named)))
-			const target =
-				(written === undefined
-					? row?.querySelector<HTMLElement>('[data-rename]')
-					: (row?.querySelector<HTMLElement>('[data-disclosure]') ??
-						row?.querySelector<HTMLElement>('[data-rename]'))) ?? null
-			if (target !== null) {
-				target.focus()
-				target.scrollIntoView({ block: 'nearest' })
-			} else if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
+			// the written section, or the one a cancelled rename was about — else the button that opened the dialog
+			if (focusSection(named, written !== undefined)) return
+			if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
 				addNamespaceButton.current?.focus()
 		}
 		const locales = useMemo(() => localeOrder(source), [source])
@@ -213,7 +184,15 @@ export const Workspace = memo(
 		}
 		// what the last write did, said until the next selection begins
 		const [said, setSaid] = useState<string>()
-		const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys } = useSelection({
+		const {
+			selection,
+			choose,
+			onSelect,
+			onSelectAll,
+			doomed,
+			setChosenKeys,
+			namespaceRenamed: selectionRenamed
+		} = useSelection({
 			keys,
 			rows,
 			visible,

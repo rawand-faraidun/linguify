@@ -1,6 +1,8 @@
-import { changeKinds } from '@linguify/constants'
+import { changeKinds, namespaceActions, studioText } from '@linguify/constants'
 import { relativePath } from '@linguify/keys'
-import type { ChangeKind, Report } from '@linguify/types'
+import type { ChangeKind, NamespaceName, Report } from '@linguify/types'
+import type { NamespaceAction } from './preflight'
+import { fill } from './words'
 
 /**
  * how many keys of each kind an operation changed, what a surface says before and after it
@@ -72,3 +74,24 @@ export const actionPreview = (
  */
 export const withWarnings = (done: string, report: Report): string =>
 	[done, ...report.warnings.map(warning => warning.message)].join(' ')
+
+/**
+ * @param action - what the namespace's dialog did
+ * @param name - the name it wrote
+ * @param report - what core reported of it
+ * @param hidden - whether the view hides the namespace added — a search or the missing filter on
+ *
+ * @returns what it did, in words, then each warning core gave
+ */
+export const namespaceWrittenText = (
+	action: NamespaceAction,
+	name: NamespaceName,
+	report: Report,
+	hidden: boolean
+): string =>
+	withWarnings(
+		action.kind === namespaceActions.rename
+			? fill(studioText.renamedNamespace, { from: action.from, to: name })
+			: fill(hidden ? studioText.addedNamespaceHidden : studioText.addedNamespace, { name }),
+		report
+	)

@@ -38,7 +38,7 @@ import {
 	toExpandedState
 } from '@linguify/table'
 import { useEditable } from '@linguify/table/react'
-import type { Locale, TableMark, ViewMode } from '@linguify/types'
+import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 
 /**
@@ -50,8 +50,9 @@ import { tableFeatures, useTable } from '@tanstack/react-table'
  * same shared functions: the grid is one stop for Tab, the arrows move between its controls, Home and End to
  * a row's ends
  *
- * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion`; `onToggle` and
- * `onEdit`, which keep their identity, so a toggle or an edit redraws only the rows it changes
+ * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion`; `onToggle`,
+ * `onEdit` and `onRename` — a section's — which keep their identity, so a toggle or an edit redraws only the
+ * rows it changes
  *
  * @returns the grid
  */
@@ -66,7 +67,8 @@ export const Grid = ({
 	onEdit,
 	selection,
 	onSelect,
-	onSelectAll
+	onSelectAll,
+	onRename
 }: {
 	rows: TableRow[]
 	mode: ViewMode
@@ -79,6 +81,7 @@ export const Grid = ({
 	selection: Selection
 	onSelect: (row: TableRow) => void
 	onSelectAll: () => void
+	onRename: (namespace: NamespaceName) => void
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -182,6 +185,7 @@ export const Grid = ({
 									onToggle={onToggle}
 									state={selectionState(selection, original)}
 									onSelect={onSelect}
+									onRename={onRename}
 								/>
 							)
 						)}
@@ -240,7 +244,8 @@ const GroupLine = memo(
 		open,
 		onToggle,
 		state,
-		onSelect
+		onSelect,
+		onRename
 	}: {
 		row: Exclude<TableRow, KeyTableRow>
 		depth: number
@@ -249,6 +254,7 @@ const GroupLine = memo(
 		onToggle: (id: string) => void
 		state: SelectionState
 		onSelect: (row: TableRow) => void
+		onRename: (namespace: NamespaceName) => void
 	}) => {
 		const heading = (
 			<>
@@ -277,6 +283,20 @@ const GroupLine = memo(
 					) : (
 						// a namespace holding no key has nothing to open: its name, said as it is
 						<span className="inline-flex gap-1 ps-4">{heading}</span>
+					)}
+					{row.kind === rowKinds.section && (
+						<button
+							type="button"
+							tabIndex={-1}
+							data-cell
+							data-rename
+							aria-label={fill(studioText.renameNamespace, { name: row.namespace })}
+							title={fill(studioText.renameNamespace, { name: row.namespace })}
+							onClick={() => onRename(row.namespace)}
+							className="ms-2 align-middle text-muted-foreground"
+						>
+							<span aria-hidden="true">✎</span>
+						</button>
 					)}
 				</th>
 			</tr>

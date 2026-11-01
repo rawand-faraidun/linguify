@@ -1,5 +1,13 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { extensionText, rowKinds, studioText, tableId, viewModeLabels, viewModes } from '@linguify/constants'
+import {
+	extensionText,
+	namespaceActions,
+	rowKinds,
+	studioText,
+	tableId,
+	viewModeLabels,
+	viewModes
+} from '@linguify/constants'
 import type { RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
@@ -7,10 +15,14 @@ import {
 	countKeys,
 	expandedExpansion,
 	fill,
+	focusSection,
 	focusTableStop,
 	hiddenByView,
 	type KeyEdit,
+	movedPaths,
+	type NamespaceAction,
 	type NewKey,
+	namespaceWrittenText,
 	noFilter,
 	rowId,
 	rowSelector,
@@ -18,15 +30,16 @@ import {
 	withWarnings
 } from '@linguify/table'
 import { useKnownRevision, useSelection, useTableView } from '@linguify/table/react'
-import type { KeyPath, ViewMode } from '@linguify/types'
+import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'
 import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
 import { Grid, selectedRow } from './grid'
+import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
 import { type ApiOutputs, useTRPC } from './trpc'
-import { useAddKey, useEditKey, useRemoveKeys } from './writes'
+import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameNamespace } from './writes'
 
 /**
  * the panel: the project's translations, read through the host, in the view the config names
@@ -116,12 +129,49 @@ const Panel = ({
 		if (lastAdded === undefined) return
 		document.querySelector(rowSelector(rowId(rowKinds.key, lastAdded)))?.scrollIntoView({ block: 'nearest' })
 	}, [lastAdded])
-	const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys } = useSelection({
+	const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys, namespaceRenamed } = useSelection({
 		keys: view.keys,
 		rows: view.rows,
 		visible: view.visible,
 		onChoose: () => setSaid(undefined)
 	})
+	const addNamespace = useAddNamespace()
+	const renameNamespace = useRenameNamespace()
+	const addNamespaceButton = useRef<HTMLButtonElement>(null)
+	const [namespaceAction, setNamespaceAction] = useState<{ action: NamespaceAction; opening: number }>()
+	const openNamespaceDialog = useCallback(
+		(action: NamespaceAction) => setNamespaceAction(current => ({ action, opening: (current?.opening ?? 0) + 1 })),
+		[]
+	)
+	const onRename = useCallback(
+		(namespace: NamespaceName) => openNamespaceDialog({ kind: namespaceActions.rename, from: namespace }),
+		[openNamespaceDialog]
+	)
+	const writeNamespace = async (name: NamespaceName) => {
+		const action = namespaceAction?.action
+		if (action === undefined) return
+		if (action.kind === namespaceActions.rename) {
+			const { from } = action
+			const renamed = await renameNamespace({ from, to: name })
+			view.namespaceRenamed(from, name)
+			namespaceRenamed(from, name)
+			setLastAdded(current => current && movedPaths([current], from, name)[0])
+			setSaid(namespaceWrittenText(action, name, renamed.report, false))
+			return
+		}
+		const added = await addNamespace(name)
+		view.namespaceAdded(name)
+		setSaid(namespaceWrittenText(action, name, added.report, view.revealing))
+	}
+	const namespaceClosed = (written: NamespaceName | undefined) => {
+		const action = namespaceAction?.action
+		setNamespaceAction(undefined)
+		const named = written ?? (action?.kind === namespaceActions.rename ? action.from : undefined)
+		// the written section, or the one a cancelled rename was about — else the button that opened the dialog
+		if (focusSection(named, written !== undefined)) return
+		if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
+			addNamespaceButton.current?.focus()
+	}
 	const removeKeys = useRemoveKeys()
 	const [deleting, setDeleting] = useState(false)
 	const deleteButton = useRef<HTMLButtonElement>(null)
@@ -175,6 +225,17 @@ const Panel = ({
 				>
 					{studioText.addKey}
 				</button>
+				{config.namespaced && (
+					<button
+						ref={addNamespaceButton}
+						type="button"
+						aria-haspopup="dialog"
+						className={controlClass}
+						onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
+					>
+						{studioText.addNamespace}
+					</button>
+				)}
 				<button type="button" onClick={() => view.expand(expandedExpansion)} className={controlClass}>
 					{studioText.expandAll}
 				</button>
@@ -246,8 +307,19 @@ const Panel = ({
 					selection={selection}
 					onSelect={onSelect}
 					onSelectAll={onSelectAll}
+					onRename={onRename}
 				/>
 			</div>
+			{namespaceAction !== undefined && (
+				<NamespaceDialog
+					key={namespaceAction.opening}
+					action={namespaceAction.action}
+					catalogue={catalogue.catalogue}
+					namespaceFiles={config.namespaceFiles}
+					onSubmit={writeNamespace}
+					onClosed={namespaceClosed}
+				/>
+			)}
 			{deleting && (
 				<DeleteKeys
 					keys={doomed.paths}

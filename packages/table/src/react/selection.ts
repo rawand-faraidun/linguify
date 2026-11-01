@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import type { KeyRow } from '@linguify/types'
+import type { KeyRow, NamespaceName } from '@linguify/types'
+import { movedSelection } from '../rename'
 import type { TableRow } from '../rows'
 import { bulkDelete, keepExisting, type Selection, toggleAll, toggleSelection } from '../selection'
 
@@ -36,5 +37,9 @@ export const useSelection = ({
 	const onSelect = useCallback((row: TableRow) => choose(current => toggleSelection(current, row)), [choose])
 	const onSelectAll = useCallback(() => choose(current => toggleAll(current, selecting.current.rows)), [choose])
 	const doomed = useMemo(() => bulkDelete(selection, keys, visible), [selection, keys, visible])
-	return { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys }
+	const namespaceRenamed = useCallback(
+		(from: NamespaceName, to: NamespaceName) => setChosenKeys(current => movedSelection(current, from, to)),
+		[]
+	)
+	return { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys, namespaceRenamed }
 }

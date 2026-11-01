@@ -1,4 +1,5 @@
 export * from './editable'
+export * from './namespace'
 export * from './new-key'
 export * from './selection'
 export * from './view'

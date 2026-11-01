@@ -1,4 +1,6 @@
-import { tableControls, tableId } from '@linguify/constants'
+import { rowKinds, tableControls, tableId } from '@linguify/constants'
+import type { NamespaceName } from '@linguify/types'
+import { rowId } from './rows'
 
 /**
  * the table's columns that are not a locale's, as the keyboard tells them apart
@@ -89,3 +91,25 @@ export const controlAfter = (table: HTMLElement, from: EventTarget | null, key: 
  * @returns the selector of that row in the table
  */
 export const rowSelector = (id: string): string => `#${tableId} tr[data-row="${CSS.escape(id)}"]`
+
+/**
+ * gives the keyboard to a namespace's section once its dialog has closed — written, to its disclosure, or
+ * its rename when it holds no key; cancelled, back to its rename
+ *
+ * @param namespace - the namespace written, or the one a cancelled rename was about
+ * @param written - whether the dialog wrote it
+ *
+ * @returns whether the section took the keyboard — it may be hidden, or there was none to take it
+ */
+export const focusSection = (namespace: NamespaceName | undefined, written: boolean): boolean => {
+	const row = namespace === undefined ? null : document.querySelector(rowSelector(rowId(rowKinds.section, namespace)))
+	const target =
+		(written
+			? (row?.querySelector<HTMLElement>(tableControls.disclosure) ??
+				row?.querySelector<HTMLElement>(tableControls.rename))
+			: row?.querySelector<HTMLElement>(tableControls.rename)) ?? null
+	if (target === null) return false
+	target.focus()
+	target.scrollIntoView({ block: 'nearest' })
+	return true
+}

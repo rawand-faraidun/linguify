@@ -385,7 +385,9 @@ export const tableId = 'translations'
 export const tableControls = {
 	cell: '[data-cell]',
 	text: '[data-edit]',
-	stop: '[data-cell][tabindex="0"]'
+	stop: '[data-cell][tabindex="0"]',
+	disclosure: '[data-disclosure]',
+	rename: '[data-rename]'
 } as const
 
 /**
