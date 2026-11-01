@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { compositionKeyCode, studioText } from '@linguify/constants'
 import {
 	countKeys,
@@ -111,7 +112,7 @@ export const Filters = ({
 					}}
 				/>
 			)}
-			<span role="status" className="text-muted-foreground">
+			<span id="match-count" role="status" className="text-muted-foreground">
 				{isFiltered(filter)
 					? fill(studioText.matchCount, {
 							shown: numbers.format(shown),
@@ -142,24 +143,47 @@ const Choices = ({
 	label: string
 	options: { value: string; label: string; checked: boolean }[]
 	onToggle: (value: string, checked: boolean) => void
-}) => (
-	<details id={id} className="relative">
-		<summary className={`${controlClass} cursor-default list-none`}>{label}</summary>
-		<fieldset className="absolute z-20 mt-1 flex min-w-max flex-col gap-1 border border-control-border bg-background p-2">
-			<legend className="sr-only">{label}</legend>
-			{options.map(option => (
-				<label key={option.value} className="flex items-center gap-2">
-					<input
-						type="checkbox"
-						checked={option.checked}
-						onChange={event => onToggle(option.value, event.target.checked)}
-					/>
-					<span dir="auto">{option.label}</span>
-				</label>
-			))}
-		</fieldset>
-	</details>
-)
+}) => {
+	const details = useRef<HTMLDetailsElement>(null)
+	// closed by a click anywhere else, as a menu is
+	useEffect(() => {
+		const away = (event: PointerEvent) => {
+			const open = details.current
+			if (open?.open && event.target instanceof Node && !open.contains(event.target)) open.open = false
+		}
+		document.addEventListener('pointerdown', away)
+		return () => document.removeEventListener('pointerdown', away)
+	}, [])
+	return (
+		<details
+			ref={details}
+			id={id}
+			className="relative"
+			onKeyDown={event => {
+				// Escape closes it, the keyboard back on its button
+				if (event.key !== 'Escape' || !event.currentTarget.open) return
+				event.preventDefault()
+				event.currentTarget.open = false
+				event.currentTarget.querySelector('summary')?.focus()
+			}}
+		>
+			<summary className={`${controlClass} cursor-default list-none`}>{label}</summary>
+			<fieldset className="absolute z-20 mt-1 flex min-w-max flex-col gap-1 border border-control-border bg-background p-2">
+				<legend className="sr-only">{label}</legend>
+				{options.map(option => (
+					<label key={option.value} className="flex items-center gap-2">
+						<input
+							type="checkbox"
+							checked={option.checked}
+							onChange={event => onToggle(option.value, event.target.checked)}
+						/>
+						<span dir="auto">{option.label}</span>
+					</label>
+				))}
+			</fieldset>
+		</details>
+	)
+}
 
 /**
  * the search box's id

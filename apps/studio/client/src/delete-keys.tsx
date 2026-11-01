@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { studioText } from '@linguify/constants'
+import { deleteListLimit, studioText } from '@linguify/constants'
 import { countKeys, fill, numbers, plural } from '@linguify/table'
 import type { KeyPath, Locale } from '@linguify/types'
 import {
@@ -27,7 +27,7 @@ import { WriteNotice } from './write-notice'
  * keyboard goes where `onCancelled` or `onDeleted` puts it — Radix gives it back only to a trigger of its
  * own
  *
- * @note the list is one stop for Tab, so the keyboard can scroll it, and shows the first {@link listed}
+ * @note the list is one stop for Tab, so the keyboard can scroll it, and shows the first {@link deleteListLimit}
  * paths — the title says how many there are
  *
  * @param props - `open` and `onOpenChange`; `keys`, the paths to remove, in order; `hidden`, how many of
@@ -102,14 +102,14 @@ export const DeleteKeys = ({
 					className={cn('max-h-48 overflow-auto border p-2 font-mono text-xs', focusRingClass)}
 					dir="ltr"
 				>
-					{shown.keys.slice(0, listed).map(key => (
+					{shown.keys.slice(0, deleteListLimit).map(key => (
 						<li key={key} className="wrap-anywhere">
 							{key}
 						</li>
 					))}
-					{shown.keys.length > listed && (
+					{shown.keys.length > deleteListLimit && (
 						<li className="font-sans text-muted-foreground">
-							{fill(studioText.andMore, { count: numbers.format(shown.keys.length - listed) })}
+							{fill(studioText.andMore, { count: numbers.format(shown.keys.length - deleteListLimit) })}
 						</li>
 					)}
 				</ul>
@@ -157,8 +157,3 @@ export const DeleteKeys = ({
 		</AlertDialog>
 	)
 }
-
-/**
- * how many paths the confirmation lists before saying how many more there are
- */
-const listed = 200

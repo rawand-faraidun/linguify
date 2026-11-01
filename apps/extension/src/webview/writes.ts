@@ -1,6 +1,6 @@
 import { type KeyEdit, keyEditInput } from '@linguify/table'
 import { useFileWrite } from '@linguify/table/react'
-import type { Revision } from '@linguify/types'
+import type { KeyPath, Revision } from '@linguify/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { trpcClient, useTRPC } from './trpc'
 
@@ -28,4 +28,14 @@ const usePanelWrite = <Input, Result extends { revision: Revision }>(
 export const useEditKey = () =>
 	usePanelWrite((edit: KeyEdit, expectedRevision: Revision) =>
 		trpcClient.key.set.mutate({ ...keyEditInput(edit), expectedRevision })
+	)
+
+/**
+ * removes keys — or whole groups — from every locale, with their descriptions
+ *
+ * @returns the removal to make, settled once it is written and the catalogue read again
+ */
+export const useRemoveKeys = () =>
+	usePanelWrite((paths: KeyPath[], expectedRevision: Revision) =>
+		trpcClient.key.remove.mutate({ paths, expectedRevision })
 	)

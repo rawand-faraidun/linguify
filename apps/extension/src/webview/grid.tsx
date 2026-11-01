@@ -1,6 +1,7 @@
 import { memo, type ReactNode, useLayoutEffect, useMemo, useRef } from 'react'
 import {
 	rowKinds,
+	selectionStates,
 	sortColumns,
 	sortDirections,
 	studioText,
@@ -28,7 +29,11 @@ import {
 	rove,
 	rowFeatures,
 	rowOptionsFor,
+	type Selection,
+	type SelectionState,
 	sameColumn,
+	selectionState,
+	shownState,
 	type TableRow,
 	toExpandedState
 } from '@linguify/table'
@@ -58,7 +63,10 @@ export const Grid = ({
 	onToggle,
 	sort,
 	onSort,
-	onEdit
+	onEdit,
+	selection,
+	onSelect,
+	onSelectAll
 }: {
 	rows: TableRow[]
 	mode: ViewMode
@@ -68,6 +76,9 @@ export const Grid = ({
 	sort: KeySort | undefined
 	onSort: (column: KeySort['column']) => void
 	onEdit: (edit: KeyEdit) => Promise<unknown>
+	selection: Selection
+	onSelect: (row: TableRow) => void
+	onSelectAll: () => void
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -112,6 +123,14 @@ export const Grid = ({
 			>
 				<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
 					<tr>
+						<th scope="col" data-select className="w-0 px-2">
+							<Tick
+								label={studioText.selectShown}
+								state={shownState(selection, rows)}
+								onChange={onSelectAll}
+								roving={false}
+							/>
+						</th>
 						<SortableHead column={{ by: sortColumns.key }} sort={sort} onSort={onSort}>
 							{studioText.key}
 						</SortableHead>
@@ -150,6 +169,8 @@ export const Grid = ({
 									compact={compact}
 									onToggle={onToggle}
 									onEdit={onEdit}
+									selected={selection.has(original.key)}
+									onSelect={onSelect}
 								/>
 							) : (
 								<GroupLine
@@ -159,6 +180,8 @@ export const Grid = ({
 									columns={columns}
 									open={canExpand(mode, original) && isExpanded(expansion, id)}
 									onToggle={onToggle}
+									state={selectionState(selection, original)}
+									onSelect={onSelect}
 								/>
 							)
 						)}
@@ -215,13 +238,17 @@ const GroupLine = memo(
 		depth,
 		columns,
 		open,
-		onToggle
+		onToggle,
+		state,
+		onSelect
 	}: {
 		row: Exclude<TableRow, KeyTableRow>
 		depth: number
 		columns: number
 		open: boolean
 		onToggle: (id: string) => void
+		state: SelectionState
+		onSelect: (row: TableRow) => void
 	}) => {
 		const heading = (
 			<>
@@ -232,7 +259,16 @@ const GroupLine = memo(
 			</>
 		)
 		return (
-			<tr data-row={row.id} className={lineClass}>
+			<tr data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined} className={lineClass}>
+				<td data-select className="px-2">
+					{row.keys > 0 && (
+						<Tick
+							label={fill(studioText.selectGroup, { name: row.kind === rowKinds.section ? row.namespace : row.path })}
+							state={state}
+							onChange={() => onSelect(row)}
+						/>
+					)}
+				</td>
 				<th scope="row" colSpan={columns} className={cellClass} style={{ paddingInlineStart: indent(depth) }}>
 					{row.keys > 0 ? (
 						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
@@ -263,7 +299,9 @@ const KeyLine = memo(
 		open,
 		compact,
 		onToggle,
-		onEdit
+		onEdit,
+		selected,
+		onSelect
 	}: {
 		row: KeyTableRow
 		depth: number
@@ -275,6 +313,8 @@ const KeyLine = memo(
 		compact: boolean
 		onToggle: (id: string) => void
 		onEdit: (edit: KeyEdit) => Promise<unknown>
+		selected: boolean
+		onSelect: (row: TableRow) => void
 	}) => {
 		const label = <KeyLabel row={row} />
 		const description = (
@@ -301,7 +341,14 @@ const KeyLine = memo(
 			</Editable>
 		)
 		return (
-			<tr data-row={row.id} className={`${lineClass} align-top`}>
+			<tr data-row={row.id} data-state={selected ? selectedRow : undefined} className={`${lineClass} align-top`}>
+				<td data-select className="px-2">
+					<Tick
+						label={fill(studioText.select, { key: row.key })}
+						state={selected ? selectionStates.all : selectionStates.none}
+						onChange={() => onSelect(row)}
+					/>
+				</td>
 				<th
 					scope="row"
 					title={row.key}
@@ -420,6 +467,39 @@ const Editable = ({
 const editHintIds = { open: 'edit-hint', keys: 'edit-keys', onDisk: 'edit-on-disk' } as const
 
 /**
+ * a native checkbox — one per row, light as the studio's measurements at 20,000 keys asked: ticked, empty,
+ * or a dash when part of a section or group is selected; reached by the arrows, as every control in a cell
+ */
+const Tick = ({
+	label,
+	state,
+	onChange,
+	roving = true
+}: {
+	label: string
+	state: SelectionState
+	onChange: () => void
+	roving?: boolean
+}) => (
+	<input
+		type="checkbox"
+		{...(roving ? { tabIndex: -1, 'data-cell': true } : {})}
+		aria-label={label}
+		checked={state === selectionStates.all}
+		ref={box => {
+			if (box !== null) box.indeterminate = state === selectionStates.some
+		}}
+		onChange={onChange}
+		className="align-middle accent-chosen-border"
+	/>
+)
+
+/**
+ * how a row says it is selected
+ */
+export const selectedRow = 'selected'
+
+/**
  * a button that opens and closes a row, its chevron turning with it
  */
 const Disclosure = ({
@@ -515,4 +595,4 @@ const indent = (depth: number) => `calc(var(--spacing) * ${2 + depth * 4})`
 
 const headClass = 'px-2 py-1.5 text-start font-semibold'
 const cellClass = 'px-2 py-1.5 text-start'
-const lineClass = 'border-border border-b'
+const lineClass = 'border-border border-b data-[state=selected]:bg-chosen/40'

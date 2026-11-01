@@ -3,7 +3,6 @@ import { namespaceActions, rowKinds, studioText, tableId } from '@linguify/const
 import { localeOrder, type RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
-	bulkDelete,
 	collapsedExpansion,
 	countKeys,
 	type Expansion,
@@ -13,7 +12,6 @@ import {
 	hiddenByView,
 	isFiltered,
 	type KeyEdit,
-	keepExisting,
 	movedExpansion,
 	movedFilter,
 	movedPaths,
@@ -25,13 +23,10 @@ import {
 	revealKey,
 	revealsMatches,
 	rowId,
-	type Selection,
 	searchExpansion,
-	type TableRow,
-	toggleAll,
-	toggleSelection
+	withWarnings
 } from '@linguify/table'
-import { useTableView } from '@linguify/table/react'
+import { useSelection, useTableView } from '@linguify/table/react'
 import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { cn } from '@linguify/ui/lib/utils'
@@ -224,23 +219,17 @@ export const Workspace = memo(
 			else setExpansions(current => reveal(current, latest.current.initial))
 			setLastAdded(key.path)
 		}
-		const [chosenKeys, setChosenKeys] = useState<Selection>(new Set())
-		// a key gone since it was ticked — deleted, renamed, or read again from disk — is let go
-		const selection = useMemo(() => keepExisting(chosenKeys, keys), [chosenKeys, keys])
 		// what the last write did, said until the next selection begins
 		const [said, setSaid] = useState<string>()
-		const selecting = useRef({ keys, rows })
-		selecting.current = { keys, rows }
-		const choose = useCallback((change: (current: Selection) => Selection) => {
-			setSaid(undefined)
-			setChosenKeys(current => change(keepExisting(current, selecting.current.keys)))
-		}, [])
-		const onSelect = useCallback((row: TableRow) => choose(current => toggleSelection(current, row)), [choose])
-		const onSelectAll = useCallback(() => choose(current => toggleAll(current, selecting.current.rows)), [choose])
+		const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys } = useSelection({
+			keys,
+			rows,
+			visible,
+			onChoose: () => setSaid(undefined)
+		})
 		const removeKeys = useRemoveKeys()
 		const [deleting, setDeleting] = useState(false)
 		const deleteButton = useRef<HTMLButtonElement>(null)
-		const doomed = useMemo(() => bulkDelete(selection, keys, visible), [selection, keys, visible])
 		// after a delete, the keyboard goes to the row after the last one deleted, so the person keeps their place
 		const after = useRef<string | undefined>(undefined)
 		const onDelete = async () => {
@@ -437,12 +426,3 @@ export const Workspace = memo(
 		)
 	}
 )
-
-/**
- * @param done - what a write did, in words
- * @param report - what core reported of it
- *
- * @returns the words, then each warning core gave — what it left as it was, and why
- */
-const withWarnings = (done: string, report: { warnings: readonly { message: string }[] }): string =>
-	[done, ...report.warnings.map(warning => warning.message)].join(' ')

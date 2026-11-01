@@ -400,6 +400,12 @@ export const tableTextClasses = {
 } as const
 
 /**
+ * how many keys a delete's confirmation lists before saying how many more there are — its title says how
+ * many in all
+ */
+export const deleteListLimit = 200
+
+/**
  * how many keys a table opens on with every section open; above it, the sections start closed — a person
  * opens the one they want in a moment, and a table of 20,000 open keys takes the browser seconds a change
  */

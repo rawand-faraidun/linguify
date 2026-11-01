@@ -63,3 +63,12 @@ export const actionPreview = (
 		nothing: written.length === 0 && removed.length === 0
 	}
 }
+
+/**
+ * @param done - what a write did, in words
+ * @param report - what core reported of it
+ *
+ * @returns the words, then each warning core gave — what it left as it was, and why
+ */
+export const withWarnings = (done: string, report: Report): string =>
+	[done, ...report.warnings.map(warning => warning.message)].join(' ')

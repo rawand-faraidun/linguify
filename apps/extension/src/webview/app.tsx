@@ -1,21 +1,26 @@
-import { useCallback, useMemo, useState } from 'react'
-import { extensionText, studioText, viewModeLabels, viewModes } from '@linguify/constants'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { extensionText, studioText, tableId, viewModeLabels, viewModes } from '@linguify/constants'
 import type { RowSource } from '@linguify/keys'
 import {
 	availableViewModes,
 	collapsedExpansion,
+	countKeys,
 	expandedExpansion,
+	fill,
+	focusTableStop,
 	type KeyEdit,
-	usableViewMode
+	usableViewMode,
+	withWarnings
 } from '@linguify/table'
-import { useKnownRevision, useTableView } from '@linguify/table/react'
+import { useKnownRevision, useSelection, useTableView } from '@linguify/table/react'
 import type { ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
+import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
-import { Grid } from './grid'
+import { Grid, selectedRow } from './grid'
 import { WriteNotice } from './notice'
 import { type ApiOutputs, useTRPC } from './trpc'
-import { useEditKey } from './writes'
+import { useEditKey, useRemoveKeys } from './writes'
 
 /**
  * the panel: the project's translations, read through the host, in the view the config names
@@ -66,13 +71,55 @@ const Panel = ({
 	const view = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
 	const editKey = useEditKey()
 	const { pin } = view
+	// what the last write did, said until the next selection begins or the next edit
+	const [said, setSaid] = useState<string>()
 	const onEdit = useCallback(
 		(edit: KeyEdit) => {
 			pin()
+			setSaid(undefined)
 			return editKey(edit)
 		},
 		[pin, editKey]
 	)
+	const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys } = useSelection({
+		keys: view.keys,
+		rows: view.rows,
+		visible: view.visible,
+		onChoose: () => setSaid(undefined)
+	})
+	const removeKeys = useRemoveKeys()
+	const [deleting, setDeleting] = useState(false)
+	const deleteButton = useRef<HTMLButtonElement>(null)
+	// after a delete, the keyboard goes to the row after the last one deleted, so the person keeps their place
+	const after = useRef<string | undefined>(undefined)
+	const onDelete = async () => {
+		const shown = [...document.querySelectorAll(`#${tableId} tbody tr[data-row]`)]
+		const last = shown.findLastIndex(row => row.getAttribute('data-state') === selectedRow)
+		after.current =
+			shown
+				.slice(last + 1)
+				.find(row => row.getAttribute('data-state') !== selectedRow)
+				?.getAttribute('data-row') ?? undefined
+		const removed = await removeKeys(doomed.paths)
+		// what core removed, and anything it left — a path holding keys of its own in another locale
+		setSaid(withWarnings(fill(studioText.deleted, { keys: countKeys(removed.report.changes.length) }), removed.report))
+		setChosenKeys(new Set())
+	}
+	const deleteClosed = (deleted: boolean) => {
+		setDeleting(false)
+		if (!deleted) {
+			deleteButton.current?.focus()
+			return
+		}
+		const next =
+			after.current === undefined
+				? null
+				: document.querySelector<HTMLElement>(
+						`#${tableId} tr[data-row="${CSS.escape(after.current)}"] [data-select] input`
+					)
+		if (next !== null) next.focus()
+		else focusTableStop(document.getElementById(tableId))
+	}
 	if (view.keys.length === 0 && view.namespaces.length === 0) return <p>{studioText.noKeys}</p>
 	return (
 		<div className="flex h-screen flex-col">
@@ -91,6 +138,31 @@ const Panel = ({
 				<button type="button" onClick={() => view.expand(collapsedExpansion)} className={controlClass}>
 					{studioText.collapseAll}
 				</button>
+				<button
+					ref={deleteButton}
+					type="button"
+					aria-disabled={selection.size === 0}
+					aria-describedby="selection-count"
+					className={`${controlClass} aria-disabled:opacity-50`}
+					onClick={() => {
+						if (selection.size > 0) setDeleting(true)
+					}}
+				>
+					{studioText.deleteSelected}
+				</button>
+				<button
+					type="button"
+					aria-disabled={selection.size === 0}
+					className={`${controlClass} aria-disabled:opacity-50`}
+					onClick={() => choose(() => new Set())}
+				>
+					{studioText.clearSelection}
+				</button>
+				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
+					{[selection.size > 0 ? fill(studioText.selectedCount, { keys: countKeys(selection.size) }) : undefined, said]
+						.filter(part => part !== undefined)
+						.join(studioText.countSeparator)}
+				</span>
 				<Filters
 					filter={view.filter}
 					onChange={view.changeFilter}
@@ -111,8 +183,20 @@ const Panel = ({
 					sort={view.sort}
 					onSort={view.onSort}
 					onEdit={onEdit}
+					selection={selection}
+					onSelect={onSelect}
+					onSelectAll={onSelectAll}
 				/>
 			</div>
+			{deleting && (
+				<DeleteKeys
+					keys={doomed.paths}
+					hidden={doomed.hidden}
+					locales={source.locales}
+					onDelete={onDelete}
+					onClosed={deleteClosed}
+				/>
+			)}
 		</div>
 	)
 }

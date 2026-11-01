@@ -1,4 +1,4 @@
-import { type KeyboardEvent, type RefObject, useRef, useState } from 'react'
+import { type KeyboardEvent, type RefObject, useEffect, useRef, useState } from 'react'
 import { compositionKeyCode } from '@linguify/constants'
 import { editedText } from '../edit'
 
@@ -29,17 +29,24 @@ export const useEditable = (text: string, onCommit: (text: string) => Promise<un
 	const pending = useRef(false)
 	const failed = useRef<string | undefined>(undefined)
 	const control: RefObject<HTMLButtonElement | null> = useRef<HTMLButtonElement>(null)
+	// the keyboard goes back to the control once it is drawn again — not on a timer, which a busy page outruns
+	const giveBack = useRef(false)
+	useEffect(() => {
+		if (draft !== undefined || !giveBack.current) return
+		giveBack.current = false
+		control.current?.focus()
+	}, [draft])
 	const changed = draft !== undefined && text !== base
 	if (draft !== undefined && changed && draft === base) {
 		// nothing typed yet: the text from the files is simply the new start
 		setBase(text)
 		setDraft(text)
 	}
-	const close = (giveBack: boolean) => {
+	const close = (back: boolean) => {
 		editing.current = false
 		failed.current = undefined
+		giveBack.current = back
 		setDraft(undefined)
-		if (giveBack) requestAnimationFrame(() => control.current?.focus())
 	}
 	const commit = async (typed: string, how: 'enter' | 'leave') => {
 		if (!editing.current || pending.current) return
