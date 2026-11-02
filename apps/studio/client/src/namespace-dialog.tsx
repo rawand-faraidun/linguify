@@ -54,17 +54,16 @@ export const NamespaceDialog = ({
 }) => {
 	const [open, setOpen] = useState(true)
 	const written = useRef<NamespaceName | undefined>(undefined)
-	const { renaming, name, setName, notes, same, ready, spoken, pending, failure, refreshed, submit, field } =
-		useNamespaceForm({
-			action,
-			catalogue,
-			namespaceFiles,
-			onSubmit,
-			onWritten: name => {
-				written.current = name
-				setOpen(false)
-			}
-		})
+	const { name, setName, notes, same, ready, spoken, pending, failure, refreshed, submit, field } = useNamespaceForm({
+		action,
+		catalogue,
+		namespaceFiles,
+		onSubmit,
+		onWritten: name => {
+			written.current = name
+			setOpen(false)
+		}
+	})
 	const cancel = () => {
 		if (!pending) setOpen(false)
 	}

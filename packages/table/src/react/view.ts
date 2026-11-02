@@ -36,8 +36,8 @@ import { columnShown, type KeySort, nextSort, sortKeys } from '../sort'
  * view lets them go. Each view keeps which rows are open, and a search or the missing filter opens a layer
  * of its own over that, gone with them. A large project opens with its sections closed
  *
- * @param project - the `catalogue` as read, the `source` locales, whether keys are `namespaced`, and the view
- * `mode`
+ * @param project - the `catalogue` as read, the `source` locales, whether keys are `namespaced`, the view
+ * `mode`, and the filter and sort `restored` from an earlier showing, if any
  *
  * @returns the rows, the filter and the sort, the expansion, and what changes each; the state itself too, for
  * a surface that carries it through a change of its own — a namespace renamed
@@ -46,12 +46,14 @@ export const useTableView = ({
 	catalogue,
 	source,
 	namespaced,
-	mode
+	mode,
+	restored
 }: {
 	catalogue: Catalogue
 	source: RowSource
 	namespaced: boolean
 	mode: ViewMode
+	restored?: { filter?: KeyFilter | undefined; sort?: KeySort | undefined } | undefined
 }) => {
 	const earlier = useRef<readonly KeyRow[]>([])
 	const keys = useMemo(() => {
@@ -64,7 +66,7 @@ export const useTableView = ({
 		() => (namespaced ? namespacesIn(catalogue, localeOrder(source)) : []),
 		[catalogue, namespaced, source]
 	)
-	const [chosen, setChosen] = useState<KeyFilter>(noFilter)
+	const [chosen, setChosen] = useState<KeyFilter>(restored?.filter ?? noFilter)
 	const filter = useMemo((): KeyFilter => {
 		const kept = chosen.namespaces?.filter((namespace: NamespaceName) => namespaces.includes(namespace))
 		return {
@@ -73,7 +75,7 @@ export const useTableView = ({
 			namespaces: kept === undefined || kept.length === 0 ? undefined : kept
 		}
 	}, [chosen, counts, namespaces])
-	const [sort, setSort] = useState<KeySort>()
+	const [sort, setSort] = useState<KeySort | undefined>(restored?.sort)
 	const search = useDeferredValue(filter.search)
 	const sorted = useMemo(() => (sort === undefined ? keys : sortKeys(keys, sort)), [keys, sort])
 	const [pinned, setPinned] = useState<readonly KeyPath[]>()

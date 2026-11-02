@@ -3,11 +3,7 @@ import { bridgeMessageType } from '@linguify/constants'
 import type { BridgeReply, BridgeRequest } from '@linguify/types'
 import { TRPCClientError, type TRPCLink } from '@trpc/client'
 import { observable } from '@trpc/server/observable'
-
-/**
- * the editor's handle, taken once for the page
- */
-const vscode = acquireVsCodeApi()
+import { vscode } from './page'
 
 /**
  * this page load's own name: the editor reloads a hidden panel's page, and a reply still on its way to the

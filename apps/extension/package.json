@@ -45,7 +45,8 @@
 		"vscode": "^1.90.0"
 	},
 	"activationEvents": [
-		"workspaceContains:**/linguify.config.json"
+		"workspaceContains:**/linguify.config.json",
+		"onWebviewPanel:linguify.panel"
 	],
 	"capabilities": {
 		"untrustedWorkspaces": {
@@ -262,6 +263,11 @@
 			{
 				"command": "linguify.import",
 				"title": "Import",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.chooseProject",
+				"title": "Choose Project",
 				"category": "Linguify"
 			}
 		]

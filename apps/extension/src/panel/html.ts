@@ -6,7 +6,8 @@
  * page; styles, fonts and images come only from the extension's own files
  *
  * @param page - `cspSource`, the webview's own origin for the extension's files; `nonce`, unguessable and
- * new each time; `script` and `style`, their webview URIs; `title`, which may name a folder, so is escaped
+ * new each time; `script` and `style`, their webview URIs; `title`, which may name a folder, so is escaped;
+ * `folder`, the project's, which the page keeps in its state so a reload can restore it — escaped too
  *
  * @returns the page's HTML
  */
@@ -15,13 +16,15 @@ export const panelHtml = ({
 	nonce,
 	script,
 	style,
-	title
+	title,
+	folder
 }: {
 	cspSource: string
 	nonce: string
 	script: string
 	style: string
 	title: string
+	folder: string
 }): string => {
 	const policy = [
 		"default-src 'none'",
@@ -41,7 +44,7 @@ export const panelHtml = ({
 		<title>${escapeHtml(title)}</title>
 		<link rel="stylesheet" href="${style}" />
 	</head>
-	<body>
+	<body data-folder="${escapeHtml(folder)}">
 		<div id="root"></div>
 		<script type="module" nonce="${nonce}" src="${script}"></script>
 	</body>

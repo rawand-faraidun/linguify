@@ -14,6 +14,7 @@ import {
 import { diffTally, formatOfFile, inSyncVerdict, relativePath } from '@linguify/keys'
 import { actionDoneText, actionPlanText, actionPreview, countKeys, fill, numbers } from '@linguify/table'
 import type { ProjectAction, Revision } from '@linguify/types'
+import { editorLayer } from './settings'
 
 /**
  * a sync's, format's or import's outcome — its report and plan, and the revision its plan was worked out on
@@ -47,7 +48,7 @@ type Caller = ReturnType<typeof createCaller>
  */
 export const runCommand = async (folder: Uri, log: LogOutputChannel, command: ProjectCommand): Promise<boolean> => {
 	try {
-		return await command(createCaller({ cwd: folder.fsPath }), folder.fsPath, folder)
+		return await command(createCaller({ cwd: folder.fsPath, editor: editorLayer(folder) }), folder.fsPath, folder)
 	} catch (error) {
 		const failure = toApiError(error)
 		log.error(failure)

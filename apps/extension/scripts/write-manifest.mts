@@ -5,7 +5,8 @@ import {
 	extensionCommands,
 	extensionCommandTitles,
 	extensionDisplayName,
-	generatedFileFormat
+	generatedFileFormat,
+	panelViewType
 } from '@linguify/constants'
 import { editorSettings, formatJson, writeFile } from '@linguify/core'
 
@@ -15,7 +16,8 @@ const path = join(import.meta.dirname, '../package.json')
 const written = await readFile(path, 'utf8')
 const manifest = JSON.parse(written)
 
-manifest.activationEvents = [`workspaceContains:**/${configFileName}`]
+// a panel left open is restored after a reload, which needs the extension running for it
+manifest.activationEvents = [`workspaceContains:**/${configFileName}`, `onWebviewPanel:${panelViewType}`]
 manifest.contributes = {
 	...manifest.contributes,
 	// each command the palette shows, named for the extension — `Linguify: Open`

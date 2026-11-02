@@ -24,7 +24,8 @@ export const extensionCommands = {
 	format: `${appName}.format`,
 	diff: `${appName}.diff`,
 	export: `${appName}.export`,
-	import: `${appName}.import`
+	import: `${appName}.import`,
+	chooseProject: `${appName}.chooseProject`
 } as const
 
 /**
@@ -46,7 +47,8 @@ export const extensionCommandTitles = {
 	format: 'Format',
 	diff: 'Diff',
 	export: 'Export',
-	import: 'Import'
+	import: 'Import',
+	chooseProject: 'Choose Project'
 } as const
 
 /**
@@ -71,7 +73,11 @@ export const webviewFiles = {
 export const extensionText = {
 	noConfig: 'No linguify config in this workspace. Run `linguify init` in a terminal, then open Linguify again.',
 	reading: 'Reading the translations…',
-	freshness: 'Linguify watches nothing: after editing the files by hand or running the CLI, refresh.'
+	freshness: 'Linguify watches nothing: after editing the files by hand or running the CLI, refresh.',
+	chooseProject: 'Choose the linguify project to work on',
+	chooseProjectHint: 'Asked once for this workspace — Linguify: Choose Project asks again',
+	settingsChanged: 'Linguify settings changed.',
+	reload: 'Reload'
 } as const
 
 /**
@@ -110,3 +116,8 @@ export const bridgeMessageType = `${appName}:rpc`
  * the panel reads them again
  */
 export const bridgeChangedType = `${appName}:changed`
+
+/**
+ * where the extension remembers, for each workspace, the project a person chose among several
+ */
+export const chosenProjectKey = `${appName}.project`

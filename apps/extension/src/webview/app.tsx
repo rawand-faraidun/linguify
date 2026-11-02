@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { extensionText, namespaceActions, studioText, viewModeLabels, viewModes } from '@linguify/constants'
 import {
 	availableViewModes,
@@ -21,6 +21,7 @@ import { Freshness } from './freshness'
 import { Grid } from './grid'
 import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
+import { keepView, keptView } from './page'
 import { type ApiOutputs, onRefresh, useTRPC } from './trpc'
 import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameNamespace } from './writes'
 
@@ -75,9 +76,25 @@ const Panel = ({
 }) => {
 	useKnownRevision(catalogue.revision)
 	const available = availableViewModes(config.capabilities)
-	const [mode, setMode] = useState<ViewMode>(usableViewMode(config.config.extension.defaultView, config.capabilities))
+	// the view as the person left it, when the page is drawn again — a reload of the editor or of the panel
+	const [kept] = useState(keptView)
+	const [mode, setMode] = useState<ViewMode>(
+		usableViewMode(kept.mode ?? config.config.extension.defaultView, config.capabilities)
+	)
 	const source = useMemo(() => rowSourceOf(config), [config])
-	const view = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
+	const view = useTableView({
+		catalogue: catalogue.catalogue,
+		source,
+		namespaced: config.namespaced,
+		mode,
+		restored: kept
+	})
+	useEffect(() => keepView({ mode, filter: view.filter, sort: view.sort }), [mode, view.filter, view.sort])
+	const box = useRef<HTMLDivElement>(null)
+	const scrolling = useRef(false)
+	useLayoutEffect(() => {
+		if (box.current !== null && kept.scroll !== undefined) box.current.scrollTop = kept.scroll
+	}, [kept])
 	const rules = useMemo(() => newKeyRulesOf(config), [config])
 	const editKey = useEditKey()
 	const addKey = useAddKey()
@@ -207,7 +224,19 @@ const Panel = ({
 				</p>
 			)}
 			<WriteNotice />
-			<div className="relative min-h-0 flex-1 scroll-pt-10 overflow-auto">
+			<div
+				ref={box}
+				className="relative min-h-0 flex-1 scroll-pt-10 overflow-auto"
+				onScroll={() => {
+					// kept once a frame at most, however fast the person scrolls
+					if (scrolling.current) return
+					scrolling.current = true
+					requestAnimationFrame(() => {
+						scrolling.current = false
+						if (box.current !== null) keepView({ scroll: box.current.scrollTop })
+					})
+				}}
+			>
 				{view.rows.length === 0 ? (
 					<p id="empty" className="p-2 text-muted-foreground">
 						{emptyViewText(view.filter)}
