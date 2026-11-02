@@ -1,5 +1,5 @@
-import { compositionKeyCode, exampleKeyPath, studioText } from '@linguify/constants'
-import { checkNewKeyForm, fill, type NewKey, noteText, stopsAdd } from '@linguify/table'
+import { exampleKeyPath, studioText } from '@linguify/constants'
+import { addedText, checkNewKeyForm, fill, isComposing, type NewKey, noteText, stopsAdd } from '@linguify/table'
 import { useNewKeyForm } from '@linguify/table/react'
 import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -83,7 +83,7 @@ export const AddKey = ({
 			onSubmit={submit}
 			onKeyDown={event => {
 				ignoreComposingEnter(event)
-				const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
+				const composing = isComposing(event.nativeEvent)
 				if (event.key === 'Escape' && !composing) close()
 			}}
 			className="flex shrink-0 flex-wrap items-start gap-3 border-b p-4"
@@ -193,7 +193,7 @@ export const AddKey = ({
 					</Button>
 				</div>
 				<p id="add-result" role="status" className="text-muted-foreground text-xs">
-					{added !== undefined && fill(added.hidden ? studioText.addedHidden : studioText.added, { key: added.key })}
+					{addedText(added)}
 					{added?.hidden === true && (
 						<Button
 							type="button"

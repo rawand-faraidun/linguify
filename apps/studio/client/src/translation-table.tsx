@@ -1,10 +1,12 @@
 import { memo, type ReactNode, useMemo, useRef } from 'react'
 import {
 	rowKinds,
+	selectedRowState,
 	selectionStates,
 	sortColumns,
 	sortDirections,
 	studioText,
+	tableHintIds,
 	tableId,
 	tableMarkClasses,
 	tableMarkLabels,
@@ -26,6 +28,7 @@ import {
 	type KeyTableRow,
 	type TableRow as Row,
 	rowFeatures,
+	rowIndent,
 	rowOptionsFor,
 	type Selection,
 	type SelectionState,
@@ -106,13 +109,13 @@ export const TranslationTable = memo(function TranslationTable({
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
 		<>
-			<span id={sortHintId} hidden>
+			<span id={tableHintIds.sort} hidden>
 				{studioText.sortHint}
 			</span>
-			<span id={editHintIds.open} hidden>
+			<span id={tableHintIds.open} hidden>
 				{studioText.editHint}
 			</span>
-			<span id={editHintIds.keys} hidden>
+			<span id={tableHintIds.keys} hidden>
 				{studioText.editKeys}
 			</span>
 			<table
@@ -196,11 +199,6 @@ export const TranslationTable = memo(function TranslationTable({
 })
 
 /**
- * how a row says it is selected — the state the table primitive styles
- */
-export const selectedRow = 'selected'
-
-/**
  * a column's header that orders the table by it when pressed — on screen only
  *
  * @note the button is named by the header's own words, and described by what sorting does; `aria-sort`
@@ -223,7 +221,7 @@ const SortableHead = ({
 		<TableHead aria-sort={direction}>
 			<button
 				type="button"
-				aria-describedby={sortHintId}
+				aria-describedby={tableHintIds.sort}
 				onClick={() => onSort(column)}
 				className={cn('items-center', plainButtonClass)}
 			>
@@ -241,18 +239,6 @@ const sortIcons = {
 	[sortDirections.ascending]: ArrowUpIcon,
 	[sortDirections.descending]: ArrowDownIcon
 }
-
-/**
- * the id of the words every sortable header points to: what sorting does, and does not
- */
-const sortHintId = 'sort-hint'
-
-/**
- * @param depth - how deep a row sits
- *
- * @returns how far its first cell is indented
- */
-const indent = (depth: number) => `calc(var(--spacing) * ${2 + depth * 4})`
 
 /**
  * @param state - how much of a row is selected
@@ -313,7 +299,7 @@ const GroupLine = memo(
 			</>
 		)
 		return (
-			<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined}>
+			<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRowState : undefined}>
 				<TableCell data-select>
 					{row.keys > 0 && (
 						<Checkbox
@@ -332,7 +318,7 @@ const GroupLine = memo(
 					scope="rowgroup"
 					colSpan={columns}
 					className="h-auto py-2 font-normal"
-					style={{ paddingInlineStart: indent(depth) }}
+					style={{ paddingInlineStart: rowIndent(depth) }}
 				>
 					{row.keys > 0 ? (
 						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
@@ -419,7 +405,7 @@ const KeyLine = memo(
 			</Editable>
 		)
 		return (
-			<TableRow data-row={row.id} data-state={selected ? selectedRow : undefined}>
+			<TableRow data-row={row.id} data-state={selected ? selectedRowState : undefined}>
 				<TableCell className="align-top" data-select>
 					<Checkbox
 						tabIndex={-1}
@@ -434,7 +420,7 @@ const KeyLine = memo(
 					scope="row"
 					title={row.key}
 					className="h-auto py-2 align-top font-mono font-normal"
-					style={{ paddingInlineStart: indent(depth) }}
+					style={{ paddingInlineStart: rowIndent(depth) }}
 				>
 					{compact ? (
 						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
@@ -513,7 +499,7 @@ const Editable = ({
 				tabIndex={edit.roving ? 0 : -1}
 				data-edit
 				data-cell
-				aria-describedby={editHintIds.open}
+				aria-describedby={tableHintIds.open}
 				onClick={event => edit.open(event.currentTarget.tabIndex === 0)}
 				className={cn('block min-h-5 w-full text-start', plainFocusClass)}
 			>
@@ -530,7 +516,7 @@ const Editable = ({
 				dir="auto"
 				lang={lang}
 				aria-label={label}
-				aria-describedby={edit.changed ? `${editHintIds.keys} ${editHintIds.onDisk}` : editHintIds.keys}
+				aria-describedby={edit.changed ? `${tableHintIds.keys} ${tableHintIds.onDisk}` : tableHintIds.keys}
 				aria-invalid={edit.changed}
 				aria-busy={edit.saving}
 				readOnly={edit.saving}
@@ -544,32 +530,12 @@ const Editable = ({
 				onBlur={edit.leave}
 			/>
 			{edit.changed && (
-				<span id={editHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
+				<span id={tableHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
 					{fill(studioText.onDisk, { text })}
 				</span>
 			)}
 		</>
 	)
-}
-
-/**
- * the ids of the words an editable text points to
- */
-const editHintIds = {
-	/**
-	 * how to open it, and move between them
-	 */
-	open: 'edit-hint',
-
-	/**
-	 * open, which keys do what
-	 */
-	keys: 'edit-keys',
-
-	/**
-	 * open, the text the files brought meanwhile
-	 */
-	onDisk: 'edit-on-disk'
 }
 
 /**

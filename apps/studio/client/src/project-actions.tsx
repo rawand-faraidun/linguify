@@ -1,7 +1,6 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import {
 	actionText,
-	compositionKeyCode,
 	ioDefaultPaths,
 	ioFormats,
 	previewStates,
@@ -20,6 +19,7 @@ import {
 	countKeys,
 	errorMessage,
 	fill,
+	isComposing,
 	writeFailure
 } from '@linguify/table'
 import type { IoFormat, ProjectAction, Revision } from '@linguify/types'
@@ -306,7 +306,7 @@ const ActionDialog = ({
 				showCloseButton={false}
 				className="max-h-[calc(100dvh-2rem)] overflow-y-auto"
 				onEscapeKeyDown={event => {
-					if (event.isComposing || event.keyCode === compositionKeyCode) event.preventDefault()
+					if (isComposing(event)) event.preventDefault()
 				}}
 				onCloseAutoFocus={event => {
 					event.preventDefault()

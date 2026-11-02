@@ -1,47 +1,24 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import {
-	extensionText,
-	namespaceActions,
-	rowKinds,
-	studioText,
-	tableId,
-	viewModeLabels,
-	viewModes
-} from '@linguify/constants'
-import type { RowSource } from '@linguify/keys'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { extensionText, namespaceActions, studioText, viewModeLabels, viewModes } from '@linguify/constants'
 import {
 	availableViewModes,
 	collapsedExpansion,
-	countKeys,
 	emptyViewText,
 	expandedExpansion,
-	fill,
-	hiddenByView,
-	type KeyEdit,
-	movedPaths,
-	type NamespaceAction,
-	type NewKey,
-	namespaceWrittenText,
+	newKeyRulesOf,
 	noFilter,
-	rowId,
-	usableViewMode,
-	withWarnings
+	rowSourceOf,
+	selectionStatus,
+	usableViewMode
 } from '@linguify/table'
-import {
-	focusSection,
-	focusTableStop,
-	rowSelector,
-	useKnownRevision,
-	useSelection,
-	useTableView
-} from '@linguify/table/react'
-import type { KeyPath, NamespaceName, ViewMode } from '@linguify/types'
+import { useKnownRevision, useTableView, useTableWrites } from '@linguify/table/react'
+import type { ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'
 import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
 import { Freshness } from './freshness'
-import { Grid, selectedRow } from './grid'
+import { Grid } from './grid'
 import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
 import { type ApiOutputs, onRefresh, useTRPC } from './trpc'
@@ -99,132 +76,44 @@ const Panel = ({
 	useKnownRevision(catalogue.revision)
 	const available = availableViewModes(config.capabilities)
 	const [mode, setMode] = useState<ViewMode>(usableViewMode(config.config.extension.defaultView, config.capabilities))
-	const source = useMemo(
-		(): RowSource => ({
-			locales: config.config.locales,
-			default: config.config.default,
-			descriptions: config.config.description.enabled
-		}),
-		[config]
-	)
+	const source = useMemo(() => rowSourceOf(config), [config])
 	const view = useTableView({ catalogue: catalogue.catalogue, source, namespaced: config.namespaced, mode })
-	const rules = useMemo(
-		() => ({
-			namespaced: config.namespaced,
-			nesting: config.capabilities.nesting,
-			namespaceFiles: config.namespaceFiles,
-			createNamespace: config.config.keys.createNamespace
-		}),
-		[config]
-	)
+	const rules = useMemo(() => newKeyRulesOf(config), [config])
 	const editKey = useEditKey()
-	const { pin, setPinned } = view
-	// a refresh shows the files as they are: rows held behind an earlier edit are let go
-	useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
-	// what the last write did, said until the next selection begins or the next edit
-	const [said, setSaid] = useState<string>()
-	const onEdit = useCallback(
-		(edit: KeyEdit) => {
-			pin()
-			setSaid(undefined)
-			return editKey(edit)
-		},
-		[pin, editKey]
-	)
 	const addKey = useAddKey()
-	const [adding, setAdding] = useState(false)
-	const addButton = useRef<HTMLButtonElement>(null)
-	const [lastAdded, setLastAdded] = useState<KeyPath>()
-	const added = useMemo(
-		() =>
-			lastAdded === undefined
-				? undefined
-				: { key: lastAdded, hidden: hiddenByView(view.keys, view.visible, lastAdded) },
-		[lastAdded, view.keys, view.visible]
-	)
-	const onAdd = async (key: NewKey) => {
-		await addKey(key)
-		view.reveal(key.path)
-		setLastAdded(key.path)
-	}
-	useLayoutEffect(() => {
-		if (lastAdded === undefined) return
-		document.querySelector(rowSelector(rowId(rowKinds.key, lastAdded)))?.scrollIntoView({ block: 'nearest' })
-	}, [lastAdded])
-	const { selection, choose, onSelect, onSelectAll, doomed, setChosenKeys, namespaceRenamed } = useSelection({
-		keys: view.keys,
-		rows: view.rows,
-		visible: view.visible,
-		onChoose: () => setSaid(undefined)
-	})
 	const addNamespace = useAddNamespace()
 	const renameNamespace = useRenameNamespace()
-	const addNamespaceButton = useRef<HTMLButtonElement>(null)
-	const [namespaceAction, setNamespaceAction] = useState<{ action: NamespaceAction; opening: number }>()
-	const openNamespaceDialog = useCallback(
-		(action: NamespaceAction) => setNamespaceAction(current => ({ action, opening: (current?.opening ?? 0) + 1 })),
-		[]
-	)
-	const onRename = useCallback(
-		(namespace: NamespaceName) => openNamespaceDialog({ kind: namespaceActions.rename, from: namespace }),
-		[openNamespaceDialog]
-	)
-	const writeNamespace = async (name: NamespaceName) => {
-		const action = namespaceAction?.action
-		if (action === undefined) return
-		if (action.kind === namespaceActions.rename) {
-			const { from } = action
-			const renamed = await renameNamespace({ from, to: name })
-			view.namespaceRenamed(from, name)
-			namespaceRenamed(from, name)
-			setLastAdded(current => current && movedPaths([current], from, name)[0])
-			setSaid(namespaceWrittenText(action, name, renamed.report, false))
-			return
-		}
-		const added = await addNamespace(name)
-		view.namespaceAdded(name)
-		setSaid(namespaceWrittenText(action, name, added.report, view.revealing))
-	}
-	const namespaceClosed = (written: NamespaceName | undefined) => {
-		const action = namespaceAction?.action
-		setNamespaceAction(undefined)
-		const named = written ?? (action?.kind === namespaceActions.rename ? action.from : undefined)
-		// the written section, or the one a cancelled rename was about — else the button that opened the dialog
-		if (focusSection(named, written !== undefined)) return
-		if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
-			addNamespaceButton.current?.focus()
-	}
 	const removeKeys = useRemoveKeys()
+	const { setPinned } = view
+	// a refresh shows the files as they are: rows held behind an earlier edit are let go
+	useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
+	const {
+		selection,
+		choose,
+		onSelect,
+		onSelectAll,
+		doomed,
+		said,
+		onEdit,
+		added,
+		onAdd,
+		typing,
+		namespaceAction,
+		openNamespaceDialog,
+		onRename,
+		writeNamespace,
+		namespaceClosed,
+		addNamespaceButton,
+		onDelete,
+		deleteClosed,
+		deleteButton
+	} = useTableWrites({
+		view,
+		writes: { edit: editKey, add: addKey, addNamespace, renameNamespace, remove: removeKeys }
+	})
+	const [adding, setAdding] = useState(false)
+	const addButton = useRef<HTMLButtonElement>(null)
 	const [deleting, setDeleting] = useState(false)
-	const deleteButton = useRef<HTMLButtonElement>(null)
-	// after a delete, the keyboard goes to the row after the last one deleted, so the person keeps their place
-	const after = useRef<string | undefined>(undefined)
-	const onDelete = async () => {
-		const shown = [...document.querySelectorAll(`#${tableId} tbody tr[data-row]`)]
-		const last = shown.findLastIndex(row => row.getAttribute('data-state') === selectedRow)
-		after.current =
-			shown
-				.slice(last + 1)
-				.find(row => row.getAttribute('data-state') !== selectedRow)
-				?.getAttribute('data-row') ?? undefined
-		const removed = await removeKeys(doomed.paths)
-		// what core removed, and anything it left — a path holding keys of its own in another locale
-		setSaid(withWarnings(fill(studioText.deleted, { keys: countKeys(removed.report.changes.length) }), removed.report))
-		setChosenKeys(new Set())
-	}
-	const deleteClosed = (deleted: boolean) => {
-		setDeleting(false)
-		if (!deleted) {
-			deleteButton.current?.focus()
-			return
-		}
-		const next =
-			after.current === undefined
-				? null
-				: document.querySelector<HTMLElement>(`${rowSelector(after.current)} [data-select] input`)
-		if (next !== null) next.focus()
-		else focusTableStop(document.getElementById(tableId))
-	}
 	return (
 		<div className="flex h-screen flex-col">
 			<div className="flex shrink-0 flex-wrap items-center gap-2 px-2 py-1.5">
@@ -292,9 +181,7 @@ const Panel = ({
 					total={view.keys.length}
 				/>
 				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
-					{[selection.size > 0 ? fill(studioText.selectedCount, { keys: countKeys(selection.size) }) : undefined, said]
-						.filter(part => part !== undefined)
-						.join(studioText.countSeparator)}
+					{selectionStatus(selection.size, said)}
 				</span>
 			</div>
 			{adding && (
@@ -306,7 +193,7 @@ const Panel = ({
 					rules={rules}
 					added={added}
 					onAdd={onAdd}
-					onTyping={() => setLastAdded(undefined)}
+					onTyping={typing}
 					onClearFilters={() => view.changeFilter(noFilter)}
 					onClose={() => {
 						setAdding(false)
@@ -359,7 +246,10 @@ const Panel = ({
 					hidden={doomed.hidden}
 					locales={source.locales}
 					onDelete={onDelete}
-					onClosed={deleteClosed}
+					onClosed={deleted => {
+						setDeleting(false)
+						deleteClosed(deleted)
+					}}
 				/>
 			)}
 		</div>

@@ -1,15 +1,17 @@
-import { useEffect, useRef } from 'react'
-import { compositionKeyCode, studioText } from '@linguify/constants'
+import { Fragment, useEffect, useRef } from 'react'
+import { studioText } from '@linguify/constants'
 import {
-	countKeys,
-	fill,
+	isComposing,
 	isFiltered,
 	type KeyFilter,
-	keysWord,
 	type LocaleCounts,
+	localeCountsText,
+	matchCountText,
+	namespaceFilterLabel,
 	noFilter,
-	numbers,
-	toTranslate
+	toggleNamespace,
+	toggleUntranslated,
+	untranslatedFilterLabel
 } from '@linguify/table'
 import type { Locale, NamespaceName } from '@linguify/types'
 
@@ -53,7 +55,7 @@ export const Filters = ({
 				onChange={event => onChange({ ...filter, search: event.target.value })}
 				onKeyDown={event => {
 					// Escape that ends a composition is the input method's, not a clear
-					if (event.nativeEvent.isComposing || event.keyCode === compositionKeyCode) return
+					if (isComposing(event.nativeEvent)) return
 					if (event.key === 'Escape' && filter.search !== '') {
 						event.preventDefault()
 						onChange({ ...filter, search: '' })
@@ -63,75 +65,56 @@ export const Filters = ({
 			{namespaces.length > 1 && (
 				<Choices
 					id="namespace-filter"
-					label={
-						filter.namespaces === undefined
-							? studioText.namespaces
-							: fill(studioText.chosen, {
-									label: studioText.namespaces,
-									chosen: fill(studioText.chosenOf, {
-										count: numbers.format(filter.namespaces.length),
-										total: numbers.format(namespaces.length)
-									})
-								})
-					}
+					label={namespaceFilterLabel(filter, namespaces)}
 					options={namespaces.map(namespace => ({
 						value: namespace,
 						label: namespace,
 						checked: filter.namespaces?.includes(namespace) ?? false
 					}))}
 					onToggle={(namespace, checked) => {
-						const next = namespaces.filter(name =>
-							name === namespace ? checked : (filter.namespaces?.includes(name) ?? false)
-						)
-						onChange({ ...filter, namespaces: next.length === 0 ? undefined : next })
+						onChange(toggleNamespace(filter, namespaces, namespace, checked))
 					}}
 				/>
 			)}
 			{locales.length > 0 && (
 				<Choices
 					id="untranslated-filter"
-					label={
-						filter.untranslatedIn.length === 0
-							? studioText.untranslated
-							: fill(studioText.chosen, {
-									label: studioText.untranslated,
-									chosen: filter.untranslatedIn.join(studioText.listSeparator)
-								})
-					}
+					label={untranslatedFilterLabel(filter, locales)}
 					options={locales.map(locale => {
-						const count = counts[locale] ?? { missing: 0, empty: 0, extra: 0 }
+						const said = localeCountsText(counts[locale] ?? { missing: 0, empty: 0, extra: 0 })
 						return {
 							value: locale,
-							label: `${locale} — ${fill(studioText.untranslatedCount, { count: numbers.format(toTranslate(count)) })}${studioText.countSeparator}${fill(studioText.extraCount, { count: numbers.format(count.extra) })}`,
+							label: locale,
+							detail: [said.untranslated, said.extra],
 							checked: filter.untranslatedIn.includes(locale)
 						}
 					})}
 					onToggle={(locale, checked) => {
-						const chosen = filter.untranslatedIn.filter(name => name !== locale)
-						onChange({ ...filter, untranslatedIn: checked ? [...chosen, locale] : chosen })
+						onChange(toggleUntranslated(filter, locale, checked))
 					}}
 				/>
 			)}
 			<span id="match-count" role="status" className="text-muted-foreground">
-				{isFiltered(filter)
-					? fill(studioText.matchCount, {
-							shown: numbers.format(shown),
-							total: numbers.format(total),
-							keys: keysWord(total)
-						})
-					: countKeys(total)}
+				{matchCountText(filter, shown, total)}
 			</span>
-			{isFiltered(filter) && (
-				<button type="button" className={controlClass} onClick={() => onChange(noFilter)}>
-					{studioText.clearFilters}
-				</button>
-			)}
+			{/* always there, as the studio's: clearing leaves the keyboard where it was */}
+			<button
+				type="button"
+				aria-disabled={!isFiltered(filter)}
+				className={`${controlClass} aria-disabled:opacity-50`}
+				onClick={() => {
+					if (isFiltered(filter)) onChange(noFilter)
+				}}
+			>
+				{studioText.clearFilters}
+			</button>
 		</>
 	)
 }
 
 /**
- * a set of choices behind a button — native `details`, its checkboxes one stop each
+ * a set of choices behind a button — native `details`, its checkboxes one stop each, each with what it
+ * counts beside it, the visible separator unsaid
  */
 const Choices = ({
 	id,
@@ -141,7 +124,7 @@ const Choices = ({
 }: {
 	id: string
 	label: string
-	options: { value: string; label: string; checked: boolean }[]
+	options: { value: string; label: string; detail?: readonly string[]; checked: boolean }[]
 	onToggle: (value: string, checked: boolean) => void
 }) => {
 	const details = useRef<HTMLDetailsElement>(null)
@@ -193,6 +176,22 @@ const Choices = ({
 							onChange={event => onToggle(option.value, event.target.checked)}
 						/>
 						<span dir="auto">{option.label}</span>
+						{option.detail !== undefined && (
+							<span className="ms-auto ps-3 text-muted-foreground tabular-nums">
+								{' '}
+								{option.detail.map((part, index) => (
+									<Fragment key={part}>
+										{index > 0 && (
+											<>
+												<span aria-hidden="true">{studioText.countSeparator}</span>
+												<span className="sr-only">{studioText.listSeparator}</span>
+											</>
+										)}
+										{part}
+									</Fragment>
+								))}
+							</span>
+						)}
 					</label>
 				))}
 			</fieldset>

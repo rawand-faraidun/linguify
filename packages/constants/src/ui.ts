@@ -414,6 +414,17 @@ export const deleteListLimit = 200
 export const selectedRowState = 'selected'
 
 /**
+ * the ids of the words a table's controls point to: what sorting does and does not, how to open a text and
+ * move between them, the keys in its field, and the text now on disk
+ */
+export const tableHintIds = {
+	sort: 'sort-hint',
+	open: 'edit-hint',
+	keys: 'edit-keys',
+	onDisk: 'edit-on-disk'
+} as const
+
+/**
  * how many keys a table opens on with every section open; above it, the sections start closed — a person
  * opens the one they want in a moment, and a table of 20,000 open keys takes the browser seconds a change
  */

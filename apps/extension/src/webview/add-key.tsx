@@ -1,5 +1,5 @@
-import { compositionKeyCode, exampleKeyPath, studioText } from '@linguify/constants'
-import { fill, type NewKey, noteText, stopsAdd } from '@linguify/table'
+import { exampleKeyPath, studioText } from '@linguify/constants'
+import { addedText, fill, isComposing, type NewKey, noteText, stopsAdd } from '@linguify/table'
 import { useNewKeyForm } from '@linguify/table/react'
 import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
 
@@ -49,7 +49,7 @@ export const AddKey = ({
 			aria-busy={form.saving}
 			onSubmit={form.submit}
 			onKeyDown={event => {
-				const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
+				const composing = isComposing(event.nativeEvent)
 				if (composing) {
 					if (event.key === 'Enter') event.preventDefault()
 					return
@@ -162,7 +162,7 @@ export const AddKey = ({
 					</button>
 				</div>
 				<p id="add-result" role="status" className="text-muted-foreground">
-					{added !== undefined && fill(added.hidden ? studioText.addedHidden : studioText.added, { key: added.key })}
+					{addedText(added)}
 					{added?.hidden === true && (
 						<button
 							type="button"

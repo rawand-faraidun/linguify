@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { deleteListLimit, studioText } from '@linguify/constants'
-import { countKeys, fill, numbers, plural } from '@linguify/table'
+import { deleteText } from '@linguify/table'
 import type { KeyPath, Locale } from '@linguify/types'
 import {
 	AlertDialog,
@@ -63,6 +63,7 @@ export const DeleteKeys = ({
 	const asked = useRef({ keys, hidden })
 	if (open && !pending) asked.current = { keys, hidden }
 	const shown = asked.current
+	const said = deleteText(shown.keys, shown.hidden, locales)
 	return (
 		<AlertDialog
 			open={open}
@@ -80,19 +81,8 @@ export const DeleteKeys = ({
 				}}
 			>
 				<AlertDialogHeader>
-					<AlertDialogTitle>{fill(studioText.deleteTitle, { keys: countKeys(shown.keys.length) })}</AlertDialogTitle>
-					<AlertDialogDescription>
-						{fill(studioText.deleteDescription, { locales: locales.join(studioText.listSeparator) })}
-						{shown.hidden > 0 && (
-							<>
-								{' '}
-								{plural(
-									shown.hidden === shown.keys.length ? studioText.deleteAllHidden : studioText.deleteHidden,
-									shown.hidden
-								)}
-							</>
-						)}
-					</AlertDialogDescription>
+					<AlertDialogTitle>{said.title}</AlertDialogTitle>
+					<AlertDialogDescription>{said.description}</AlertDialogDescription>
 				</AlertDialogHeader>
 				<ul
 					id="delete-keys"
@@ -102,16 +92,12 @@ export const DeleteKeys = ({
 					className={cn('max-h-48 overflow-auto border p-2 font-mono text-xs', focusRingClass)}
 					dir="ltr"
 				>
-					{shown.keys.slice(0, deleteListLimit).map(key => (
+					{said.listed.map(key => (
 						<li key={key} className="wrap-anywhere">
 							{key}
 						</li>
 					))}
-					{shown.keys.length > deleteListLimit && (
-						<li className="font-sans text-muted-foreground">
-							{fill(studioText.andMore, { count: numbers.format(shown.keys.length - deleteListLimit) })}
-						</li>
-					)}
+					{said.more !== undefined && <li className="font-sans text-muted-foreground">{said.more}</li>}
 				</ul>
 				{failure !== undefined && (
 					<WriteNotice

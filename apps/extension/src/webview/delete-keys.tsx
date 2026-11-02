@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { deleteListLimit, studioText } from '@linguify/constants'
-import { countKeys, fill, numbers, plural } from '@linguify/table'
+import { studioText } from '@linguify/constants'
+import { deleteText } from '@linguify/table'
 import type { KeyPath, Locale } from '@linguify/types'
 import { FailureNotice } from './notice'
 
@@ -41,6 +41,7 @@ export const DeleteKeys = ({
 	const asked = useRef({ keys, hidden })
 	if (!pending && !deleted.current) asked.current = { keys, hidden }
 	const shown = asked.current
+	const said = deleteText(shown.keys, shown.hidden, locales)
 	useEffect(() => {
 		dialog.current?.showModal()
 	}, [])
@@ -56,19 +57,10 @@ export const DeleteKeys = ({
 			onClose={() => onClosed(deleted.current)}
 		>
 			<h2 id="delete-title" className="mb-2 font-semibold">
-				{fill(studioText.deleteTitle, { keys: countKeys(shown.keys.length) })}
+				{said.title}
 			</h2>
 			<p id="delete-description" className="mb-2 text-muted-foreground">
-				{fill(studioText.deleteDescription, { locales: locales.join(studioText.listSeparator) })}
-				{shown.hidden > 0 && (
-					<>
-						{' '}
-						{plural(
-							shown.hidden === shown.keys.length ? studioText.deleteAllHidden : studioText.deleteHidden,
-							shown.hidden
-						)}
-					</>
-				)}
+				{said.description}
 			</p>
 			<ul
 				// biome-ignore lint/a11y/noNoninteractiveTabindex: a list that scrolls must be reachable to scroll
@@ -77,16 +69,12 @@ export const DeleteKeys = ({
 				className="mb-3 max-h-48 overflow-auto border border-control-border p-2 font-mono"
 				dir="ltr"
 			>
-				{shown.keys.slice(0, deleteListLimit).map(key => (
+				{said.listed.map(key => (
 					<li key={key} className="wrap-anywhere">
 						{key}
 					</li>
 				))}
-				{shown.keys.length > deleteListLimit && (
-					<li className="font-sans text-muted-foreground">
-						{fill(studioText.andMore, { count: numbers.format(shown.keys.length - deleteListLimit) })}
-					</li>
-				)}
+				{said.more !== undefined && <li className="font-sans text-muted-foreground">{said.more}</li>}
 			</ul>
 			{failure !== undefined && (
 				<FailureNotice

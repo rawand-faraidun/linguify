@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
-import { compositionKeyCode, studioText } from '@linguify/constants'
-import { fill, type NamespaceAction } from '@linguify/table'
+import { studioText } from '@linguify/constants'
+import { isComposing, type NamespaceAction, namespaceDialogText } from '@linguify/table'
 import { useNamespaceForm } from '@linguify/table/react'
 import type { Catalogue, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -68,7 +68,7 @@ export const NamespaceDialog = ({
 	const cancel = () => {
 		if (!pending) setOpen(false)
 	}
-	const adding = renaming === undefined
+	const said = namespaceDialogText(action, pending)
 	return (
 		<Dialog
 			open={open}
@@ -79,7 +79,7 @@ export const NamespaceDialog = ({
 			<DialogContent
 				showCloseButton={false}
 				onEscapeKeyDown={event => {
-					if (event.isComposing || event.keyCode === compositionKeyCode) event.preventDefault()
+					if (isComposing(event)) event.preventDefault()
 				}}
 				onCloseAutoFocus={event => {
 					event.preventDefault()
@@ -93,12 +93,8 @@ export const NamespaceDialog = ({
 					className="flex min-w-0 flex-col gap-4"
 				>
 					<DialogHeader>
-						<DialogTitle className="wrap-anywhere">
-							{adding ? studioText.addNamespaceTitle : fill(studioText.renameNamespace, { name: renaming })}
-						</DialogTitle>
-						<DialogDescription>
-							{adding ? studioText.addNamespaceDescription : studioText.renameNamespaceDescription}
-						</DialogDescription>
+						<DialogTitle className="wrap-anywhere">{said.title}</DialogTitle>
+						<DialogDescription>{said.description}</DialogDescription>
 					</DialogHeader>
 					<div className="flex flex-col gap-1">
 						<Label htmlFor="namespace-name">{studioText.namespaceName}</Label>
@@ -139,13 +135,7 @@ export const NamespaceDialog = ({
 							{studioText.cancel}
 						</Button>
 						<Button type="submit" className={cn(focusRingClass, 'aria-disabled:opacity-50')} aria-disabled={!ready}>
-							{pending
-								? adding
-									? studioText.adding
-									: studioText.renaming
-								: adding
-									? studioText.add
-									: studioText.rename}
+							{said.button}
 						</Button>
 					</DialogFooter>
 				</form>

@@ -1,10 +1,12 @@
 import { memo, type ReactNode, useMemo, useRef } from 'react'
 import {
 	rowKinds,
+	selectedRowState,
 	selectionStates,
 	sortColumns,
 	sortDirections,
 	studioText,
+	tableHintIds,
 	tableId,
 	tableMarkClasses,
 	tableMarkLabels,
@@ -25,6 +27,7 @@ import {
 	type KeySort,
 	type KeyTableRow,
 	rowFeatures,
+	rowIndent,
 	rowOptionsFor,
 	type Selection,
 	type SelectionState,
@@ -97,13 +100,13 @@ export const Grid = ({
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
 		<>
-			<span id={editHintIds.open} hidden>
+			<span id={tableHintIds.open} hidden>
 				{studioText.editHint}
 			</span>
-			<span id={editHintIds.keys} hidden>
+			<span id={tableHintIds.keys} hidden>
 				{studioText.editKeys}
 			</span>
-			<span id={sortHintId} hidden>
+			<span id={tableHintIds.sort} hidden>
 				{studioText.sortHint}
 			</span>
 			<table
@@ -210,7 +213,7 @@ const SortableHead = ({
 		<th scope="col" aria-sort={direction} className={headClass}>
 			<button
 				type="button"
-				aria-describedby={sortHintId}
+				aria-describedby={tableHintIds.sort}
 				onClick={() => onSort(column)}
 				className="inline-flex items-center gap-1 text-start font-semibold"
 			>
@@ -222,11 +225,6 @@ const SortableHead = ({
 		</th>
 	)
 }
-
-/**
- * the id of the words every sortable head points to: what sorting does, and does not
- */
-const sortHintId = 'sort-hint'
 
 /**
  * a section or a group: its name and how many keys it holds, opening and closing what is under it
@@ -260,7 +258,11 @@ const GroupLine = memo(
 			</>
 		)
 		return (
-			<tr data-row={row.id} data-state={state === selectionStates.all ? selectedRow : undefined} className={lineClass}>
+			<tr
+				data-row={row.id}
+				data-state={state === selectionStates.all ? selectedRowState : undefined}
+				className={lineClass}
+			>
 				<td data-select className="px-2">
 					{row.keys > 0 && (
 						<Tick
@@ -270,7 +272,7 @@ const GroupLine = memo(
 						/>
 					)}
 				</td>
-				<th scope="row" colSpan={columns} className={cellClass} style={{ paddingInlineStart: indent(depth) }}>
+				<th scope="row" colSpan={columns} className={cellClass} style={{ paddingInlineStart: rowIndent(depth) }}>
 					{row.keys > 0 ? (
 						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
 							{heading}
@@ -356,7 +358,7 @@ const KeyLine = memo(
 			</Editable>
 		)
 		return (
-			<tr data-row={row.id} data-state={selected ? selectedRow : undefined} className={`${lineClass} align-top`}>
+			<tr data-row={row.id} data-state={selected ? selectedRowState : undefined} className={`${lineClass} align-top`}>
 				<td data-select className="px-2">
 					<Tick
 						label={fill(studioText.select, { key: row.key })}
@@ -368,7 +370,7 @@ const KeyLine = memo(
 					scope="row"
 					title={row.key}
 					className={`${cellClass} font-mono font-normal`}
-					style={{ paddingInlineStart: indent(depth) }}
+					style={{ paddingInlineStart: rowIndent(depth) }}
 				>
 					{compact ? (
 						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
@@ -438,7 +440,7 @@ const Editable = ({
 				tabIndex={edit.roving ? 0 : -1}
 				data-edit
 				data-cell
-				aria-describedby={editHintIds.open}
+				aria-describedby={tableHintIds.open}
 				onClick={event => edit.open(event.currentTarget.tabIndex === 0)}
 				className="block min-h-5 w-full text-start"
 			>
@@ -456,7 +458,7 @@ const Editable = ({
 				dir="auto"
 				lang={lang}
 				aria-label={label}
-				aria-describedby={edit.changed ? `${editHintIds.keys} ${editHintIds.onDisk}` : editHintIds.keys}
+				aria-describedby={edit.changed ? `${tableHintIds.keys} ${tableHintIds.onDisk}` : tableHintIds.keys}
 				aria-invalid={edit.changed}
 				aria-busy={edit.saving}
 				readOnly={edit.saving}
@@ -467,19 +469,13 @@ const Editable = ({
 				onBlur={edit.leave}
 			/>
 			{edit.changed && (
-				<span id={editHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
+				<span id={tableHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
 					{fill(studioText.onDisk, { text })}
 				</span>
 			)}
 		</>
 	)
 }
-
-/**
- * the ids of the words an editable text and its field point to: how to open it, the keys in it, and the
- * text now on disk
- */
-const editHintIds = { open: 'edit-hint', keys: 'edit-keys', onDisk: 'edit-on-disk' } as const
 
 /**
  * a native checkbox — one per row, light as the studio's measurements at 20,000 keys asked: ticked, empty,
@@ -508,11 +504,6 @@ const Tick = ({
 		className="align-middle accent-chosen-border"
 	/>
 )
-
-/**
- * how a row says it is selected
- */
-export const selectedRow = 'selected'
 
 /**
  * a button that opens and closes a row, its chevron turning with it
@@ -600,13 +591,6 @@ const Mark = ({ mark }: { mark: TableMark }) =>
 			{tableMarkLabels[mark]}
 		</span>
 	)
-
-/**
- * @param depth - how deep a row sits
- *
- * @returns its indent, deeper rows further in
- */
-const indent = (depth: number) => `calc(var(--spacing) * ${2 + depth * 4})`
 
 const headClass = 'px-2 py-1.5 text-start font-semibold'
 const cellClass = 'px-2 py-1.5 text-start'

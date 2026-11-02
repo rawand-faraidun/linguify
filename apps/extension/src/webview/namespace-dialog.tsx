@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { compositionKeyCode, studioText } from '@linguify/constants'
-import { fill, type NamespaceAction } from '@linguify/table'
+import { studioText } from '@linguify/constants'
+import { isComposing, type NamespaceAction, namespaceDialogText } from '@linguify/table'
 import { useNamespaceForm } from '@linguify/table/react'
 import type { Catalogue, NamespaceName } from '@linguify/types'
 import { FailureNotice } from './notice'
@@ -49,8 +49,7 @@ export const NamespaceDialog = ({
 		// opened modal, the keyboard goes to the first field in it: the name
 		dialog.current?.showModal()
 	}, [])
-	const { renaming } = form
-	const adding = renaming === undefined
+	const said = namespaceDialogText(action, form.pending)
 	return (
 		<dialog
 			ref={dialog}
@@ -65,7 +64,7 @@ export const NamespaceDialog = ({
 			<form
 				onSubmit={form.submit}
 				onKeyDown={event => {
-					const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
+					const composing = isComposing(event.nativeEvent)
 					if (!composing) return
 					// an input method's Enter and Escape are its own
 					if (event.key === 'Enter' || event.key === 'Escape') event.preventDefault()
@@ -74,10 +73,10 @@ export const NamespaceDialog = ({
 				className="flex min-w-0 flex-col gap-3"
 			>
 				<h2 id="namespace-title" className="wrap-anywhere font-semibold">
-					{renaming === undefined ? studioText.addNamespaceTitle : fill(studioText.renameNamespace, { name: renaming })}
+					{said.title}
 				</h2>
 				<p id="namespace-description" className="text-muted-foreground">
-					{adding ? studioText.addNamespaceDescription : studioText.renameNamespaceDescription}
+					{said.description}
 				</p>
 				<div className="flex flex-col gap-1">
 					<label htmlFor="namespace-name">{studioText.namespaceName}</label>
@@ -123,13 +122,7 @@ export const NamespaceDialog = ({
 						aria-disabled={!form.ready}
 						className="border border-control-border bg-chosen px-2 py-0.5 font-semibold text-chosen-foreground aria-disabled:opacity-50"
 					>
-						{form.pending
-							? adding
-								? studioText.adding
-								: studioText.renaming
-							: adding
-								? studioText.add
-								: studioText.rename}
+						{said.button}
 					</button>
 				</div>
 			</form>

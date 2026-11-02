@@ -319,3 +319,10 @@ const sameRow = (a: KeyRow, b: KeyRow): boolean => {
 		locales.every(locale => Object.hasOwn(b.values, locale) && a.values[locale] === b.values[locale])
 	)
 }
+
+/**
+ * @param depth - how deep a row sits
+ *
+ * @returns how far its first cell is indented, in the table's spacing unit
+ */
+export const rowIndent = (depth: number): string => `calc(var(--spacing) * ${2 + depth * 4})`

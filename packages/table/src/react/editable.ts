@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type RefObject, useEffect, useRef, useState } from 'react'
-import { compositionKeyCode } from '@linguify/constants'
 import { editedText } from '../edit'
+import { isComposing } from '../said'
 
 /**
  * a text a person can change in place — what the studio and the extension both draw their own way: shown
@@ -87,7 +87,7 @@ export const useEditable = (text: string, onCommit: (text: string) => Promise<un
 		},
 		type: setDraft,
 		keyDown: (event: KeyboardEvent<HTMLElement>) => {
-			const composing = event.nativeEvent.isComposing || event.nativeEvent.keyCode === compositionKeyCode
+			const composing = isComposing(event.nativeEvent)
 			if (composing || draft === undefined) return
 			if (event.key === 'Enter' && !event.shiftKey) {
 				event.preventDefault()

@@ -1,15 +1,17 @@
 import { useRef } from 'react'
-import { compositionKeyCode, studioText } from '@linguify/constants'
+import { studioText } from '@linguify/constants'
 import {
-	countKeys,
-	fill,
+	isComposing,
 	isFiltered,
 	type KeyFilter,
-	keysWord,
 	type LocaleCounts,
+	localeCountsText,
+	matchCountText,
+	namespaceFilterLabel,
 	noFilter,
-	numbers,
-	toTranslate
+	toggleNamespace,
+	toggleUntranslated,
+	untranslatedFilterLabel
 } from '@linguify/table'
 import type { Locale, NamespaceName } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
@@ -62,7 +64,6 @@ export const Filters = ({
 	const search = useRef<HTMLInputElement>(null)
 	const filtered = isFiltered(filter)
 	const locales = Object.entries(counts)
-	const chosenLocales = locales.map(([locale]) => locale).filter(locale => filter.untranslatedIn.includes(locale))
 	return (
 		<>
 			<search aria-label={studioText.search}>
@@ -82,7 +83,7 @@ export const Filters = ({
 						onChange={event => onChange({ ...filter, search: event.target.value })}
 						onKeyDown={event => {
 							// Escape that ends a composition is the input method's, not a clear
-							if (event.nativeEvent.isComposing || event.keyCode === compositionKeyCode) return
+							if (isComposing(event.nativeEvent)) return
 							if (event.key === 'Escape' && filter.search !== '') {
 								event.preventDefault()
 								onChange({ ...filter, search: '' })
@@ -109,15 +110,7 @@ export const Filters = ({
 				<DropdownMenu modal={false}>
 					<DropdownMenuTrigger asChild>
 						<Button id="namespace-filter" variant="outline" size="sm" className={focusRingClass}>
-							{filter.namespaces === undefined
-								? studioText.namespaces
-								: fill(studioText.chosen, {
-										label: studioText.namespaces,
-										chosen: fill(studioText.chosenOf, {
-											count: numbers.format(filter.namespaces.length),
-											total: numbers.format(namespaces.length)
-										})
-									})}
+							{namespaceFilterLabel(filter, namespaces)}
 							<ChevronDownIcon data-icon="inline-end" />
 						</Button>
 					</DropdownMenuTrigger>
@@ -129,10 +122,7 @@ export const Filters = ({
 								checked={filter.namespaces?.includes(namespace) ?? false}
 								onSelect={event => event.preventDefault()}
 								onCheckedChange={checked => {
-									const next = namespaces.filter(name =>
-										name === namespace ? checked : (filter.namespaces?.includes(name) ?? false)
-									)
-									onChange({ ...filter, namespaces: next.length === 0 ? undefined : next })
+									onChange(toggleNamespace(filter, namespaces, namespace, checked))
 								}}
 							>
 								{namespace}
@@ -145,18 +135,10 @@ export const Filters = ({
 				<DropdownMenu modal={false}>
 					<DropdownMenuTrigger asChild>
 						<Button id="untranslated-filter" variant="outline" size="sm" className={focusRingClass}>
-							{chosenLocales.length === 0
-								? studioText.untranslated
-								: fill(studioText.chosen, {
-										label: studioText.untranslated,
-										chosen:
-											chosenLocales.length <= 2
-												? chosenLocales.join(studioText.listSeparator)
-												: fill(studioText.chosenOf, {
-														count: numbers.format(chosenLocales.length),
-														total: numbers.format(locales.length)
-													})
-									})}
+							{untranslatedFilterLabel(
+								filter,
+								locales.map(([locale]) => locale)
+							)}
 							<ChevronDownIcon data-icon="inline-end" />
 						</Button>
 					</DropdownMenuTrigger>
@@ -169,16 +151,15 @@ export const Filters = ({
 								checked={filter.untranslatedIn.includes(locale)}
 								onSelect={event => event.preventDefault()}
 								onCheckedChange={checked => {
-									const chosen = filter.untranslatedIn.filter(name => name !== locale)
-									onChange({ ...filter, untranslatedIn: checked ? [...chosen, locale] : chosen })
+									onChange(toggleUntranslated(filter, locale, checked))
 								}}
 							>
 								<span className="me-4 font-medium">{locale}</span>
 								<span className="ms-auto whitespace-nowrap text-muted-foreground tabular-nums">
-									{fill(studioText.untranslatedCount, { count: numbers.format(toTranslate(count)) })}
+									{localeCountsText(count).untranslated}
 									<span aria-hidden="true">{studioText.countSeparator}</span>
 									<span className="sr-only">{studioText.listSeparator}</span>
-									{fill(studioText.extraCount, { count: numbers.format(count.extra) })}
+									{localeCountsText(count).extra}
 								</span>
 							</DropdownMenuCheckboxItem>
 						))}
@@ -186,13 +167,7 @@ export const Filters = ({
 				</DropdownMenu>
 			)}
 			<span id="match-count" role="status" className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">
-				{filtered
-					? fill(studioText.matchCount, {
-							shown: numbers.format(shown),
-							total: numbers.format(total),
-							keys: keysWord(total)
-						})
-					: countKeys(total)}
+				{matchCountText(filter, shown, total)}
 			</span>
 			<Button
 				variant="ghost"

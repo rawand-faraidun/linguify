@@ -1,5 +1,5 @@
 import type { KeyboardEvent } from 'react'
-import { compositionKeyCode } from '@linguify/constants'
+import { isComposing } from '@linguify/table'
 
 /**
  * keeps Enter that ends an input method's composition from sending a form — Safari sends it otherwise, with
@@ -8,6 +8,5 @@ import { compositionKeyCode } from '@linguify/constants'
  * @param event - a key pressed in the form
  */
 export const ignoreComposingEnter = (event: KeyboardEvent<HTMLFormElement>) => {
-	if (event.key === 'Enter' && (event.nativeEvent.isComposing || event.keyCode === compositionKeyCode))
-		event.preventDefault()
+	if (event.key === 'Enter' && isComposing(event.nativeEvent)) event.preventDefault()
 }
