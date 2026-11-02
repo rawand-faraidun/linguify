@@ -7,7 +7,7 @@ removed in every locale at once.
 It is [linguify](https://www.npmjs.com/package/linguify)'s own engine, inside the editor: the same rules,
 the same files, the same results as the command line and the studio. Nothing else to install.
 
-![The Linguify panel: every key in English, Kurdish Sorani and German side by side, an empty Kurdish Sorani text tinted](https://github.com/rawand-faraidun/linguify/raw/HEAD/apps/extension/media/screenshot.png)
+![The Linguify panel: every key in English, Kurdish Sorani and German side by side, an empty Kurdish Sorani text tinted](https://github.com/rawand-faraidun/linguify/raw/HEAD/assets/screenshots/extension-panel.png)
 
 ## Start
 
