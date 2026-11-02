@@ -1,7 +1,7 @@
 {
 	"name": "linguify",
-	"version": "1.4.1",
 	"description": "Developer-first translation file manager.",
+	"version": "1.4.1",
 	"type": "module",
 	"bin": {
 		"linguify": "./dist/index.js"
@@ -70,5 +70,9 @@
 	"homepage": "https://github.com/rawand-faraidun/linguify#readme",
 	"bugs": {
 		"url": "https://github.com/rawand-faraidun/linguify/issues"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
 	}
 }
