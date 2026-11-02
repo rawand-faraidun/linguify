@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import {
+	extensionDisplayName,
 	extensionText,
 	namespaceActions,
 	panelScrollKeptAfter,
@@ -10,10 +11,13 @@ import {
 import {
 	availableViewModes,
 	collapsedExpansion,
+	countKeys,
 	emptyViewText,
 	expandedExpansion,
+	fill,
 	newKeyRulesOf,
 	noFilter,
+	plural,
 	rowSourceOf,
 	selectionStatus,
 	usableViewMode
@@ -22,6 +26,7 @@ import { useKnownRevision, useTableView, useTableWrites } from '@linguify/table/
 import type { ViewMode } from '@linguify/types'
 import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'
+import { buttonClass, primaryButtonClass } from './classes'
 import { DeleteKeys } from './delete-keys'
 import { Filters } from './filters'
 import { Freshness } from './freshness'
@@ -152,7 +157,53 @@ const Panel = ({
 	const [deleting, setDeleting] = useState(false)
 	return (
 		<div className="flex h-screen flex-col">
-			<div className="flex shrink-0 flex-wrap items-center gap-2 px-2 py-1.5">
+			<header className="flex shrink-0 flex-wrap items-end gap-x-6 gap-y-3 px-6 pt-5 pb-3">
+				<div className="min-w-0 flex-1">
+					<h1 className="font-semibold text-xl">
+						{extensionDisplayName}
+						<span className="ms-2 font-normal text-base text-muted-foreground">{folderName(config.cwd)}</span>
+					</h1>
+					<p className="mt-1 text-muted-foreground">
+						{fill(extensionText.summary, {
+							locales: plural(extensionText.localeCount, source.locales.length),
+							keys: countKeys(view.keys.length),
+							default: source.default
+						})}
+					</p>
+				</div>
+				<div className="flex gap-2">
+					{config.namespaced && (
+						<button
+							ref={addNamespaceButton}
+							type="button"
+							aria-haspopup="dialog"
+							className={buttonClass}
+							onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
+						>
+							{studioText.addNamespace}
+						</button>
+					)}
+					<button
+						ref={addButton}
+						type="button"
+						aria-expanded={adding}
+						aria-controls="add-key"
+						className={primaryButtonClass}
+						onClick={() => setAdding(open => !open)}
+					>
+						{studioText.addKey}
+					</button>
+				</div>
+			</header>
+			<div className="flex shrink-0 flex-wrap items-center gap-2 px-6 pb-3">
+				<Filters
+					filter={view.filter}
+					onChange={view.changeFilter}
+					namespaces={view.namespaces}
+					counts={view.counts}
+					shown={view.visible.length}
+					total={view.keys.length}
+				/>
 				<ViewSwitch
 					mode={mode}
 					available={available}
@@ -161,31 +212,10 @@ const Panel = ({
 						view.viewChanged(next)
 					}}
 				/>
-				<button
-					ref={addButton}
-					type="button"
-					aria-expanded={adding}
-					aria-controls="add-key"
-					className={controlClass}
-					onClick={() => setAdding(open => !open)}
-				>
-					{studioText.addKey}
-				</button>
-				{config.namespaced && (
-					<button
-						ref={addNamespaceButton}
-						type="button"
-						aria-haspopup="dialog"
-						className={controlClass}
-						onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
-					>
-						{studioText.addNamespace}
-					</button>
-				)}
-				<button type="button" onClick={() => view.expand(expandedExpansion)} className={controlClass}>
+				<button type="button" onClick={() => view.expand(expandedExpansion)} className={buttonClass}>
 					{studioText.expandAll}
 				</button>
-				<button type="button" onClick={() => view.expand(collapsedExpansion)} className={controlClass}>
+				<button type="button" onClick={() => view.expand(collapsedExpansion)} className={buttonClass}>
 					{studioText.collapseAll}
 				</button>
 				<button
@@ -193,7 +223,7 @@ const Panel = ({
 					type="button"
 					aria-disabled={selection.size === 0}
 					aria-describedby="selection-count"
-					className={`${controlClass} aria-disabled:opacity-50`}
+					className={buttonClass}
 					onClick={() => {
 						if (selection.size > 0) setDeleting(true)
 					}}
@@ -203,19 +233,11 @@ const Panel = ({
 				<button
 					type="button"
 					aria-disabled={selection.size === 0}
-					className={`${controlClass} aria-disabled:opacity-50`}
+					className={buttonClass}
 					onClick={() => choose(() => new Set())}
 				>
 					{studioText.clearSelection}
 				</button>
-				<Filters
-					filter={view.filter}
-					onChange={view.changeFilter}
-					namespaces={view.namespaces}
-					counts={view.counts}
-					shown={view.visible.length}
-					total={view.keys.length}
-				/>
 				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
 					{selectionStatus(selection.size, said)}
 				</span>
@@ -245,7 +267,7 @@ const Panel = ({
 			<WriteNotice />
 			<div
 				ref={box}
-				className="relative min-h-0 flex-1 scroll-pt-10 overflow-auto"
+				className="relative min-h-0 flex-1 scroll-pt-12 overflow-auto px-6 pb-6"
 				onScroll={() => {
 					// kept once the scrolling pauses, not on every frame of it
 					clearTimeout(scrolling.current)
@@ -315,12 +337,12 @@ const ViewSwitch = ({
 	available: readonly ViewMode[]
 	onPick: (mode: ViewMode) => void
 }) => (
-	<fieldset className="relative inline-flex">
+	<fieldset id="view-switch" className="relative inline-flex overflow-hidden rounded-sm border border-input-border">
 		<legend className="sr-only">{studioText.view}</legend>
 		{Object.values(viewModes).map(view => (
 			<label
 				key={view}
-				className={`${controlClass} has-checked:border-chosen-border has-checked:bg-chosen has-checked:font-semibold has-checked:text-chosen-foreground has-disabled:opacity-50 has-focus-visible:outline has-focus-visible:outline-focus has-focus-visible:outline-offset-2`}
+				className="px-2.5 py-1 hover:bg-hover has-checked:bg-chosen has-checked:text-chosen-foreground has-disabled:opacity-50 has-checked:shadow-[inset_0_0_0_1px_var(--color-chosen-border)] has-focus-visible:outline has-focus-visible:outline-focus has-focus-visible:-outline-offset-2"
 			>
 				<input
 					type="radio"
@@ -337,4 +359,13 @@ const ViewSwitch = ({
 	</fieldset>
 )
 
-const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'
+/**
+ * @param cwd - the project's folder, as the API gives it
+ *
+ * @returns its last part — what the panel is titled with
+ */
+const folderName = (cwd: string): string =>
+	cwd
+		.split(/[/\\]/)
+		.filter(part => part !== '')
+		.at(-1) ?? cwd

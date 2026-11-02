@@ -14,6 +14,7 @@ import {
 	untranslatedFilterLabel
 } from '@linguify/table'
 import type { Locale, NamespaceName } from '@linguify/types'
+import { buttonClass, fieldClass } from './classes'
 
 /**
  * the search, the namespace filter, the missing filter with each locale's counts, how many keys match, and a
@@ -50,7 +51,7 @@ export const Filters = ({
 				dir="auto"
 				aria-label={studioText.search}
 				placeholder={studioText.search}
-				className="min-w-40 border border-input-border bg-input px-1.5 py-0.5 text-input-foreground"
+				className={`w-64 max-w-full ${fieldClass}`}
 				value={filter.search}
 				onChange={event => onChange({ ...filter, search: event.target.value })}
 				onKeyDown={event => {
@@ -101,7 +102,7 @@ export const Filters = ({
 			<button
 				type="button"
 				aria-disabled={!isFiltered(filter)}
-				className={`${controlClass} aria-disabled:opacity-50`}
+				className={buttonClass}
 				onClick={() => {
 					if (isFiltered(filter)) onChange(noFilter)
 				}}
@@ -165,8 +166,8 @@ const Choices = ({
 				event.currentTarget.querySelector('summary')?.focus()
 			}}
 		>
-			<summary className={`${controlClass} cursor-default list-none`}>{label}</summary>
-			<fieldset className="absolute z-20 mt-1 flex w-max max-w-[calc(100vw-1rem)] flex-col gap-1 border border-widget-border bg-background p-2 shadow-[0_2px_8px_var(--color-widget-shadow)]">
+			<summary className={`${buttonClass} cursor-default list-none`}>{label}</summary>
+			<fieldset className="absolute z-20 mt-1 flex w-max max-w-[calc(100vw-1rem)] flex-col gap-1.5 rounded-md border border-widget-border bg-background p-2 shadow-[0_2px_8px_var(--color-widget-shadow)]">
 				<legend className="sr-only">{label}</legend>
 				{options.map(option => (
 					<label key={option.value} className="flex items-center gap-2">
@@ -203,5 +204,3 @@ const Choices = ({
  * the search box's id
  */
 export const searchId = 'search'
-
-const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'

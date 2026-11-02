@@ -3,6 +3,7 @@ import { studioText } from '@linguify/constants'
 import { isComposing, type NamespaceAction, namespaceDialogText } from '@linguify/table'
 import { useNamespaceForm } from '@linguify/table/react'
 import type { Catalogue, NamespaceName } from '@linguify/types'
+import { buttonClass, fieldClass, primaryButtonClass } from './classes'
 import { FailureNotice } from './notice'
 
 /**
@@ -89,7 +90,7 @@ export const NamespaceDialog = ({
 						readOnly={form.pending}
 						aria-invalid={form.notes.length > 0}
 						aria-describedby="namespace-notes"
-						className="border border-input-border bg-input px-1.5 py-0.5 font-mono text-input-foreground"
+						className={`font-mono ${fieldClass}`}
 						value={form.name}
 						onChange={event => form.setName(event.target.value)}
 					/>
@@ -110,18 +111,14 @@ export const NamespaceDialog = ({
 					<button
 						type="button"
 						aria-disabled={form.pending}
-						className={`${controlClass} aria-disabled:opacity-50`}
+						className={buttonClass}
 						onClick={() => {
 							if (!form.pending) dialog.current?.close()
 						}}
 					>
 						{studioText.cancel}
 					</button>
-					<button
-						type="submit"
-						aria-disabled={!form.ready}
-						className="border border-control-border bg-chosen px-2 py-0.5 font-semibold text-chosen-foreground aria-disabled:opacity-50"
-					>
+					<button type="submit" aria-disabled={!form.ready} className={primaryButtonClass}>
 						{said.button}
 					</button>
 				</div>
@@ -129,5 +126,3 @@ export const NamespaceDialog = ({
 		</dialog>
 	)
 }
-
-const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'

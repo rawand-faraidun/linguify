@@ -31,9 +31,21 @@
 	--color-extra-foreground: var(--vscode-editor-foreground);
 	--color-extra-border: var(--vscode-inputValidation-infoBorder);
 	--color-contrast: var(--vscode-contrastBorder, transparent);
+	--color-primary: var(--vscode-button-background);
+	--color-primary-foreground: var(--vscode-button-foreground);
+	--color-primary-hover: var(--vscode-button-hoverBackground);
+	--color-control-hover: var(--vscode-button-secondaryHoverBackground);
+	--color-surface: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+	--color-row-border: var(--vscode-editorGroup-border, var(--vscode-panel-border, transparent));
+	--color-hover: var(--vscode-list-hoverBackground);
+	--color-badge: var(--vscode-badge-background);
+	--color-badge-foreground: var(--vscode-badge-foreground);
+	--color-gap-missing: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 14%, transparent);
+	--color-gap-extra: color-mix(in srgb, var(--vscode-editorInfo-foreground, #3794ff) 14%, transparent);
 	--font-sans: var(--vscode-font-family);
 	--font-mono: var(--vscode-editor-font-family);
-	--radius: 0;
+	--radius-sm: 2px;
+	--radius-md: 4px;
 }
 
 body {
@@ -43,14 +55,24 @@ body {
 	font-size: var(--vscode-font-size);
 }
 
-/* a mark is outlined in its own border colour too: high contrast themes draw borders, not fills */
-[data-mark="missing"],
-[data-mark="empty"] {
+/* a mark is outlined in its own border colour in high contrast, whose themes draw borders, not fills */
+.vscode-high-contrast [data-mark="missing"],
+.vscode-high-contrast [data-mark="empty"] {
 	outline: 1px solid var(--color-missing-border);
 }
 
-[data-mark="extra"] {
+.vscode-high-contrast [data-mark="extra"] {
 	outline: 1px solid var(--color-extra-border);
+}
+
+/* a text still to translate, or one the default lacks: its whole cell tinted, as a spreadsheet shows it */
+td[data-gap="missing"],
+td[data-gap="empty"] {
+	background: var(--color-gap-missing);
+}
+
+td[data-gap="extra"] {
+	background: var(--color-gap-extra);
 }
 
 /* outside the control, so a ring the colour of a chosen button's fill still shows */

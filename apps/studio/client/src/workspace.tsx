@@ -187,6 +187,18 @@ export const Workspace = memo(
 							{studioText.addNamespace}
 						</Button>
 					)}
+				</Toolbar>
+				{/* what acts on the table's rows — opening and closing them, deleting the selected — on a row of its own */}
+				<div id="table-actions" className="flex shrink-0 items-center gap-2 border-b px-4 py-1.5">
+					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
+						<ListChevronsUpDownIcon data-icon="inline-start" />
+						{studioText.expandAll}
+					</Button>
+					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(collapsedExpansion)}>
+						<ListChevronsDownUpIcon data-icon="inline-start" />
+						{studioText.collapseAll}
+					</Button>
+					<span aria-hidden="true" className="mx-1 h-4 border-s" />
 					<Button
 						ref={deleteButton}
 						variant="destructive"
@@ -217,15 +229,7 @@ export const Workspace = memo(
 					>
 						{selectionStatus(selection.size, said)}
 					</span>
-					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
-						<ListChevronsUpDownIcon data-icon="inline-start" />
-						{studioText.expandAll}
-					</Button>
-					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(collapsedExpansion)}>
-						<ListChevronsDownUpIcon data-icon="inline-start" />
-						{studioText.collapseAll}
-					</Button>
-				</Toolbar>
+				</div>
 				<main className="flex min-h-0 flex-1 scroll-pt-10 flex-col overflow-auto contain-content">
 					{adding && (
 						<AddKey

@@ -113,7 +113,7 @@ export const Grid = ({
 				ref={tableRef}
 				id={tableId}
 				aria-label={studioText.translations}
-				className="w-full border-collapse text-start"
+				className="w-full border-separate border-spacing-0 rounded-md border border-row-border bg-surface text-start"
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={event => {
 					const to = controlAfter(event.currentTarget, event)
@@ -122,9 +122,9 @@ export const Grid = ({
 					to.focus()
 				}}
 			>
-				<thead className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
+				<thead className="sticky top-0 z-10 bg-surface">
 					<tr>
-						<th scope="col" data-select className="w-0 px-2">
+						<th scope="col" data-select className={`w-0 ${selectCellClass}`}>
 							<Tick
 								label={studioText.selectShown}
 								state={shownState(selection, rows)}
@@ -146,7 +146,9 @@ export const Grid = ({
 								{locale === source.default && (
 									<>
 										{' '}
-										<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
+										<span className="ms-1 rounded-full bg-badge px-1.5 py-px text-[0.625rem] text-badge-foreground">
+											{studioText.defaultLocale}
+										</span>
 									</>
 								)}
 							</SortableHead>
@@ -215,10 +217,15 @@ const SortableHead = ({
 				type="button"
 				aria-describedby={tableHintIds.sort}
 				onClick={() => onSort(column)}
-				className="inline-flex items-center gap-1 text-start font-semibold"
+				className="group inline-flex items-center gap-1 text-start font-semibold uppercase"
 			>
 				<span>{children}</span>
-				<span aria-hidden="true" className={direction === undefined ? 'text-muted-foreground' : undefined}>
+				<span
+					aria-hidden="true"
+					className={
+						direction === undefined ? 'opacity-0 group-hover:opacity-70 group-focus-visible:opacity-70' : undefined
+					}
+				>
 					{direction === undefined ? '↕' : direction === sortDirections.ascending ? '↑' : '↓'}
 				</span>
 			</button>
@@ -263,7 +270,7 @@ const GroupLine = memo(
 				data-state={state === selectionStates.all ? selectedRowState : undefined}
 				className={lineClass}
 			>
-				<td data-select className="px-2">
+				<td data-select className={selectCellClass}>
 					{row.keys > 0 && (
 						<Tick
 							label={fill(studioText.selectGroup, { name: row.kind === rowKinds.section ? row.namespace : row.path })}
@@ -359,7 +366,7 @@ const KeyLine = memo(
 		)
 		return (
 			<tr data-row={row.id} data-state={selected ? selectedRowState : undefined} className={`${lineClass} align-top`}>
-				<td data-select className="px-2">
+				<td data-select className={selectCellClass}>
 					<Tick
 						label={fill(studioText.select, { key: row.key })}
 						state={selected ? selectionStates.all : selectionStates.none}
@@ -369,7 +376,7 @@ const KeyLine = memo(
 				<th
 					scope="row"
 					title={row.key}
-					className={`${cellClass} font-mono font-normal`}
+					className={`${cellClass} font-mono font-normal text-[0.8125rem]`}
 					style={{ paddingInlineStart: rowIndent(depth) }}
 				>
 					{compact ? (
@@ -381,12 +388,12 @@ const KeyLine = memo(
 					)}
 				</th>
 				{descriptions && !compact && (
-					<td data-description className={`${cellClass} text-muted-foreground`}>
+					<td data-description className={`${cellClass} text-muted-foreground text-xs`}>
 						{description}
 					</td>
 				)}
 				{shown.map(locale => (
-					<td key={locale} data-locale={locale} className={cellClass}>
+					<td key={locale} data-locale={locale} data-gap={cellMark(row, locale, defaultLocale)} className={cellClass}>
 						{value(locale)}
 						{open && (
 							<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
@@ -501,7 +508,7 @@ const Tick = ({
 			if (box !== null) box.indeterminate = state === selectionStates.some
 		}}
 		onChange={onChange}
-		className="align-middle accent-chosen-border"
+		className="align-middle accent-chosen-border not-checked:not-indeterminate:not-focus-visible:opacity-35 not-checked:not-indeterminate:group-hover/row:opacity-100"
 	/>
 )
 
@@ -571,7 +578,7 @@ const Value = ({ row, locale, defaultLocale }: { row: KeyTableRow; locale: Local
  * text from the files: bounded inside its cell, wrapping, and in its own direction
  */
 const Text = ({ text, lang }: { text: string; lang?: Locale }) => (
-	<span data-text dir="auto" lang={lang} className={tableTextClasses.text}>
+	<span data-text dir="auto" lang={lang} className={`${tableTextClasses.text} text-left`}>
 		{text}
 	</span>
 )
@@ -587,11 +594,13 @@ const Mark = ({ mark }: { mark: TableMark }) =>
 			<span className="sr-only">{studioText.absent}</span>
 		</span>
 	) : (
-		<span data-mark={mark} className={`px-1 text-[0.625rem] uppercase tracking-wide ${tableMarkClasses[mark]}`}>
+		<span data-mark={mark} className="text-muted-foreground text-xs italic">
 			{tableMarkLabels[mark]}
 		</span>
 	)
 
-const headClass = 'px-2 py-1.5 text-start font-semibold'
-const cellClass = 'px-2 py-1.5 text-start'
-const lineClass = 'border-border border-b data-[state=selected]:bg-chosen/40'
+const headClass =
+	'border-row-border border-b px-4 py-2.5 text-start font-semibold text-[0.6875rem] text-muted-foreground uppercase tracking-wider'
+const cellClass = 'border-row-border border-b px-4 py-2.5 text-start'
+const selectCellClass = 'border-row-border border-b pt-3 pb-2.5 ps-4 pe-1 align-top leading-none'
+const lineClass = 'group/row hover:bg-hover data-[state=selected]:bg-chosen/40'

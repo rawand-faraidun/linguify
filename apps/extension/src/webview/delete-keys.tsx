@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { studioText } from '@linguify/constants'
 import { deleteText } from '@linguify/table'
 import type { KeyPath, Locale } from '@linguify/types'
+import { buttonClass, primaryButtonClass } from './classes'
 import { FailureNotice } from './notice'
 
 /**
@@ -90,7 +91,7 @@ export const DeleteKeys = ({
 				<button
 					type="button"
 					aria-disabled={pending}
-					className={`${controlClass} aria-disabled:opacity-50`}
+					className={buttonClass}
 					onClick={() => {
 						if (!pending) dialog.current?.close()
 					}}
@@ -101,7 +102,7 @@ export const DeleteKeys = ({
 					ref={deleteAction}
 					type="button"
 					aria-disabled={pending}
-					className="border border-control-border bg-chosen px-2 py-0.5 font-semibold text-chosen-foreground aria-disabled:opacity-50"
+					className={primaryButtonClass}
 					onClick={() => {
 						if (pending) return
 						setPending(true)
@@ -125,5 +126,3 @@ export const DeleteKeys = ({
 		</dialog>
 	)
 }
-
-const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'

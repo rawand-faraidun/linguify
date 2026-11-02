@@ -2,6 +2,7 @@ import { exampleKeyPath, studioText } from '@linguify/constants'
 import { addedText, fill, isComposing, type NewKey, noteText, stopsAdd } from '@linguify/table'
 import { useNewKeyForm } from '@linguify/table/react'
 import type { Catalogue, KeyPath, KeyRules, Locale } from '@linguify/types'
+import { buttonClass, fieldClass, primaryButtonClass } from './classes'
 
 /**
  * the form that adds a key — the studio's, in the panel's look: its path, its description, its text in every
@@ -147,13 +148,13 @@ export const AddKey = ({
 			})}
 			<div className="flex flex-col gap-1">
 				<div className="mt-5 flex items-center gap-2">
-					<button type="submit" aria-disabled={!form.ready} className={`${controlClass} aria-disabled:opacity-50`}>
+					<button type="submit" aria-disabled={!form.ready} className={primaryButtonClass}>
 						{form.saving ? studioText.adding : studioText.add}
 					</button>
 					<button
 						type="button"
 						aria-disabled={form.saving}
-						className={controlClass}
+						className={buttonClass}
 						onClick={() => {
 							if (!form.saving) onClose()
 						}}
@@ -183,6 +184,3 @@ export const AddKey = ({
 		</form>
 	)
 }
-
-const fieldClass = 'border border-input-border bg-input px-1.5 py-0.5 text-input-foreground'
-const controlClass = 'border border-control-border bg-control px-2 py-0.5 text-control-foreground'
