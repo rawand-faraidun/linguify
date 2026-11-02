@@ -1,10 +1,18 @@
 {
 	"name": "linguify-vs",
 	"displayName": "Linguify",
-	"version": "0.0.0",
 	"description": "Developer-first translation file manager, in the editor.",
+	"version": "0.0.0",
 	"publisher": "rawand-faraidun",
 	"private": true,
+	"icon": "icon.png",
+	"galleryBanner": {
+		"color": "#1e1e1e",
+		"theme": "dark"
+	},
+	"categories": [
+		"Other"
+	],
 	"main": "./dist/index.js",
 	"extensionKind": [
 		"workspace"
@@ -12,6 +20,7 @@
 	"scripts": {
 		"build": "tsdown && vite build --configLoader runner",
 		"manifest": "tsx scripts/write-manifest.mts",
+		"package": "tsx scripts/package.mts",
 		"typecheck": "tsc && tsc -p tsconfig.webview.json"
 	},
 	"devDependencies": {
@@ -34,6 +43,7 @@
 		"@types/react-dom": "catalog:",
 		"@types/vscode": "1.90.0",
 		"@vitejs/plugin-react": "catalog:",
+		"@vscode/vsce": "^4.1.0",
 		"react": "catalog:",
 		"react-dom": "catalog:",
 		"tailwindcss": "catalog:",
@@ -43,6 +53,28 @@
 	},
 	"engines": {
 		"vscode": "^1.90.0"
+	},
+	"keywords": [
+		"i18n",
+		"localization",
+		"translation",
+		"json",
+		"locales"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rawand Faraidun",
+		"email": "201.rawand@gmail.com",
+		"url": "https://github.com/rawand-faraidun"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rawand-faraidun/linguify.git",
+		"directory": "apps/extension"
+	},
+	"homepage": "https://github.com/rawand-faraidun/linguify/tree/main/apps/extension#readme",
+	"bugs": {
+		"url": "https://github.com/rawand-faraidun/linguify/issues"
 	},
 	"activationEvents": [
 		"workspaceContains:**/linguify.config.json",

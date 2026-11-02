@@ -43,6 +43,8 @@ pnpm-debug.log*
 
 # Package artifacts
 *.tgz
+# the extension's icon, copied from assets/ when it is packaged
+apps/extension/icon.png
 
 # os / editor
 .DS_Store
