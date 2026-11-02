@@ -3,12 +3,13 @@ name: verify
 on:
   push:
   pull_request:
+  workflow_call:
 
 permissions:
   contents: read
 
 concurrency:
-  group: verify-${{ github.ref }}
+  group: ${{ github.workflow }}-verify-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

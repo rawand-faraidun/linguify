@@ -1,0 +1,62 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    uses: ./.github/workflows/verify.yml
+
+  # with changesets waiting: open or update the version pull request; with none — that pull request just
+  # merged — release what it versioned
+  version:
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      has-changesets: ${{ steps.changesets.outputs.has-changesets }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: changesets
+        # v2.1.2
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51
+        with:
+          commit-message: Version the packages
+          pr-title: Version the packages
+
+  # the extension first, then the CLI — so the CLI's release is the head of the history
+  extension:
+    needs: version
+    if: needs.version.outputs.has-changesets == 'false'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/publish-extension.yml
+    secrets:
+      AZURE_TOKEN: ${{ secrets.AZURE_TOKEN }}
+      OPENVSX_TOKEN: ${{ secrets.OPENVSX_TOKEN }}
+
+  npm:
+    needs: [version, extension]
+    if: needs.version.outputs.has-changesets == 'false'
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-npm.yml
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,0 +1,109 @@
+name: publish-npm
+
+on:
+  workflow_call:
+    inputs:
+      dry-run:
+        description: Pack linguify as npm would receive it and check the token; publish and release nothing
+        type: boolean
+        default: false
+    secrets:
+      NPM_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Pack linguify as npm would receive it and check the token; publish and release nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  id-token: write
+
+concurrency:
+  group: publish-npm
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # a real release only from main, its changesets applied
+      - name: Refuse to publish from anywhere but main, or before the version pull request is merged
+        if: ${{ !inputs.dry-run }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Publishing runs from main only, not $GITHUB_REF. Dispatch a dry run instead."
+            exit 1
+          fi
+          if ls .changeset/*.md 2> /dev/null | grep -qv README; then
+            echo "::error::Changesets are waiting: merge the version pull request first."
+            exit 1
+          fi
+
+      - id: release
+        name: Find the version, and whether it is on npm and released already
+        run: |
+          version=$(node -p "require('./apps/cli/package.json').version")
+          tag="linguify@$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if npm view "linguify@$version" version > /dev/null 2>&1; then echo "on-npm=true" >> "$GITHUB_OUTPUT"; else echo "on-npm=false" >> "$GITHUB_OUTPUT"; fi
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "$tag is released already: nothing to do"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - if: steps.release.outputs.released == 'false'
+        uses: pnpm/action-setup@v6
+      - if: steps.release.outputs.released == 'false'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+      - if: steps.release.outputs.released == 'false'
+        run: pnpm install --frozen-lockfile
+
+      # built with no token in reach
+      - name: Build linguify
+        if: steps.release.outputs.released == 'false'
+        run: pnpm turbo run build --filter linguify
+
+      - name: Pack linguify as npm would receive it, and check the token
+        if: steps.release.outputs.released == 'false' && inputs.dry-run
+        run: |
+          pnpm --filter linguify pack --dry-run
+          npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # what npm does not have yet, with provenance — pnpm reads it from here, not from publishConfig
+      - name: Publish to npm
+        if: steps.release.outputs.released == 'false' && steps.release.outputs.on-npm == 'false' && !inputs.dry-run
+        run: pnpm changeset publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      # the release makes its tag with it, on this commit; a version npm still lacks fails here, loudly
+      - name: Release it on GitHub, tagged
+        if: steps.release.outputs.released == 'false' && !inputs.dry-run
+        run: |
+          npm view "linguify@$VERSION" version > /dev/null || { echo "::error::linguify@$VERSION is not on npm"; exit 1; }
+          awk -v heading="## $VERSION" '$0 == heading { found = 1; next } /^## / { if (found) exit } found' apps/cli/CHANGELOG.md > notes.md
+          gh release create "$TAG" --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}

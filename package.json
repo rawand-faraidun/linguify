@@ -13,7 +13,8 @@
 		"check": "biome check .",
 		"format": "biome format --write .",
 		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm --filter linguify-vs manifest --check",
-		"changeset": "changeset"
+		"changeset": "changeset",
+		"changeset:release": "turbo run build --filter linguify && changeset publish"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.14",
