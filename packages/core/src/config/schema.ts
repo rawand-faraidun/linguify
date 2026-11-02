@@ -7,6 +7,7 @@ import {
 	ioColumns,
 	ioFormats,
 	localeCodePattern,
+	protectedFileNames,
 	reservedKeySegments,
 	studioPortRange,
 	unprintableCharacter,
@@ -41,9 +42,18 @@ const descriptionObject = z.strictObject({
 		.string()
 		.regex(fileNamePattern, 'Must be a plain file name inside `path`: no `/` or `\\`, and not `.` or `..`')
 		.refine(name => !unprintableCharacter.test(name), 'Must not contain a control character')
+		// a name the rule above refuses is not said twice
 		.refine(
-			name => name !== configFileName,
+			name => !fileNamePattern.test(name) || name.toLowerCase().endsWith('.json'),
+			'Must end in `.json`: descriptions are always JSON'
+		)
+		.refine(
+			name => name.toLowerCase() !== configFileName.toLowerCase(),
 			`Must not be \`${configFileName}\`: writing descriptions would overwrite the config`
+		)
+		.refine(
+			name => !protectedFileNames.includes(name.toLowerCase()),
+			`Must not be one of the project's own files — ${protectedFileNames.join(', ')}: writing descriptions would rewrite it`
 		)
 		.default(descriptionDefaults.name)
 		.describe('Filename inside `path`. Always JSON whatever the engine — descriptions are not translations')

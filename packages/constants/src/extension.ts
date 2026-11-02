@@ -71,7 +71,10 @@ export const webviewFiles = {
  * the extension's words on screen
  */
 export const extensionText = {
-	noConfig: 'No linguify config in this workspace. Run `linguify init` in a terminal, then open Linguify again.',
+	noConfig:
+		'No linguify config in this workspace, nor above it. Run “linguify init” in a terminal, then open Linguify again.',
+	ofProject: '{text} — {project}',
+	allFiles: 'All files',
 	reading: 'Reading the translations…',
 	freshness: 'Linguify watches nothing: after editing the files by hand or running the CLI, refresh.',
 	chooseProject: 'Choose the linguify project to work on',
@@ -121,3 +124,19 @@ export const bridgeChangedType = `${appName}:changed`
  * where the extension remembers, for each workspace, the project a person chose among several
  */
 export const chosenProjectKey = `${appName}.project`
+
+/**
+ * the folders the search for projects leaves out: dependencies, builds and the repository's own
+ */
+export const projectSearchExcludes = '{**/node_modules/**,**/.git/**,**/dist/**,**/.turbo/**}'
+
+/**
+ * how many configs the search for projects reads at most — enough for any monorepo, and a bound on a
+ * workspace of thousands of folders
+ */
+export const projectSearchLimit = 100
+
+/**
+ * how long, in milliseconds, the panel's scrolling must pause before where it stopped is kept
+ */
+export const panelScrollKeptAfter = 200

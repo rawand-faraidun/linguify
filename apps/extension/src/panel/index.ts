@@ -17,18 +17,26 @@ import { editorLayer } from '../settings'
 import { panelHtml } from './html'
 
 /**
- * the open panels, by the folder whose config each shows — one each — with that folder
+ * the open panels, by the folder whose config each shows — one each — with that folder, the editor layer
+ * its page was drawn with, and what listens to it
  */
-const panels = new Map<string, { panel: WebviewPanel; folder: Uri }>()
+const panels = new Map<
+	string,
+	{ panel: WebviewPanel; folder: Uri; editor: Record<string, unknown>; listeners: Disposable[] }
+>()
 
 /**
- * closes every open panel — when the extension stops
+ * stops answering the panels — when the extension stops
  *
- * @returns what disposes of them
+ * @note the panels themselves are left to the editor: one closed here, as the window reloads, is one the
+ * editor can no longer restore
+ *
+ * @returns what stops it
  */
 export const panelsDisposable = (): Disposable => ({
 	dispose: () => {
-		for (const { panel } of panels.values()) panel.dispose()
+		for (const { listeners } of panels.values()) for (const listener of listeners) listener.dispose()
+		panels.clear()
 	}
 })
 
@@ -80,7 +88,10 @@ export const restorePanel = (context: ExtensionContext, panel: WebviewPanel, fol
  * @param context - the extension's context
  */
 export const reloadPanels = (context: ExtensionContext) => {
-	for (const { panel, folder } of panels.values()) panel.webview.html = pageOf(context, panel, folder)
+	for (const shown of panels.values()) {
+		shown.editor = editorLayer(shown.folder)
+		shown.panel.webview.html = pageOf(context, shown.panel, shown.folder)
+	}
 }
 
 /**
@@ -97,7 +108,8 @@ export const projectChanged = (folder: Uri) => {
  * shows a project in a panel and answers its page
  *
  * @note the webview reaches the project only through {@link answerBridge}, called here in the host for
- * each message it posts, with the editor layer as the person's settings stand then: no server, no port. It
+ * each message it posts, with the editor layer as the person's settings stood when its page was drawn — what
+ * it shows and what it writes always agree, a change waiting on Reload: no server, no port. It
  * may load only the extension's own built files. A call still running when the panel closes is not
  * answered, and one that fails in the host is logged, not lost
  *
@@ -111,10 +123,11 @@ const showProject = (context: ExtensionContext, panel: WebviewPanel, folder: Uri
 	const { webview } = panel
 	webview.html = pageOf(context, panel, folder)
 	let disposed = false
-	const listeners: Disposable[] = [
+	const shown = { panel, folder, editor: editorLayer(folder), listeners: [] as Disposable[] }
+	shown.listeners.push(
 		webview.onDidReceiveMessage(async (message: unknown) => {
 			try {
-				const reply = await answerBridge(message, { cwd: folder.fsPath, editor: editorLayer(folder) })
+				const reply = await answerBridge(message, { cwd: folder.fsPath, editor: shown.editor })
 				if (reply !== undefined && !disposed) await webview.postMessage(reply)
 			} catch (error) {
 				log.error(error instanceof Error ? error : String(error))
@@ -123,10 +136,10 @@ const showProject = (context: ExtensionContext, panel: WebviewPanel, folder: Uri
 		panel.onDidDispose(() => {
 			disposed = true
 			panels.delete(key)
-			for (const listener of listeners) listener.dispose()
+			for (const listener of shown.listeners) listener.dispose()
 		})
-	]
-	panels.set(key, { panel, folder })
+	)
+	panels.set(key, shown)
 }
 
 /**

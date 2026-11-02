@@ -1,5 +1,12 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { extensionText, namespaceActions, studioText, viewModeLabels, viewModes } from '@linguify/constants'
+import {
+	extensionText,
+	namespaceActions,
+	panelScrollKeptAfter,
+	studioText,
+	viewModeLabels,
+	viewModes
+} from '@linguify/constants'
 import {
 	availableViewModes,
 	collapsedExpansion,
@@ -22,7 +29,7 @@ import { Grid } from './grid'
 import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
 import { keepView, keptView } from './page'
-import { type ApiOutputs, onRefresh, useTRPC } from './trpc'
+import { type ApiOutputs, onRefresh, refresh, useTRPC } from './trpc'
 import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameNamespace } from './writes'
 
 /**
@@ -47,7 +54,19 @@ export const App = () => {
 				readAt={Math.min(config.dataUpdatedAt, catalogue.dataUpdatedAt)}
 			/>
 		)
-	if (error !== undefined) return <p role="alert">{error}</p>
+	if (error !== undefined)
+		return (
+			<div role="alert" className="flex flex-col items-start gap-2 p-2">
+				<p>{error}</p>
+				<button
+					type="button"
+					className="border border-control-border bg-control px-2 py-0.5 text-control-foreground"
+					onClick={() => void refresh().catch(() => undefined)}
+				>
+					{studioText.refresh}
+				</button>
+			</div>
+		)
 	return <p>{extensionText.reading}</p>
 }
 
@@ -91,7 +110,7 @@ const Panel = ({
 	})
 	useEffect(() => keepView({ mode, filter: view.filter, sort: view.sort }), [mode, view.filter, view.sort])
 	const box = useRef<HTMLDivElement>(null)
-	const scrolling = useRef(false)
+	const scrolling = useRef<ReturnType<typeof setTimeout>>(undefined)
 	useLayoutEffect(() => {
 		if (box.current !== null && kept.scroll !== undefined) box.current.scrollTop = kept.scroll
 	}, [kept])
@@ -228,13 +247,11 @@ const Panel = ({
 				ref={box}
 				className="relative min-h-0 flex-1 scroll-pt-10 overflow-auto"
 				onScroll={() => {
-					// kept once a frame at most, however fast the person scrolls
-					if (scrolling.current) return
-					scrolling.current = true
-					requestAnimationFrame(() => {
-						scrolling.current = false
+					// kept once the scrolling pauses, not on every frame of it
+					clearTimeout(scrolling.current)
+					scrolling.current = setTimeout(() => {
 						if (box.current !== null) keepView({ scroll: box.current.scrollTop })
-					})
+					}, panelScrollKeptAfter)
 				}}
 			>
 				{view.rows.length === 0 ? (

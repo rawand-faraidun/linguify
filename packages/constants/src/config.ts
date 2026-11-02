@@ -124,6 +124,23 @@ export const descriptionDefaults = {
 } as const
 
 /**
+ * files a descriptions file may never be named, whatever the case: a project's own files, which sit beside
+ * the locales when `path` is the project's folder — descriptions merged into one would rewrite it
+ */
+export const protectedFileNames: readonly string[] = [
+	'package.json',
+	'package-lock.json',
+	'tsconfig.json',
+	'jsconfig.json',
+	'composer.json',
+	'deno.json',
+	'biome.json',
+	'turbo.json',
+	'app.json',
+	'manifest.json'
+]
+
+/**
  * where a config value can come from
  */
 export const configLayers = {
