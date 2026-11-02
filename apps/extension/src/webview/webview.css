@@ -17,7 +17,7 @@
 	--color-input-foreground: var(--vscode-input-foreground);
 	--color-control: var(--vscode-button-secondaryBackground);
 	--color-control-foreground: var(--vscode-button-secondaryForeground);
-	--color-control-border: var(--vscode-button-border, var(--vscode-contrastBorder, transparent));
+	--color-control-border: var(--vscode-contrastBorder, transparent);
 	--color-input-border: var(--vscode-input-border, var(--vscode-contrastBorder, var(--vscode-panel-border)));
 	--color-widget-border: var(--vscode-editorWidget-border, var(--vscode-contrastBorder, var(--vscode-panel-border)));
 	--color-widget-shadow: var(--vscode-widget-shadow, transparent);
@@ -40,8 +40,8 @@
 	--color-hover: var(--vscode-list-hoverBackground);
 	--color-badge: var(--vscode-badge-background);
 	--color-badge-foreground: var(--vscode-badge-foreground);
-	--color-gap-missing: color-mix(in srgb, var(--vscode-editorWarning-foreground, #cca700) 14%, transparent);
-	--color-gap-extra: color-mix(in srgb, var(--vscode-editorInfo-foreground, #3794ff) 14%, transparent);
+	--color-gap-missing: color-mix(in srgb, var(--vscode-charts-orange, #d18616) 13%, transparent);
+	--color-gap-extra: color-mix(in srgb, var(--vscode-charts-blue, #3794ff) 12%, transparent);
 	--font-sans: var(--vscode-font-family);
 	--font-mono: var(--vscode-editor-font-family);
 	--radius-sm: 2px;
@@ -73,6 +73,44 @@ td[data-gap="empty"] {
 
 td[data-gap="extra"] {
 	background: var(--color-gap-extra);
+}
+
+/* a checkbox drawn in the editor's own colours: an outlined square, filled with a tick when chosen, a dash
+   when part of a section is */
+input[type="checkbox"].tick {
+	appearance: none;
+	display: inline-grid;
+	place-content: center;
+	width: 14px;
+	height: 14px;
+	margin: 0;
+	vertical-align: middle;
+	border: 1px solid var(--color-input-border);
+	border-radius: 3px;
+	background: var(--color-input);
+}
+
+input[type="checkbox"].tick:checked,
+input[type="checkbox"].tick:indeterminate {
+	border-color: var(--color-primary);
+	background: var(--color-primary);
+}
+
+input[type="checkbox"].tick:checked::before {
+	content: "";
+	width: 8px;
+	height: 5px;
+	margin-top: -2px;
+	border: solid var(--color-primary-foreground);
+	border-width: 0 0 2px 2px;
+	transform: rotate(-45deg);
+}
+
+input[type="checkbox"].tick:indeterminate::before {
+	content: "";
+	width: 8px;
+	height: 2px;
+	background: var(--color-primary-foreground);
 }
 
 /* outside the control, so a ring the colour of a chosen button's fill still shows */

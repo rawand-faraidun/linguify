@@ -39,6 +39,7 @@ import {
 import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
 import type { KeyPath, Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
+import { ChevronIcon, PencilIcon } from './icons'
 
 /**
  * the translation grid: the rows `@linguify/table` builds for the view — sections, groups, keys — with the
@@ -112,7 +113,7 @@ export const Grid = ({
 				ref={tableRef}
 				id={tableId}
 				aria-label={studioText.translations}
-				className="w-full border-separate border-spacing-0 rounded-md border border-row-border bg-surface text-start"
+				className="w-full table-fixed border-separate border-spacing-0 rounded-md border border-row-border bg-surface text-start"
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={event => {
 					const to = controlAfter(event.currentTarget, event)
@@ -121,6 +122,15 @@ export const Grid = ({
 					to.focus()
 				}}
 			>
+				{/* the select column narrow, the key and description a fixed share, the locales the rest alike */}
+				<colgroup>
+					<col className="w-10" />
+					<col className={descriptions ? 'w-[22%]' : 'w-[28%]'} />
+					{descriptions && <col className="w-[20%]" />}
+					{shown.map(locale => (
+						<col key={locale} />
+					))}
+				</colgroup>
 				<thead className="sticky top-0 z-10 bg-surface">
 					<tr>
 						<th scope="col" data-select className={`w-0 ${selectCellClass}`}>
@@ -295,7 +305,7 @@ const GroupLine = memo(
 							onClick={() => onRename(row.namespace)}
 							className="ms-2 align-middle text-muted-foreground"
 						>
-							<span aria-hidden="true">✎</span>
+							<PencilIcon />
 						</button>
 					)}
 				</th>
@@ -355,7 +365,7 @@ const KeyLine = memo(
 						onClick={() => onRenameKey(row.key)}
 						className="shrink-0 font-sans text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100"
 					>
-						<span aria-hidden="true">✎</span>
+						<PencilIcon />
 					</button>
 				</span>
 			</th>
@@ -478,7 +488,7 @@ const Tick = ({
 			if (box !== null) box.indeterminate = state === selectionStates.some
 		}}
 		onChange={onChange}
-		className="align-middle accent-chosen-border not-checked:not-indeterminate:not-focus-visible:opacity-35 not-checked:not-indeterminate:group-hover/row:opacity-100"
+		className="tick not-checked:not-indeterminate:not-focus-visible:opacity-50 not-checked:not-indeterminate:group-hover/row:opacity-100"
 	/>
 )
 
@@ -505,9 +515,9 @@ const Disclosure = ({
 	>
 		<span
 			aria-hidden="true"
-			className="inline-block w-3 shrink-0 in-aria-expanded:rotate-90 motion-safe:transition-transform"
+			className="inline-flex shrink-0 in-aria-expanded:rotate-90 pt-0.5 motion-safe:transition-transform"
 		>
-			›
+			<ChevronIcon />
 		</span>
 		{children}
 	</button>
@@ -570,7 +580,7 @@ const Mark = ({ mark }: { mark: TableMark }) =>
 	)
 
 const headClass =
-	'border-row-border border-b px-4 py-2.5 text-start font-semibold text-[0.6875rem] text-muted-foreground uppercase tracking-wider'
-const cellClass = 'border-row-border border-b px-4 py-2.5 text-start'
-const selectCellClass = 'border-row-border border-b pt-3 pb-2.5 ps-4 pe-1 align-top leading-none'
+	'border-row-border border-b px-4 py-2 text-start font-semibold text-[0.6875rem] text-muted-foreground uppercase tracking-wider'
+const cellClass = 'border-row-border border-b px-4 py-2 text-start break-words'
+const selectCellClass = 'border-row-border border-b pt-2.5 pb-2 ps-4 pe-1 align-top leading-none'
 const lineClass = 'group/row hover:bg-hover data-[state=selected]:bg-chosen/40'
