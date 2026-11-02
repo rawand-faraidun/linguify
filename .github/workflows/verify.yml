@@ -2,8 +2,14 @@ name: verify
 
 on:
   push:
-    branches: [dev, main]
   pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
