@@ -65,6 +65,21 @@ body {
 	outline: 1px solid var(--color-extra-border);
 }
 
+/* the grid drawn as a plain table: a line between every column as between every row — never after the
+   last — and every other row a shade apart, faint enough that hover, a selection and a tint still show */
+#translations th,
+#translations td {
+	border-inline-end: 1px solid var(--color-row-border);
+}
+
+#translations tr > :last-child {
+	border-inline-end: none;
+}
+
+:where(#translations tbody tr:nth-child(even)) {
+	background: color-mix(in srgb, var(--color-foreground) 3.5%, transparent);
+}
+
 /* a text still to translate, or one the default lacks: its whole cell tinted, as a spreadsheet shows it */
 td[data-gap="missing"],
 td[data-gap="empty"] {
