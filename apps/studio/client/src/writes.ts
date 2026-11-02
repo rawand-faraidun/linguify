@@ -1,7 +1,7 @@
 import { type KeyEdit, keyEditInput, type NewKey, newKeyInput } from '@linguify/table'
 import { useFileWrite as useSharedFileWrite } from '@linguify/table/react'
 import type { KeyPath, NamespaceName, Revision } from '@linguify/types'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { type ApiInputs, session, trpcClient, useTRPC } from './trpc'
 
 export { useKnownRevision } from '@linguify/table/react'
@@ -100,42 +100,17 @@ export const useFormat = () =>
 	useFileWrite(({ against }: Planned) => trpcClient.format.mutate({ expectedRevision: against }))
 
 /**
- * updates and adds keys from a table
- *
- * @note `table`, the table's revision as the plan read it: the import is refused if the table changed since
- *
- * @returns the import to run, settled once it is written and the catalogue read again
- */
-export const useImport = () =>
-	useFileWrite(({ against, table, ...input }: TableTarget & Planned & { table?: Revision }) =>
-		trpcClient.import.mutate({
-			...input,
-			expectedRevision: against,
-			...(table === undefined ? {} : { expectedTable: table })
-		})
-	)
-
-/**
- * writes every key to a table — no translation changes, so outside the files' queue and revision, its
- * failure reported as any write's
- *
- * @returns the export to run, settled once the table is written
- */
-export const useExport = () => {
-	const mutation = useMutation({
-		mutationFn: (input: TableTarget) => trpcClient.export.mutate(input)
-	})
-	return mutation.mutateAsync
-}
-
-/**
  * a sync's options, as the dialog sets them — every one given
  */
 // biome-ignore lint/suspicious/noConfusingVoidType: an optional tRPC input is typed with void, which this strips
 export type SyncOptions = Required<Pick<Exclude<ApiInputs['sync'], undefined | void>, 'removeUnused'>>
 
 /**
- * the table an import reads or an export writes: its format and file, as the dialogs choose them
+ * renames a key, or a whole group, in every locale, its descriptions moving with it
+ *
+ * @returns the rename to make, settled once it is written and the catalogue read again
  */
-// biome-ignore lint/suspicious/noConfusingVoidType: an optional tRPC input is typed with void, which this strips
-export type TableTarget = Required<Pick<Exclude<ApiInputs['export'], undefined | void>, 'format' | 'path'>>
+export const useRenameKey = () =>
+	useFileWrite(({ from, to }: { from: KeyPath; to: KeyPath }, expectedRevision: Revision) =>
+		trpcClient.key.rename.mutate({ from, to, expectedRevision })
+	)

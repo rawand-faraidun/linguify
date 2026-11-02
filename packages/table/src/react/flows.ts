@@ -1,13 +1,14 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { namespaceActions, rowKinds, selectedRowState, tableControls, tableId } from '@linguify/constants'
+import { namespaceActions, rowKinds, selectedRowState, studioText, tableControls, tableId } from '@linguify/constants'
 import type { KeyPath, NamespaceName, Report } from '@linguify/types'
 import type { KeyEdit, NewKey } from '../edit'
 import { hiddenByView } from '../filter'
 import type { NamespaceAction } from '../preflight'
 import { movedPaths } from '../rename'
-import { namespaceWrittenText } from '../report'
+import { namespaceWrittenText, withWarnings } from '../report'
 import { rowId } from '../rows'
 import { deletedText } from '../said'
+import { fill } from '../words'
 import { focusSection, focusTableStop, rowSelector } from './keyboard'
 import { useSelection } from './selection'
 import type { useTableView } from './view'
@@ -20,6 +21,7 @@ export type TableWrites = {
 	add: (key: NewKey) => Promise<unknown>
 	addNamespace: (name: NamespaceName) => Promise<{ report: Report }>
 	renameNamespace: (names: { from: NamespaceName; to: NamespaceName }) => Promise<{ report: Report }>
+	renameKey: (paths: { from: KeyPath; to: KeyPath }) => Promise<{ report: Report }>
 	remove: (paths: KeyPath[]) => Promise<{ report: Report }>
 }
 
@@ -32,7 +34,8 @@ export type TableWrites = {
  * next is begun. A namespace dialog is mounted afresh for each opening; a rename carries the view, the
  * selection and the key last added with it, and an add joins a namespace filter; once it closes the
  * keyboard goes to the section written, or the one a cancelled rename was about, else back to what opened
- * it. A bulk delete removes what the selection holds, says what core did and left, lets the selection go,
+ * it. A key's rename moves the selection, the view and the key last added with it, and the keyboard goes
+ * back to the key's rename. A bulk delete removes what the selection holds, says what core did and left, lets the selection go,
  * and gives the keyboard to the row after the last one deleted, so the person keeps their place
  *
  * @param table - the `view` from `useTableView`, and the surface's `writes`
@@ -94,7 +97,7 @@ export const useTableWrites = ({ view, writes }: { view: ReturnType<typeof useTa
 			const { from } = action
 			const renamed = await writes.renameNamespace({ from, to: name })
 			view.namespaceRenamed(from, name)
-			selecting.namespaceRenamed(from, name)
+			selecting.renamed(from, name)
 			setLastAdded(current => current && movedPaths([current], from, name)[0])
 			setSaid(namespaceWrittenText(action, name, renamed.report, false))
 			return
@@ -110,6 +113,44 @@ export const useTableWrites = ({ view, writes }: { view: ReturnType<typeof useTa
 		if (focusSection(named, written !== undefined)) return
 		if (action?.kind === namespaceActions.add || !focusTableStop(document.getElementById(tableId)))
 			addNamespaceButton.current?.focus()
+	}
+
+	// a key's rename: a dialog for it, mounted afresh for each opening
+	const [keyRename, setKeyRename] = useState<{ from: KeyPath; opening: number }>()
+	const onRenameKey = useCallback(
+		(from: KeyPath) => setKeyRename(current => ({ from, opening: (current?.opening ?? 0) + 1 })),
+		[]
+	)
+	const writeKeyRename = async (to: KeyPath) => {
+		const from = keyRename?.from
+		if (from === undefined) return
+		const done = await writes.renameKey({ from, to })
+		view.keyRenamed(from, to)
+		selecting.renamed(from, to)
+		setLastAdded(current => current && movedPaths([current], from, to)[0])
+		setSaid(withWarnings(fill(studioText.renamedKey, { from, to }), done.report))
+	}
+	/**
+	 * @param written - the key's new path, or nothing when the rename was cancelled
+	 */
+	const keyRenameClosed = (written: KeyPath | undefined) => {
+		const from = keyRename?.from
+		setKeyRename(undefined)
+		const at = written ?? from
+		// the row at the new path is drawn once the catalogue read again lands — a frame or two after a dialog
+		// that closes at once
+		const focusRename = (frames: number) => {
+			const rename =
+				at === undefined
+					? null
+					: document.querySelector<HTMLElement>(`${rowSelector(rowId(rowKinds.key, at))} ${tableControls.rename}`)
+			if (rename !== null) {
+				rename.focus()
+				rename.scrollIntoView({ block: 'nearest' })
+			} else if (frames > 0) requestAnimationFrame(() => focusRename(frames - 1))
+			else focusTableStop(document.getElementById(tableId))
+		}
+		focusRename(rowDrawFrames)
 	}
 
 	const deleteButton = useRef<HTMLButtonElement>(null)
@@ -154,6 +195,10 @@ export const useTableWrites = ({ view, writes }: { view: ReturnType<typeof useTa
 		 * lets go of the key last added, once the next is begun
 		 */
 		typing: () => setLastAdded(undefined),
+		keyRename,
+		onRenameKey,
+		writeKeyRename,
+		keyRenameClosed,
 		namespaceAction,
 		openNamespaceDialog,
 		onRename,
@@ -165,3 +210,9 @@ export const useTableWrites = ({ view, writes }: { view: ReturnType<typeof useTa
 		deleteButton
 	}
 }
+
+/**
+ * how many frames a rename waits for its key's row to be drawn at the new path before giving the keyboard to
+ * the table instead
+ */
+const rowDrawFrames = 10

@@ -11,8 +11,7 @@ import {
 	tableMarkClasses,
 	tableMarkLabels,
 	tableMarks,
-	tableTextClasses,
-	viewModes
+	tableTextClasses
 } from '@linguify/constants'
 import { localeOrder, type RowSource } from '@linguify/keys'
 import {
@@ -38,7 +37,7 @@ import {
 	toExpandedState
 } from '@linguify/table'
 import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
-import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
+import type { KeyPath, Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
 import { Textarea } from '@linguify/ui/components/textarea'
@@ -77,7 +76,8 @@ export const TranslationTable = memo(function TranslationTable({
 	selection,
 	onSelect,
 	onSelectAll,
-	onRename
+	onRename,
+	onRenameKey
 }: {
 	rows: Row[]
 	mode: ViewMode
@@ -91,6 +91,7 @@ export const TranslationTable = memo(function TranslationTable({
 	onSelect: (row: Row) => void
 	onSelectAll: () => void
 	onRename: (namespace: NamespaceName) => void
+	onRenameKey: (key: KeyPath) => void
 }) {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -102,10 +103,8 @@ export const TranslationTable = memo(function TranslationTable({
 		...rowOptionsFor(mode),
 		state: { expanded }
 	})
-	const compact = mode === viewModes.compact
-	const descriptions = source.descriptions && !compact
-	const locales = useMemo(() => localeOrder(source), [source])
-	const shown = useMemo(() => (compact ? locales.slice(0, 1) : locales), [compact, locales])
+	const descriptions = source.descriptions
+	const shown = useMemo(() => localeOrder(source), [source])
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
 		<>
@@ -167,14 +166,11 @@ export const TranslationTable = memo(function TranslationTable({
 									key={id}
 									row={original}
 									depth={depth}
-									locales={locales}
 									shown={shown}
 									defaultLocale={source.default}
-									descriptions={source.descriptions}
-									compact={compact}
-									open={compact && isExpanded(expansion, id)}
-									onToggle={onToggle}
+									descriptions={descriptions}
 									onEdit={onEdit}
+									onRenameKey={onRenameKey}
 									selected={selection.has(original.key)}
 									onSelect={onSelect}
 								/>
@@ -184,7 +180,7 @@ export const TranslationTable = memo(function TranslationTable({
 									row={original}
 									depth={depth}
 									columns={columns}
-									open={canExpand(mode, original) && isExpanded(expansion, id)}
+									open={canExpand(original) && isExpanded(expansion, id)}
 									onToggle={onToggle}
 									state={selectionState(selection, original)}
 									onSelect={onSelect}
@@ -349,118 +345,96 @@ const GroupLine = memo(
 )
 
 /**
- * one key: its path as the row's header, its description, and its text in each shown locale — in compact
- * view, opened, the description and every other locale inside the same row
+ * one key: its path as the row's header, with a way to rename it, its description, and its text in each
+ * locale
  */
 const KeyLine = memo(
 	({
 		row,
 		depth,
-		locales,
 		shown,
 		defaultLocale,
 		descriptions,
-		compact,
-		open,
-		onToggle,
 		onEdit,
+		onRenameKey,
 		selected,
 		onSelect
 	}: {
 		row: KeyTableRow
 		depth: number
-		locales: readonly Locale[]
 		shown: readonly Locale[]
 		defaultLocale: Locale
 		descriptions: boolean
-		compact: boolean
-		open: boolean
-		onToggle: (id: string) => void
 		onEdit: (edit: KeyEdit) => Promise<unknown>
+		onRenameKey: (key: KeyPath) => void
 		selected: boolean
 		onSelect: (row: Row) => void
-	}) => {
-		const label = <KeyLabel row={row} />
-		const description = (
-			<Editable
-				text={row.description ?? ''}
-				label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
-				onCommit={text => onEdit({ key: row.key, description: text })}
+	}) => (
+		<TableRow data-row={row.id} data-state={selected ? selectedRowState : undefined} className="group/row">
+			<TableCell className="align-top" data-select>
+				<Checkbox
+					tabIndex={-1}
+					data-cell
+					aria-label={fill(studioText.select, { key: row.key })}
+					className={checkboxClass}
+					checked={selected}
+					onCheckedChange={() => onSelect(row)}
+				/>
+			</TableCell>
+			<TableHead
+				scope="row"
+				title={row.key}
+				className="h-auto py-2 align-top font-mono font-normal"
+				style={{ paddingInlineStart: rowIndent(depth) }}
 			>
-				{row.description === undefined || row.description === '' ? (
-					<span className="sr-only">{studioText.noDescription}</span>
-				) : (
-					<Text text={row.description} />
-				)}
-			</Editable>
-		)
-		const value = (locale: Locale) => (
-			<Editable
-				text={row.values[locale] ?? ''}
-				lang={locale}
-				label={fill(studioText.editLabel, { column: locale, key: row.key })}
-				onCommit={text => onEdit({ key: row.key, locale, text })}
-			>
-				<Value row={row} locale={locale} defaultLocale={defaultLocale} />
-			</Editable>
-		)
-		return (
-			<TableRow data-row={row.id} data-state={selected ? selectedRowState : undefined}>
-				<TableCell className="align-top" data-select>
-					<Checkbox
+				<span className="flex items-start gap-2">
+					<KeyLabel row={row} />
+					<button
+						type="button"
 						tabIndex={-1}
 						data-cell
-						aria-label={fill(studioText.select, { key: row.key })}
-						className={checkboxClass}
-						checked={selected}
-						onCheckedChange={() => onSelect(row)}
-					/>
-				</TableCell>
-				<TableHead
-					scope="row"
-					title={row.key}
-					className="h-auto py-2 align-top font-mono font-normal"
-					style={{ paddingInlineStart: rowIndent(depth) }}
-				>
-					{compact ? (
-						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
-							{label}
-						</Disclosure>
-					) : (
-						label
-					)}
-				</TableHead>
-				{descriptions && !compact && (
-					<TableCell className="align-top text-muted-foreground" data-description>
-						{description}
-					</TableCell>
-				)}
-				{shown.map(locale => (
-					<TableCell key={locale} className="align-top" data-locale={locale}>
-						{value(locale)}
-						{open && (
-							<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-								{descriptions && (
-									<>
-										<dt className="text-muted-foreground">{studioText.description}</dt>
-										<dd className="text-muted-foreground" data-description>
-											{description}
-										</dd>
-									</>
-								)}
-								{locales.slice(1).map(other => (
-									<div key={other} className="contents" data-locale={other}>
-										<dt className="text-muted-foreground">{other}</dt>
-										<dd>{value(other)}</dd>
-									</div>
-								))}
-							</dl>
+						data-rename
+						aria-label={fill(studioText.renameKey, { key: row.key })}
+						title={fill(studioText.renameKey, { key: row.key })}
+						onClick={() => onRenameKey(row.key)}
+						className={cn(
+							'inline-flex shrink-0 text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100',
+							plainButtonClass
 						)}
-					</TableCell>
-				))}
-			</TableRow>
-		)
-	}
+					>
+						<PencilIcon className="size-3.5" />
+					</button>
+				</span>
+			</TableHead>
+			{descriptions && (
+				<TableCell className="align-top text-muted-foreground" data-description>
+					<Editable
+						text={row.description ?? ''}
+						label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, description: text })}
+					>
+						{row.description === undefined || row.description === '' ? (
+							<span className="sr-only">{studioText.noDescription}</span>
+						) : (
+							<Text text={row.description} />
+						)}
+					</Editable>
+				</TableCell>
+			)}
+			{shown.map(locale => (
+				<TableCell key={locale} className="align-top" data-locale={locale}>
+					<Editable
+						text={row.values[locale] ?? ''}
+						lang={locale}
+						label={fill(studioText.editLabel, { column: locale, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, locale, text })}
+					>
+						<Value row={row} locale={locale} defaultLocale={defaultLocale} />
+					</Editable>
+				</TableCell>
+			))}
+		</TableRow>
+	)
 )
 
 /**

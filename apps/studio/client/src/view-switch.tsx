@@ -5,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from '@linguify/ui/components/toggle-gro
 import { switchItemClass } from './classes'
 
 /**
- * flat, tree or compact — a mode the project cannot use is shown, and disabled
+ * flat or tree — a mode the project cannot use is shown, and disabled
  *
  * @param props - `mode`, the one shown; `available`, those the project can use; `onPick`
  *

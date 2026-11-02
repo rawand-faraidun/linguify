@@ -6,6 +6,7 @@ import {
 	collapsedExpansion,
 	emptyViewText,
 	expandedExpansion,
+	matchCountText,
 	newKeyRulesOf,
 	noFilter,
 	pinnedKeys,
@@ -21,6 +22,7 @@ import { AddKey, addKeyFormId } from './add-key'
 import { destructiveClass, focusRingClass } from './classes'
 import { DeleteKeys } from './delete-keys'
 import { Filters, searchId } from './filters'
+import { KeyRenameDialog } from './key-rename-dialog'
 import { NamespaceDialog } from './namespace-dialog'
 import { ProjectActions } from './project-actions'
 import { Toolbar } from './toolbar'
@@ -28,16 +30,23 @@ import { TranslationTable } from './translation-table'
 import { type ApiOutputs, onRefresh } from './trpc'
 import { useViewMode } from './use-view-mode'
 import { ViewSwitch } from './view-switch'
-import { useAddKey, useAddNamespace, useEditKey, useKnownRevision, useRemoveKeys, useRenameNamespace } from './writes'
+import {
+	useAddKey,
+	useAddNamespace,
+	useEditKey,
+	useKnownRevision,
+	useRemoveKeys,
+	useRenameKey,
+	useRenameNamespace
+} from './writes'
 
 /**
  * the project, once read: the toolbar with the view's controls, and the table
  *
- * @note each view mode keeps its own expansion, so switching modes and back finds rows as they were; the
- * compact view starts with its sections open and its keys closed. While a search or the still-to-translate
- * filter is on, the table shows {@link searchExpansion} instead — a layer per view that opening and closing
- * rows changes until the search ends, never the view's own expansion. Sorting reorders the screen only;
- * nothing is written, and a sort by a column the view does not show is dropped
+ * @note each view mode keeps its own expansion, so switching modes and back finds rows as they were.
+ * While a search or the still-to-translate filter is on, the table shows {@link searchExpansion} instead —
+ * a layer per view that opening and closing rows changes until the search ends, never the view's own
+ * expansion. Sorting reorders the screen only; nothing is written
  *
  * @note only what changed renders again: the keys are read from the catalogue once, sorted once per sort,
  * and filtered from that; a kept key keeps its row, and the rows' toggle never changes. The middle is
@@ -103,17 +112,17 @@ export const Workspace = memo(
 		useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
 		const changeMode = (next: ViewMode) => {
 			pick(next)
-			viewChanged(next)
+			viewChanged()
 		}
 		useKnownRevision(catalogue.revision)
 		const editKey = useEditKey()
 		const addKey = useAddKey()
 		const addNamespace = useAddNamespace()
 		const renameNamespace = useRenameNamespace()
+		const renameKey = useRenameKey()
 		const removeKeys = useRemoveKeys()
 		const {
 			selection,
-			choose,
 			onSelect,
 			onSelectAll,
 			doomed,
@@ -123,6 +132,10 @@ export const Workspace = memo(
 			added,
 			onAdd,
 			typing,
+			keyRename,
+			onRenameKey,
+			writeKeyRename,
+			keyRenameClosed,
 			namespaceAction,
 			openNamespaceDialog,
 			onRename,
@@ -134,7 +147,7 @@ export const Workspace = memo(
 			deleteButton
 		} = useTableWrites({
 			view,
-			writes: { edit: editKey, add: addKey, addNamespace, renameNamespace, remove: removeKeys }
+			writes: { edit: editKey, add: addKey, addNamespace, renameNamespace, renameKey, remove: removeKeys }
 		})
 		const [adding, setAdding] = useState(false)
 		const addButton = useRef<HTMLButtonElement>(null)
@@ -145,51 +158,14 @@ export const Workspace = memo(
 			<>
 				<Toolbar>
 					<ViewSwitch mode={mode} available={availableViewModes(config.capabilities)} onPick={changeMode} />
-					<Filters
-						filter={filter}
-						onChange={changeFilter}
-						namespaces={namespaces}
-						counts={counts}
-						shown={visible.length}
-						total={keys.length}
-					/>
-					<Button
-						ref={addButton}
-						variant="outline"
-						size="sm"
-						className={focusRingClass}
-						aria-expanded={adding}
-						aria-controls={adding ? addKeyFormId : undefined}
-						onClick={() => setAdding(open => !open)}
-					>
-						<PlusIcon data-icon="inline-start" />
-						{studioText.addKey}
-					</Button>
-					<ProjectActions
-						defaults={{ removeUnused: config.config.sync.removeUnused, format: config.config.io.format }}
-						cwd={config.cwd}
-						revision={catalogue.revision}
-						onDone={said => {
-							setSaid(said)
-							// keys the action added or removed show as the view says, not held behind an earlier edit
-							setPinned(undefined)
-						}}
-					/>
-					{config.namespaced && (
-						<Button
-							ref={addNamespaceButton}
-							variant="outline"
-							size="sm"
-							className={focusRingClass}
-							onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
-						>
-							<FolderPlusIcon data-icon="inline-start" />
-							{studioText.addNamespace}
-						</Button>
-					)}
+					<span id="match-count" role="status" className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">
+						{matchCountText(filter, visible.length, keys.length)}
+					</span>
 				</Toolbar>
-				{/* what acts on the table's rows — opening and closing them, deleting the selected — on a row of its own */}
-				<div id="table-actions" className="flex shrink-0 items-center gap-2 border-b px-4 py-1.5">
+				{/* the table's own row: finding keys at its start, acting on them, and adding at its end */}
+				<div id="table-actions" className="flex shrink-0 flex-wrap items-center gap-2 border-b px-4 py-1.5">
+					<Filters filter={filter} onChange={changeFilter} namespaces={namespaces} counts={counts} />
+					<span aria-hidden="true" className="mx-1 h-4 border-s" />
 					<Button variant="ghost" size="sm" className={focusRingClass} onClick={() => expand(expandedExpansion)}>
 						<ListChevronsUpDownIcon data-icon="inline-start" />
 						{studioText.expandAll}
@@ -198,7 +174,6 @@ export const Workspace = memo(
 						<ListChevronsDownUpIcon data-icon="inline-start" />
 						{studioText.collapseAll}
 					</Button>
-					<span aria-hidden="true" className="mx-1 h-4 border-s" />
 					<Button
 						ref={deleteButton}
 						variant="destructive"
@@ -213,15 +188,6 @@ export const Workspace = memo(
 						<Trash2Icon data-icon="inline-start" />
 						{studioText.deleteSelected}
 					</Button>
-					<Button
-						variant="ghost"
-						size="sm"
-						className={cn(focusRingClass, 'aria-disabled:opacity-50')}
-						aria-disabled={selection.size === 0}
-						onClick={() => choose(() => new Set())}
-					>
-						{studioText.clearSelection}
-					</Button>
 					<span
 						id="selection-count"
 						role="status"
@@ -229,6 +195,42 @@ export const Workspace = memo(
 					>
 						{selectionStatus(selection.size, said)}
 					</span>
+					<div className="ms-auto flex items-center gap-2">
+						<Button
+							ref={addButton}
+							variant="outline"
+							size="sm"
+							className={focusRingClass}
+							aria-expanded={adding}
+							aria-controls={adding ? addKeyFormId : undefined}
+							onClick={() => setAdding(open => !open)}
+						>
+							<PlusIcon data-icon="inline-start" />
+							{studioText.addKey}
+						</Button>
+						{config.namespaced && (
+							<Button
+								ref={addNamespaceButton}
+								variant="outline"
+								size="sm"
+								className={focusRingClass}
+								onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
+							>
+								<FolderPlusIcon data-icon="inline-start" />
+								{studioText.addNamespace}
+							</Button>
+						)}
+						<ProjectActions
+							removeUnused={config.config.sync.removeUnused}
+							cwd={config.cwd}
+							revision={catalogue.revision}
+							onDone={said => {
+								setSaid(said)
+								// keys the action added or removed show as the view says, not held behind an earlier edit
+								setPinned(undefined)
+							}}
+						/>
+					</div>
 				</div>
 				<main className="flex min-h-0 flex-1 scroll-pt-10 flex-col overflow-auto contain-content">
 					{adding && (
@@ -271,9 +273,20 @@ export const Workspace = memo(
 							onSelect={onSelect}
 							onSelectAll={onSelectAll}
 							onRename={onRename}
+							onRenameKey={onRenameKey}
 						/>
 					)}
 				</main>
+				{keyRename !== undefined && (
+					<KeyRenameDialog
+						key={keyRename.opening}
+						from={keyRename.from}
+						catalogue={catalogue.catalogue}
+						rules={rules}
+						onSubmit={writeKeyRename}
+						onClosed={keyRenameClosed}
+					/>
+				)}
 				{namespaceAction !== undefined && (
 					<NamespaceDialog
 						key={namespaceAction.opening}

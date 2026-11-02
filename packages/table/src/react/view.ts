@@ -1,5 +1,5 @@
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
-import { tableOpenLimit, viewModes } from '@linguify/constants'
+import { tableOpenLimit } from '@linguify/constants'
 import { keyRows, localeOrder, namespacesIn, type RowSource } from '@linguify/keys'
 import type { Catalogue, KeyPath, KeyRow, NamespaceName, ViewMode } from '@linguify/types'
 import {
@@ -8,7 +8,6 @@ import {
 	expandedExpansion,
 	revealKey,
 	searchExpansion,
-	sectionsExpansion,
 	toggleExpansion
 } from '../expansion'
 import {
@@ -23,7 +22,7 @@ import {
 } from '../filter'
 import { movedExpansion, movedFilter, movedPaths } from '../rename'
 import { buildRows, keepUnchangedRows } from '../rows'
-import { columnShown, type KeySort, nextSort, sortKeys } from '../sort'
+import { type KeySort, nextSort, sortKeys } from '../sort'
 
 /**
  * the translation table as a person narrows and opens it — what the studio and the extension both show,
@@ -96,14 +95,11 @@ export const useTableView = ({
 		[mode, visible, namespaced, emptyNamespaces]
 	)
 	const large = keys.length > tableOpenLimit
-	const initial = useMemo(
-		() => (large ? collapsedExpansion : mode === viewModes.compact ? sectionsExpansion(rows) : expandedExpansion),
-		[large, mode, rows]
-	)
+	const initial = useMemo(() => (large ? collapsedExpansion : expandedExpansion), [large])
 	const [expansions, setExpansions] = useState<Partial<Record<ViewMode, Expansion>>>({})
 	const base = expansions[mode] ?? initial
 	const revealing = revealsMatches({ ...filter, search })
-	const revealed = useMemo(() => searchExpansion(base, rows, mode), [base, rows, mode])
+	const revealed = useMemo(() => searchExpansion(base, rows), [base, rows])
 	const [layers, setLayers] = useState<Partial<Record<ViewMode, Expansion>>>({})
 	const expansion = revealing ? (layers[mode] ?? revealed) : base
 	const narrowed = narrowsView(filter, sort)
@@ -128,14 +124,9 @@ export const useTableView = ({
 		setSort(current => nextSort(current, column))
 	}, [])
 	/**
-	 * lets go of held rows and of a sort the new view does not show — after the view changes
+	 * lets go of held rows — after the view changes
 	 */
-	const viewChanged = (next: ViewMode) => {
-		setPinned(undefined)
-		setSort(current =>
-			current !== undefined && columnShown(current.column, next, source.default) ? current : undefined
-		)
-	}
+	const viewChanged = () => setPinned(undefined)
 	/**
 	 * brings a key just added into sight: held rows take it in, and its section and groups open
 	 *
@@ -168,6 +159,16 @@ export const useTableView = ({
 		setExpansions(move)
 		setLayers(move)
 	}, [])
+	// a key or group renamed: held rows and what is open follow it
+	const keyRenamed = useCallback((from: KeyPath, to: KeyPath) => {
+		const move = (current: Partial<Record<ViewMode, Expansion>>) =>
+			Object.fromEntries(
+				Object.entries(current).map(([view, expansion]) => [view, movedExpansion(expansion, from, to)])
+			)
+		setPinned(current => current && movedPaths(current, from, to))
+		setExpansions(move)
+		setLayers(move)
+	}, [])
 	// a namespace filter on: the new one joins it, as a person adding it means to see it
 	const namespaceAdded = useCallback(
 		(name: NamespaceName) =>
@@ -180,6 +181,7 @@ export const useTableView = ({
 		keys,
 		counts,
 		namespaceRenamed,
+		keyRenamed,
 		namespaceAdded,
 		namespaces,
 		filter,

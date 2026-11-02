@@ -30,13 +30,12 @@ export type Expansion = {
 export const collapsedExpansion: Expansion = { all: false, overrides: {} }
 
 /**
- * every row open — every section, every group, every compact key
+ * every row open — every section, every group
  */
 export const expandedExpansion: Expansion = { all: true, overrides: {} }
 
 /**
- * every section and group open, every key closed — where the compact view starts, showing each key's
- * default text and hiding the rest until a key is opened
+ * every section and group open
  *
  * @param rows - the rows the table shows, every level
  *
@@ -56,19 +55,17 @@ export const sectionsExpansion = (rows: readonly TableRow[]): Expansion => {
 }
 
 /**
- * what a search shows, so no match hides in a closed row: every section and group open — and in the
- * compact view every key too, as a match may be in a locale only an open key shows
+ * what a search shows, so no match hides in a closed row: every section and group open
  *
  * @param expansion - which rows are open
  * @param rows - the rows the table shows, every level
- * @param mode - the view mode
  *
- * @returns that expansion — keys outside the compact view as they were
+ * @returns that expansion
  */
-export const searchExpansion = (expansion: Expansion, rows: readonly TableRow[], mode: ViewMode): Expansion =>
-	mode === viewModes.compact
-		? expandedExpansion
-		: { all: expansion.all, overrides: { ...expansion.overrides, ...sectionsExpansion(rows).overrides } }
+export const searchExpansion = (expansion: Expansion, rows: readonly TableRow[]): Expansion => ({
+	all: expansion.all,
+	overrides: { ...expansion.overrides, ...sectionsExpansion(rows).overrides }
+})
 
 /**
  * whether a row is open
@@ -107,13 +104,13 @@ export const toggleExpansion = (expansion: Expansion, id: string, open = !isExpa
 export const toExpandedState = (
 	expansion: Expansion,
 	rows: readonly TableRow[],
-	mode: ViewMode
+	_mode: ViewMode
 ): true | Record<string, boolean> => {
 	if (expansion.all && Object.keys(expansion.overrides).length === 0) return true
 	const state: Record<string, boolean> = {}
 	const visit = (level: readonly TableRow[]) => {
 		for (const row of level) {
-			if (canExpand(mode, row) && isExpanded(expansion, row.id)) state[row.id] = true
+			if (canExpand(row) && isExpanded(expansion, row.id)) state[row.id] = true
 			if (row.kind !== rowKinds.key) visit(row.subRows)
 		}
 	}

@@ -1,4 +1,4 @@
-import { rowKinds, viewModes } from '@linguify/constants'
+import { rowKinds } from '@linguify/constants'
 import type { ViewMode } from '@linguify/types'
 import { createExpandedRowModel, rowExpandingFeature } from '@tanstack/table-core'
 import type { TableRow } from './rows'
@@ -28,16 +28,13 @@ export const rowOptions = {
 }
 
 /**
- * whether a row can open in a view mode: a section or a group always; a key only in compact view, where
- * opening it shows the locales the view hides — inside the row itself, so it adds no row of its own
+ * whether a row can open: a section or a group; a key never
  *
- * @param mode - the view mode
  * @param row - a row
  *
  * @returns whether it can open
  */
-export const canExpand = (mode: ViewMode, row: TableRow): boolean =>
-	row.kind !== rowKinds.key || mode === viewModes.compact
+export const canExpand = (row: TableRow): boolean => row.kind !== rowKinds.key
 
 /**
  * the row options for a view mode — {@link rowOptions}, and in every mode the one rule of
@@ -47,7 +44,7 @@ export const canExpand = (mode: ViewMode, row: TableRow): boolean =>
  *
  * @returns the options to hand to TanStack Table
  */
-export const rowOptionsFor = (mode: ViewMode) => ({
+export const rowOptionsFor = (_mode: ViewMode) => ({
 	...rowOptions,
-	getRowCanExpand: (row: { original: TableRow }) => canExpand(mode, row.original)
+	getRowCanExpand: (row: { original: TableRow }) => canExpand(row.original)
 })

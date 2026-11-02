@@ -77,7 +77,7 @@ export const extensionText = {
 	allFiles: 'All files',
 	reading: 'Reading the translations…',
 	freshness: 'Linguify watches nothing: after editing the files by hand or running the CLI, refresh.',
-	summary: '{locales} · {keys} · default {default}',
+	defaultLocaleIs: 'default {default}',
 	localeCount: { one: '{count} locale', other: '{count} locales' },
 	defaultBadge: 'default',
 	chooseProject: 'Choose the linguify project to work on',
@@ -97,6 +97,7 @@ export const bridgeProcedures: readonly string[] = [
 	'catalogue.get',
 	'key.add',
 	'key.set',
+	'key.rename',
 	'key.remove',
 	'namespace.add',
 	'namespace.rename'
@@ -122,6 +123,12 @@ export const bridgeMessageType = `${appName}:rpc`
  * the panel reads them again
  */
 export const bridgeChangedType = `${appName}:changed`
+
+/**
+ * the tag on the message a panel posts to have the host run one of its Files menu's actions — sync or
+ * format — for the panel's project, asked first in the editor's own modal, as from the palette
+ */
+export const bridgeCommandType = `${appName}:command`
 
 /**
  * where the extension remembers, for each workspace, the project a person chose among several

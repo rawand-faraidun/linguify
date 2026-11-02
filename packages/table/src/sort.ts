@@ -1,6 +1,6 @@
-import { sortColumns, sortDirections, viewModes } from '@linguify/constants'
+import { sortColumns, sortDirections } from '@linguify/constants'
 import { compareKeyPaths } from '@linguify/keys'
-import type { KeyRow, Locale, Values, ViewMode } from '@linguify/types'
+import type { KeyRow, Locale, Values } from '@linguify/types'
 
 /**
  * how the table is ordered — on screen only; the files never change
@@ -60,19 +60,6 @@ export const nextSort = (current: KeySort | undefined, column: KeySort['column']
  */
 export const sameColumn = (a: KeySort['column'], b: KeySort['column']): boolean =>
 	a.by === sortColumns.key ? b.by === sortColumns.key : b.by === sortColumns.locale && a.locale === b.locale
-
-/**
- * whether a view shows a column, so a sort by it can be seen — the compact view shows the key and the
- * default locale only
- *
- * @param column - a column
- * @param mode - the view mode
- * @param defaultLocale - the default locale
- *
- * @returns whether the view shows it
- */
-export const columnShown = (column: KeySort['column'], mode: ViewMode, defaultLocale: Locale): boolean =>
-	mode !== viewModes.compact || column.by === sortColumns.key || column.locale === defaultLocale
 
 /**
  * @param locale - a configured locale code

@@ -11,10 +11,10 @@ import {
 import {
 	availableViewModes,
 	collapsedExpansion,
-	countKeys,
 	emptyViewText,
 	expandedExpansion,
 	fill,
+	matchCountText,
 	newKeyRulesOf,
 	noFilter,
 	plural,
@@ -28,14 +28,16 @@ import { useQuery } from '@tanstack/react-query'
 import { AddKey } from './add-key'
 import { buttonClass, primaryButtonClass } from './classes'
 import { DeleteKeys } from './delete-keys'
+import { FilesMenu } from './files-menu'
 import { Filters } from './filters'
 import { Freshness } from './freshness'
 import { Grid } from './grid'
+import { KeyRenameDialog } from './key-rename-dialog'
 import { NamespaceDialog } from './namespace-dialog'
 import { WriteNotice } from './notice'
 import { keepView, keptView } from './page'
 import { type ApiOutputs, onRefresh, refresh, useTRPC } from './trpc'
-import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameNamespace } from './writes'
+import { useAddKey, useAddNamespace, useEditKey, useRemoveKeys, useRenameKey, useRenameNamespace } from './writes'
 
 /**
  * the panel: the project's translations, read through the host, in the view the config names
@@ -124,13 +126,13 @@ const Panel = ({
 	const addKey = useAddKey()
 	const addNamespace = useAddNamespace()
 	const renameNamespace = useRenameNamespace()
+	const renameKey = useRenameKey()
 	const removeKeys = useRemoveKeys()
 	const { setPinned } = view
 	// a refresh shows the files as they are: rows held behind an earlier edit are let go
 	useEffect(() => onRefresh(() => setPinned(undefined)), [setPinned])
 	const {
 		selection,
-		choose,
 		onSelect,
 		onSelectAll,
 		doomed,
@@ -139,6 +141,10 @@ const Panel = ({
 		added,
 		onAdd,
 		typing,
+		keyRename,
+		onRenameKey,
+		writeKeyRename,
+		keyRenameClosed,
 		namespaceAction,
 		openNamespaceDialog,
 		onRename,
@@ -150,7 +156,7 @@ const Panel = ({
 		deleteButton
 	} = useTableWrites({
 		view,
-		writes: { edit: editKey, add: addKey, addNamespace, renameNamespace, remove: removeKeys }
+		writes: { edit: editKey, add: addKey, addNamespace, renameNamespace, renameKey, remove: removeKeys }
 	})
 	const [adding, setAdding] = useState(false)
 	const addButton = useRef<HTMLButtonElement>(null)
@@ -164,54 +170,26 @@ const Panel = ({
 						<span className="ms-2 font-normal text-base text-muted-foreground">{folderName(config.cwd)}</span>
 					</h1>
 					<p className="mt-1 text-muted-foreground">
-						{fill(extensionText.summary, {
-							locales: plural(extensionText.localeCount, source.locales.length),
-							keys: countKeys(view.keys.length),
-							default: source.default
-						})}
+						{plural(extensionText.localeCount, source.locales.length)}
+						{studioText.countSeparator}
+						<span id="match-count" role="status" className="tabular-nums">
+							{matchCountText(view.filter, view.visible.length, view.keys.length)}
+						</span>
+						{studioText.countSeparator}
+						{fill(extensionText.defaultLocaleIs, { default: source.default })}
 					</p>
 				</div>
-				<div className="flex gap-2">
-					{config.namespaced && (
-						<button
-							ref={addNamespaceButton}
-							type="button"
-							aria-haspopup="dialog"
-							className={buttonClass}
-							onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
-						>
-							{studioText.addNamespace}
-						</button>
-					)}
-					<button
-						ref={addButton}
-						type="button"
-						aria-expanded={adding}
-						aria-controls="add-key"
-						className={primaryButtonClass}
-						onClick={() => setAdding(open => !open)}
-					>
-						{studioText.addKey}
-					</button>
-				</div>
-			</header>
-			<div className="flex shrink-0 flex-wrap items-center gap-2 px-6 pb-3">
-				<Filters
-					filter={view.filter}
-					onChange={view.changeFilter}
-					namespaces={view.namespaces}
-					counts={view.counts}
-					shown={view.visible.length}
-					total={view.keys.length}
-				/>
 				<ViewSwitch
 					mode={mode}
 					available={available}
 					onPick={next => {
 						setMode(next)
-						view.viewChanged(next)
+						view.viewChanged()
 					}}
 				/>
+			</header>
+			<div id="table-actions" className="flex shrink-0 flex-wrap items-center gap-2 px-6 pb-3">
+				<Filters filter={view.filter} onChange={view.changeFilter} namespaces={view.namespaces} counts={view.counts} />
 				<button type="button" onClick={() => view.expand(expandedExpansion)} className={buttonClass}>
 					{studioText.expandAll}
 				</button>
@@ -230,17 +208,33 @@ const Panel = ({
 				>
 					{studioText.deleteSelected}
 				</button>
-				<button
-					type="button"
-					aria-disabled={selection.size === 0}
-					className={buttonClass}
-					onClick={() => choose(() => new Set())}
-				>
-					{studioText.clearSelection}
-				</button>
 				<span id="selection-count" role="status" className="wrap-anywhere min-w-0 text-muted-foreground tabular-nums">
 					{selectionStatus(selection.size, said)}
 				</span>
+				<div className="ms-auto flex items-center gap-2">
+					<button
+						ref={addButton}
+						type="button"
+						aria-expanded={adding}
+						aria-controls="add-key"
+						className={primaryButtonClass}
+						onClick={() => setAdding(open => !open)}
+					>
+						{studioText.addKey}
+					</button>
+					{config.namespaced && (
+						<button
+							ref={addNamespaceButton}
+							type="button"
+							aria-haspopup="dialog"
+							className={buttonClass}
+							onClick={() => openNamespaceDialog({ kind: namespaceActions.add })}
+						>
+							{studioText.addNamespace}
+						</button>
+					)}
+					<FilesMenu />
+				</div>
 			</div>
 			{adding && (
 				<AddKey
@@ -294,10 +288,21 @@ const Panel = ({
 						onSelect={onSelect}
 						onSelectAll={onSelectAll}
 						onRename={onRename}
+						onRenameKey={onRenameKey}
 					/>
 				)}
 			</div>
 			<Freshness readAt={readAt} />
+			{keyRename !== undefined && (
+				<KeyRenameDialog
+					key={keyRename.opening}
+					from={keyRename.from}
+					catalogue={catalogue.catalogue}
+					rules={rules}
+					onSubmit={writeKeyRename}
+					onClosed={keyRenameClosed}
+				/>
+			)}
 			{namespaceAction !== undefined && (
 				<NamespaceDialog
 					key={namespaceAction.opening}
@@ -325,7 +330,7 @@ const Panel = ({
 }
 
 /**
- * flat, tree or compact: native radio buttons, so one stop for Tab and the arrows moving between them come
+ * flat or tree: native radio buttons, so one stop for Tab and the arrows moving between them come
  * from the browser — a view the project's format cannot show is there, and disabled, as in the studio
  */
 const ViewSwitch = ({

@@ -123,9 +123,10 @@ text as it is. `--dry-run` shows what it would change first.
 npx linguify studio
 ```
 
-The studio is the translation table in your browser: flat, tree and compact views, a search, a filter for
-what each locale is missing, editing in place, adding and deleting keys and namespaces, sync, format, import
-and export. It listens on your machine only (`127.0.0.1`, port `5678` or `studio.port`).
+The studio is the translation table in your browser: flat and tree views, a search, a filter for what
+each locale is missing, editing in place, adding, renaming and deleting keys, adding and renaming namespaces,
+sync and format. Export and import a table from the command line. It listens on your machine only
+(`127.0.0.1`, port `5678` or `studio.port`).
 
 The studio watches nothing. If you edit the files by hand or run the CLI while it is open, press Refresh; a
 change you make on top of files that changed on disk is refused rather than written over them. A change to
@@ -153,7 +154,7 @@ config can be as short as `{ "locales": ["en", "ckb"] }`.
 | `keys.createNamespace` | `false` | A new key may name a namespace that is not there yet; it is created with it |
 | `studio.port` | `5678` | The port the studio listens on |
 | `studio.open` | `true` | Open a browser when the studio starts |
-| `studio.defaultView` | `flat` | The view the studio opens in: `flat`, `tree` or `compact` |
+| `studio.defaultView` | `flat` | The view the studio opens in: `flat` or `tree` |
 | `extension.defaultView` | `flat` | The same, for the VS Code extension |
 | `io.format` | `csv` | The format `export` and `import` use when neither `-f` nor the file's extension names one |
 

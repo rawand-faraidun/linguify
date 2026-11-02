@@ -2,13 +2,10 @@ import { useRef } from 'react'
 import { studioText } from '@linguify/constants'
 import {
 	isComposing,
-	isFiltered,
 	type KeyFilter,
 	type LocaleCounts,
 	localeCountsText,
-	matchCountText,
 	namespaceFilterLabel,
-	noFilter,
 	toggleNamespace,
 	toggleUntranslated,
 	untranslatedFilterLabel
@@ -32,17 +29,14 @@ import { fieldFocusClass, focusRingClass, menuItemClass } from './classes'
 export const searchId = 'search'
 
 /**
- * the search, the namespace filter, the still-to-translate filter with each locale's counts, how many keys
- * match, and a way to clear it all
+ * the search, the namespace filter, and the still-to-translate filter with each locale's counts — how many
+ * keys match is said in the header, and a filter is cleared where it was set
  *
  * @note the menus are not modal: a modal one stops pointer events on the whole page, which makes the
- * browser restyle every row of a large table as it opens and closes. The count and Clear filters are
- * always there — the toolbar keeps its shape as a search starts, the count is announced as it changes,
- * and clearing leaves the keyboard where it was
+ * browser restyle every row of a large table as it opens and closes
  *
  * @param props - `filter` and `onChange`; `namespaces`, every namespace, empty when the project has
- * none; `counts`, each non-default locale's counts, in config order; `shown` and `total`, how many keys
- * pass the filter of how many
+ * none; `counts`, each non-default locale's counts, in config order
  *
  * @returns the controls
  */
@@ -50,19 +44,14 @@ export const Filters = ({
 	filter,
 	onChange,
 	namespaces,
-	counts,
-	shown,
-	total
+	counts
 }: {
 	filter: KeyFilter
 	onChange: (filter: KeyFilter) => void
 	namespaces: readonly NamespaceName[]
 	counts: Readonly<Record<Locale, LocaleCounts>>
-	shown: number
-	total: number
 }) => {
 	const search = useRef<HTMLInputElement>(null)
-	const filtered = isFiltered(filter)
 	const locales = Object.entries(counts)
 	return (
 		<>
@@ -166,21 +155,6 @@ export const Filters = ({
 					</DropdownMenuContent>
 				</DropdownMenu>
 			)}
-			<span id="match-count" role="status" className="whitespace-nowrap text-muted-foreground text-xs tabular-nums">
-				{matchCountText(filter, shown, total)}
-			</span>
-			<Button
-				variant="ghost"
-				size="sm"
-				className={focusRingClass}
-				aria-disabled={!filtered}
-				onClick={() => {
-					if (filtered) onChange(noFilter)
-				}}
-			>
-				<XIcon data-icon="inline-start" />
-				{studioText.clearFilters}
-			</Button>
 		</>
 	)
 }

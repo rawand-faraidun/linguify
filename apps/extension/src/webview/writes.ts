@@ -72,3 +72,13 @@ export const useRenameNamespace = () =>
 	usePanelWrite(({ from, to }: { from: NamespaceName; to: NamespaceName }, expectedRevision: Revision) =>
 		trpcClient.namespace.rename.mutate({ from, to, expectedRevision })
 	)
+
+/**
+ * renames a key, or a whole group, in every locale, its descriptions moving with it
+ *
+ * @returns the rename to make, settled once it is written and the catalogue read again
+ */
+export const useRenameKey = () =>
+	usePanelWrite(({ from, to }: { from: KeyPath; to: KeyPath }, expectedRevision: Revision) =>
+		trpcClient.key.rename.mutate({ from, to, expectedRevision })
+	)

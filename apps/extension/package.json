@@ -187,8 +187,7 @@
 					"type": "string",
 					"enum": [
 						"flat",
-						"tree",
-						"compact"
+						"tree"
 					],
 					"default": "flat",
 					"markdownDescription": "Table mode the studio starts in",
@@ -199,8 +198,7 @@
 					"type": "string",
 					"enum": [
 						"flat",
-						"tree",
-						"compact"
+						"tree"
 					],
 					"default": "flat",
 					"markdownDescription": "Table mode the editor extension starts in",

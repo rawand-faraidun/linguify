@@ -1,6 +1,7 @@
 import {
 	keyConflictText,
 	keyPathProblemText,
+	keySeparator,
 	type namespaceActions,
 	newKeyNotes,
 	studioText
@@ -86,6 +87,8 @@ export type NewKeyNote =
 	| { kind: typeof newKeyNotes.conflict; conflict: KeyConflict }
 	| { kind: typeof newKeyNotes.newNamespace; namespace: NamespaceName; allowed: boolean }
 	| { kind: typeof newKeyNotes.defaultRequired }
+	| { kind: typeof newKeyNotes.same }
+	| { kind: typeof newKeyNotes.inside }
 
 /**
  * what a new key's form says, and whether it can be added
@@ -209,5 +212,41 @@ export const noteText = (note: NewKeyNote): string => {
 			return fill(note.allowed ? studioText.newNamespace : studioText.namespaceMissing, { namespace: note.namespace })
 		case newKeyNotes.defaultRequired:
 			return studioText.defaultRequired
+		case newKeyNotes.same:
+			return studioText.namespaceSame
+		case newKeyNotes.inside:
+			return studioText.keyInside
 	}
+}
+
+/**
+ * checks a key's new path before it is renamed, the way core will: the path as a new key's — usable here,
+ * not taken in any locale, not through a text, its namespace there or allowed to be made — and neither the
+ * path it has nor one inside it
+ *
+ * @param catalogue - every locale's tree
+ * @param from - the key, or group, being renamed
+ * @param to - the path typed
+ * @param rules - the project's rules, and whether a key may make its namespace
+ *
+ * @returns what to say under the path, and whether nothing stands in the way
+ */
+export const checkKeyRename = (
+	catalogue: Catalogue,
+	from: KeyPath,
+	to: KeyPath,
+	rules: KeyRules & { createNamespace: boolean }
+): { notes: NewKeyNote[]; ready: boolean } => {
+	if (to === from) return { notes: [{ kind: newKeyNotes.same }], ready: false }
+	if (to.startsWith(`${from}${keySeparator}`)) return { notes: [{ kind: newKeyNotes.inside }], ready: false }
+	const check = checkNewKey(catalogue, to, rules)
+	const notes: NewKeyNote[] = [
+		...(check.problem === undefined ? [] : [{ kind: newKeyNotes.problem, problem: check.problem }]),
+		...(check.duplicate.length === 0 ? [] : [{ kind: newKeyNotes.duplicate, locales: check.duplicate }]),
+		...check.conflicts.map(conflict => ({ kind: newKeyNotes.conflict, conflict })),
+		...(check.namespace === undefined
+			? []
+			: [{ kind: newKeyNotes.newNamespace, namespace: check.namespace, allowed: rules.createNamespace }])
+	]
+	return { notes, ready: notes.every(note => !stopsAdd(note)) }
 }

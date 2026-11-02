@@ -244,9 +244,6 @@ const toRows = (branch: Branch): TableRow[] =>
 /**
  * builds the rows of a view mode
  *
- * @note compact has the flat view's rows: what it hides — every locale but the default — is shown
- * inside an expanded key row, never as rows of its own
- *
  * @param mode - the view mode
  * @param rows - every key, as `list keys` gives them
  * @param options - whether the project has namespaces
@@ -323,6 +320,7 @@ const sameRow = (a: KeyRow, b: KeyRow): boolean => {
 /**
  * @param depth - how deep a row sits
  *
- * @returns how far its first cell is indented, in the table's spacing unit
+ * @returns how far its first cell is indented, in the table's spacing unit — a level deeper a clear step
+ * in, so a key reads as under its section
  */
-export const rowIndent = (depth: number): string => `calc(var(--spacing) * ${2 + depth * 4})`
+export const rowIndent = (depth: number): string => `calc(var(--spacing) * ${4 + depth * 10})`

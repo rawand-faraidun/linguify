@@ -11,8 +11,7 @@ import {
 	tableMarkClasses,
 	tableMarkLabels,
 	tableMarks,
-	tableTextClasses,
-	viewModes
+	tableTextClasses
 } from '@linguify/constants'
 import { localeOrder, type RowSource } from '@linguify/keys'
 import {
@@ -38,7 +37,7 @@ import {
 	toExpandedState
 } from '@linguify/table'
 import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
-import type { Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
+import type { KeyPath, Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
 import { tableFeatures, useTable } from '@tanstack/react-table'
 
 /**
@@ -51,7 +50,7 @@ import { tableFeatures, useTable } from '@tanstack/react-table'
  * a row's ends
  *
  * @param props - the `rows` for the view, its `mode`, the `source` locales, the `expansion`; `onToggle`,
- * `onEdit` and `onRename` — a section's — which keep their identity, so a toggle or an edit redraws only the
+ * `onEdit`, `onRename` — a section's — and `onRenameKey`, which keep their identity, so a toggle or an edit redraws only the
  * rows it changes
  *
  * @returns the grid
@@ -68,7 +67,8 @@ export const Grid = ({
 	selection,
 	onSelect,
 	onSelectAll,
-	onRename
+	onRename,
+	onRenameKey
 }: {
 	rows: TableRow[]
 	mode: ViewMode
@@ -82,6 +82,7 @@ export const Grid = ({
 	onSelect: (row: TableRow) => void
 	onSelectAll: () => void
 	onRename: (namespace: NamespaceName) => void
+	onRenameKey: (key: KeyPath) => void
 }) => {
 	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
 	const tableRef = useRef<HTMLTableElement>(null)
@@ -93,10 +94,8 @@ export const Grid = ({
 		...rowOptionsFor(mode),
 		state: { expanded }
 	})
-	const compact = mode === viewModes.compact
-	const descriptions = source.descriptions && !compact
-	const locales = useMemo(() => localeOrder(source), [source])
-	const shown = useMemo(() => (compact ? locales.slice(0, 1) : locales), [compact, locales])
+	const descriptions = source.descriptions
+	const shown = useMemo(() => localeOrder(source), [source])
 	const columns = 1 + (descriptions ? 1 : 0) + shown.length
 	return (
 		<>
@@ -164,14 +163,11 @@ export const Grid = ({
 									key={id}
 									row={original}
 									depth={depth}
-									locales={locales}
 									shown={shown}
 									defaultLocale={source.default}
-									descriptions={source.descriptions}
-									open={compact && isExpanded(expansion, id)}
-									compact={compact}
-									onToggle={onToggle}
+									descriptions={descriptions}
 									onEdit={onEdit}
+									onRenameKey={onRenameKey}
 									selected={selection.has(original.key)}
 									onSelect={onSelect}
 								/>
@@ -181,7 +177,7 @@ export const Grid = ({
 									row={original}
 									depth={depth}
 									columns={columns}
-									open={canExpand(mode, original) && isExpanded(expansion, id)}
+									open={canExpand(original) && isExpanded(expansion, id)}
 									onToggle={onToggle}
 									state={selectionState(selection, original)}
 									onSelect={onSelect}
@@ -309,115 +305,89 @@ const GroupLine = memo(
 )
 
 /**
- * one key: its path, its description, its text in each shown locale — in compact view, opened, the rest
- * beneath the default's text
+ * one key: its path, with a way to rename it, its description, and its text in each locale
  */
 const KeyLine = memo(
 	({
 		row,
 		depth,
-		locales,
 		shown,
 		defaultLocale,
 		descriptions,
-		open,
-		compact,
-		onToggle,
 		onEdit,
+		onRenameKey,
 		selected,
 		onSelect
 	}: {
 		row: KeyTableRow
 		depth: number
-		locales: readonly Locale[]
 		shown: readonly Locale[]
 		defaultLocale: Locale
 		descriptions: boolean
-		open: boolean
-		compact: boolean
-		onToggle: (id: string) => void
 		onEdit: (edit: KeyEdit) => Promise<unknown>
+		onRenameKey: (key: KeyPath) => void
 		selected: boolean
 		onSelect: (row: TableRow) => void
-	}) => {
-		const label = <KeyLabel row={row} />
-		const description = (
-			<Editable
-				text={row.description ?? ''}
-				label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
-				onCommit={text => onEdit({ key: row.key, description: text })}
+	}) => (
+		<tr data-row={row.id} data-state={selected ? selectedRowState : undefined} className={`${lineClass} align-top`}>
+			<td data-select className={selectCellClass}>
+				<Tick
+					label={fill(studioText.select, { key: row.key })}
+					state={selected ? selectionStates.all : selectionStates.none}
+					onChange={() => onSelect(row)}
+				/>
+			</td>
+			<th
+				scope="row"
+				title={row.key}
+				className={`${cellClass} font-mono font-normal text-[0.8125rem]`}
+				style={{ paddingInlineStart: rowIndent(depth) }}
 			>
-				{row.description === undefined || row.description === '' ? (
-					<span className="sr-only">{studioText.noDescription}</span>
-				) : (
-					<Text text={row.description} />
-				)}
-			</Editable>
-		)
-		const value = (locale: Locale) => (
-			<Editable
-				text={row.values[locale] ?? ''}
-				lang={locale}
-				label={fill(studioText.editLabel, { column: locale, key: row.key })}
-				onCommit={text => onEdit({ key: row.key, locale, text })}
-			>
-				<Value row={row} locale={locale} defaultLocale={defaultLocale} />
-			</Editable>
-		)
-		return (
-			<tr data-row={row.id} data-state={selected ? selectedRowState : undefined} className={`${lineClass} align-top`}>
-				<td data-select className={selectCellClass}>
-					<Tick
-						label={fill(studioText.select, { key: row.key })}
-						state={selected ? selectionStates.all : selectionStates.none}
-						onChange={() => onSelect(row)}
-					/>
-				</td>
-				<th
-					scope="row"
-					title={row.key}
-					className={`${cellClass} font-mono font-normal text-[0.8125rem]`}
-					style={{ paddingInlineStart: rowIndent(depth) }}
-				>
-					{compact ? (
-						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
-							{label}
-						</Disclosure>
-					) : (
-						label
-					)}
-				</th>
-				{descriptions && !compact && (
-					<td data-description className={`${cellClass} text-muted-foreground text-xs`}>
-						{description}
-					</td>
-				)}
-				{shown.map(locale => (
-					<td key={locale} data-locale={locale} data-gap={cellMark(row, locale, defaultLocale)} className={cellClass}>
-						{value(locale)}
-						{open && (
-							<dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
-								{descriptions && (
-									<>
-										<dt className="text-muted-foreground">{studioText.description}</dt>
-										<dd data-description className="text-muted-foreground">
-											{description}
-										</dd>
-									</>
-								)}
-								{locales.slice(1).map(other => (
-									<div key={other} className="contents" data-locale={other}>
-										<dt className="text-muted-foreground">{other}</dt>
-										<dd>{value(other)}</dd>
-									</div>
-								))}
-							</dl>
+				<span className="flex items-start gap-1.5">
+					<KeyLabel row={row} />
+					<button
+						type="button"
+						tabIndex={-1}
+						data-cell
+						data-rename
+						aria-label={fill(studioText.renameKey, { key: row.key })}
+						title={fill(studioText.renameKey, { key: row.key })}
+						onClick={() => onRenameKey(row.key)}
+						className="shrink-0 font-sans text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100"
+					>
+						<span aria-hidden="true">✎</span>
+					</button>
+				</span>
+			</th>
+			{descriptions && (
+				<td data-description className={`${cellClass} text-muted-foreground text-xs`}>
+					<Editable
+						text={row.description ?? ''}
+						label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, description: text })}
+					>
+						{row.description === undefined || row.description === '' ? (
+							<span className="sr-only">{studioText.noDescription}</span>
+						) : (
+							<Text text={row.description} />
 						)}
-					</td>
-				))}
-			</tr>
-		)
-	}
+					</Editable>
+				</td>
+			)}
+			{shown.map(locale => (
+				<td key={locale} data-locale={locale} data-gap={cellMark(row, locale, defaultLocale)} className={cellClass}>
+					<Editable
+						text={row.values[locale] ?? ''}
+						lang={locale}
+						label={fill(studioText.editLabel, { column: locale, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, locale, text })}
+					>
+						<Value row={row} locale={locale} defaultLocale={defaultLocale} />
+					</Editable>
+				</td>
+			))}
+		</tr>
+	)
 )
 
 /**

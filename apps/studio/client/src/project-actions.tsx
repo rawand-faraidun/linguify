@@ -1,8 +1,7 @@
 import { type FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import {
 	actionText,
-	ioDefaultPaths,
-	ioFormats,
+	fileMenuActions,
 	previewStates,
 	projectActions,
 	projectActionText,
@@ -10,19 +9,16 @@ import {
 	studioText,
 	writeFailures
 } from '@linguify/constants'
-import { formatOfFile, isIoFormat, relativePath } from '@linguify/keys'
 import {
 	type ActionPreview,
 	actionDoneText,
 	actionPlanText,
 	actionPreview,
-	countKeys,
 	errorMessage,
-	fill,
 	isComposing,
 	writeFailure
 } from '@linguify/table'
-import type { IoFormat, ProjectAction, Revision } from '@linguify/types'
+import type { Revision } from '@linguify/types'
 import { Button } from '@linguify/ui/components/button'
 import { Checkbox } from '@linguify/ui/components/checkbox'
 import {
@@ -39,42 +35,42 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@linguify/ui/components/dropdown-menu'
-import { Input } from '@linguify/ui/components/input'
 import { Label } from '@linguify/ui/components/label'
-import { ToggleGroup, ToggleGroupItem } from '@linguify/ui/components/toggle-group'
 import { cn } from '@linguify/ui/lib/utils'
 import { ChevronDownIcon } from 'lucide-react'
-import { checkboxClass, focusRingClass, inputFocusClass, menuItemClass, switchItemClass } from './classes'
+import { checkboxClass, focusRingClass, menuItemClass } from './classes'
 import { ignoreComposingEnter } from './composition'
 import { trpcClient } from './trpc'
 import { WriteNotice } from './write-notice'
-import { useExport, useFormat, useImport, useSync } from './writes'
+import { useFormat, useSync } from './writes'
 
 /**
- * what the dialogs start from: the config's `sync.removeUnused` and `io.format`
+ * an action the Files menu offers
  */
-type ActionDefaults = { removeUnused: boolean; format: IoFormat }
+type FileAction = (typeof fileMenuActions)[number]
 
 /**
- * the whole-project actions — sync, format, import, export — in a Files menu, each in a dialog
+ * the whole-project actions the studio offers — sync and format — in a Files menu, each in a dialog; a table
+ * is exported and imported from the command line or the editor's palette
  *
- * @param props - `defaults`; `cwd`, the folder the studio runs in, which paths are typed and shown from;
- * `revision`, the translations' as last read; `onDone`, what was done, in words
+ * @param props - `removeUnused`, what the sync dialog starts from — the config's `sync.removeUnused`; `cwd`,
+ * the folder the studio runs in, which files are shown from; `revision`, the translations' as last read;
+ * `onDone`, what was done, in words
  *
  * @returns the menu, and the dialog open
  */
 export const ProjectActions = ({
-	defaults,
+	removeUnused,
 	cwd,
 	revision,
 	onDone
 }: {
-	defaults: ActionDefaults
+	removeUnused: boolean
 	cwd: string
 	revision: Revision
 	onDone: (said: string) => void
 }) => {
-	const [opened, setOpened] = useState<{ action: ProjectAction; opening: number }>()
+	const [opened, setOpened] = useState<{ action: FileAction; opening: number }>()
 	const menu = useRef<HTMLButtonElement>(null)
 	return (
 		<>
@@ -85,8 +81,8 @@ export const ProjectActions = ({
 						<ChevronDownIcon data-icon="inline-end" />
 					</Button>
 				</DropdownMenuTrigger>
-				<DropdownMenuContent align="start">
-					{Object.values(projectActions).map(action => (
+				<DropdownMenuContent align="end">
+					{fileMenuActions.map(action => (
 						<DropdownMenuItem
 							key={action}
 							className={menuItemClass}
@@ -101,7 +97,7 @@ export const ProjectActions = ({
 				<ActionDialog
 					key={opened.opening}
 					action={opened.action}
-					defaults={defaults}
+					removeUnusedByDefault={removeUnused}
 					cwd={cwd}
 					revision={revision}
 					onDone={onDone}
@@ -117,16 +113,14 @@ export const ProjectActions = ({
 
 /**
  * an outcome as the dialog shows it: one summary for the live status, the files and warnings beside it —
- * and the revisions it was worked out on, which the run then expects: the translations', and an import's
- * table's
+ * and the revision it was worked out on, which the run then expects
  */
 type Shown = {
 	summary: string[]
 	files: string[]
 	warnings: string[]
 	nothing: boolean
-	revision?: Revision
-	table?: Revision
+	revision: Revision
 }
 
 /**
@@ -138,29 +132,29 @@ type Preview =
 	| ({ state: typeof previewStates.ready } & Shown)
 
 /**
- * one action's dialog: its options, what it would do — worked out by a dry run as the options change — and
+ * one action's dialog: its option, what it would do — worked out by a dry run as the option changes — and
  * the button that does it
  *
  * @note the live status holds the summary alone, so a project of hundreds of files is said in a line and
  * shown in a list that scrolls; while the next outcome is worked out the last one stays, marked busy, so
- * each pause in typing is not said twice. Warnings are always shown, as they need a person even when
- * nothing is written. A write that fails is said here, as the modal keeps the page's toast out of reach,
- * and stays said while the plan is worked out again
+ * each pause is not said twice. Warnings are always shown, as they need a person even when nothing is
+ * written. A write that fails is said here, as the modal keeps the page's toast out of reach, and stays said
+ * while the plan is worked out again
  *
- * @note the run expects the revisions its plan was worked out on, so it does what was shown or is refused;
+ * @note the run expects the revision its plan was worked out on, so it does what was shown or is refused;
  * the plan is worked out again whenever the translations move — the studio's own queued edit landing
  * included — so what is shown is what the run will find
  */
 const ActionDialog = ({
 	action,
-	defaults,
+	removeUnusedByDefault,
 	cwd,
 	revision,
 	onDone,
 	onClosed
 }: {
-	action: ProjectAction
-	defaults: ActionDefaults
+	action: FileAction
+	removeUnusedByDefault: boolean
 	cwd: string
 	revision: Revision
 	onDone: (said: string) => void
@@ -169,41 +163,22 @@ const ActionDialog = ({
 	const [open, setOpen] = useState(true)
 	const [pending, setPending] = useState(false)
 	const [failure, setFailure] = useState<{ error: unknown }>()
-	const [removeUnused, setRemoveUnused] = useState(defaults.removeUnused)
-	const [format, setFormat] = useState(defaults.format)
-	const [path, setPath] = useState<string>(ioDefaultPaths[defaults.format])
+	const [removeUnused, setRemoveUnused] = useState(removeUnusedByDefault)
 	const [preview, setPreview] = useState<Preview>({ state: previewStates.working, last: undefined })
 	const [read, setRead] = useState(0)
 	const [queued, setQueued] = useState(false)
 	const sync = useSync()
 	const formatFiles = useFormat()
-	const importTable = useImport()
-	const exportTable = useExport()
-	const table = action === projectActions.import || action === projectActions.export
-	const target = path.trim()
 
 	const dryRun = useCallback(async (): Promise<Shown> => {
-		if (action === projectActions.export) {
-			const result = await trpcClient.export.mutate({ format, path: target, dryRun: true })
-			const plan = fill(result.replaces ? actionText.exportReplaces : actionText.exportPlan, {
-				keys: countKeys(result.rows),
-				path: relativePath(cwd, result.path)
-			})
-			return { summary: [plan], files: [], warnings: [], nothing: false }
-		}
-		if (action === projectActions.import) {
-			const result = await trpcClient.import.mutate({ format, path: target, dryRun: true })
-			return { ...shownOf(actionPreview(result, cwd)), revision: result.revision, table: result.table }
-		}
-		const plans = {
-			[projectActions.sync]: () => trpcClient.sync.mutate({ removeUnused, dryRun: true }),
-			[projectActions.format]: () => trpcClient.format.mutate({ dryRun: true })
-		}
-		const result = await plans[action]()
+		const result =
+			action === projectActions.sync
+				? await trpcClient.sync.mutate({ removeUnused, dryRun: true })
+				: await trpcClient.format.mutate({ dryRun: true })
 		return { ...shownOf(actionPreview(result, cwd)), revision: result.revision }
-	}, [action, removeUnused, format, target, cwd])
+	}, [action, removeUnused, cwd])
 
-	// worked out again as the options change, as the translations move, and after a refresh, which `read`
+	// worked out again as the option changes, as the translations move, and after a refresh, which `read`
 	// counts
 	// biome-ignore lint/correctness/useExhaustiveDependencies: `revision` and `read` ask for the same dry run again
 	useEffect(() => {
@@ -217,10 +192,6 @@ const ActionDialog = ({
 						? previous.last
 						: undefined
 		}))
-		if (table && target === '') {
-			setPreview({ state: previewStates.failed, message: actionText.nameAFile })
-			return
-		}
 		const timer = setTimeout(() => {
 			dryRun()
 				.then(shown => {
@@ -234,39 +205,20 @@ const ActionDialog = ({
 			current = false
 			clearTimeout(timer)
 		}
-	}, [dryRun, revision, read, table, target])
+	}, [dryRun, revision, read])
 
-	// a failed write stays said until an option changes
-	// biome-ignore lint/correctness/useExhaustiveDependencies: each option clears it
-	useEffect(() => setFailure(undefined), [removeUnused, format, target])
+	// a failed write stays said until the option changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: the option clears it
+	useEffect(() => setFailure(undefined), [removeUnused])
 
 	const run = async (planned: Shown) => {
 		setPending(true)
 		setFailure(undefined)
 		try {
-			if (action === projectActions.export) {
-				const result = await exportTable({ format, path: target })
-				onDone(
-					fill(projectActionText.export.done, {
-						keys: countKeys(result.rows),
-						path: relativePath(cwd, result.path)
-					})
-				)
-			} else {
-				const against = planned.revision ?? revision
-				const runs = {
-					[projectActions.sync]: () => sync({ removeUnused, against }),
-					[projectActions.format]: () => formatFiles({ against }),
-					[projectActions.import]: () =>
-						importTable({
-							format,
-							path: target,
-							against,
-							...(planned.table === undefined ? {} : { table: planned.table })
-						})
-				}
-				onDone(actionDoneText(action, actionPreview(await runs[action](), cwd)))
-			}
+			const against = planned.revision
+			const done =
+				action === projectActions.sync ? await sync({ removeUnused, against }) : await formatFiles({ against })
+			onDone(actionDoneText(action, actionPreview(done, cwd)))
 			setPending(false)
 			setOpen(false)
 		} catch (error) {
@@ -326,64 +278,16 @@ const ActionDialog = ({
 					{action === projectActions.sync && (
 						<div className="flex items-start gap-2">
 							<Checkbox
-								id={fieldIds.removeUnused}
+								id={removeUnusedId}
 								className={checkboxClass}
 								checked={removeUnused}
 								disabled={pending}
 								onCheckedChange={checked => setRemoveUnused(checked === true)}
 							/>
-							<Label htmlFor={fieldIds.removeUnused} className="font-normal">
+							<Label htmlFor={removeUnusedId} className="font-normal">
 								{actionText.removeUnused}
 							</Label>
 						</div>
-					)}
-					{table && (
-						<>
-							<div className="flex flex-col gap-1">
-								<Label id={fieldIds.format}>{actionText.tableFormat}</Label>
-								<ToggleGroup
-									type="single"
-									variant="outline"
-									size="sm"
-									spacing={0}
-									aria-labelledby={fieldIds.format}
-									value={format}
-									onValueChange={value => {
-										if (!isIoFormat(value) || pending) return
-										// a path still the default follows the format; one typed stays
-										if (path === ioDefaultPaths[format]) setPath(ioDefaultPaths[value])
-										setFormat(value)
-									}}
-								>
-									{Object.values(ioFormats).map(name => (
-										<ToggleGroupItem key={name} value={name} className={switchItemClass}>
-											{name}
-										</ToggleGroupItem>
-									))}
-								</ToggleGroup>
-							</div>
-							<div className="flex flex-col gap-1">
-								<Label htmlFor={fieldIds.path}>{studioText.tablePath}</Label>
-								<Input
-									id={fieldIds.path}
-									dir="ltr"
-									autoComplete="off"
-									spellCheck={false}
-									readOnly={pending}
-									className={cn('font-mono', inputFocusClass)}
-									aria-invalid={preview.state === previewStates.failed}
-									aria-describedby={previewId}
-									value={path}
-									onChange={event => {
-										const typed = event.target.value
-										setPath(typed)
-										// a file typed with a table's extension sets the format, as the format sets the file
-										const named = formatOfFile(typed.trim())
-										if (named !== undefined) setFormat(named)
-									}}
-								/>
-							</div>
-						</>
 					)}
 					{failure !== undefined && (
 						<WriteNotice
@@ -473,7 +377,7 @@ const ActionDialog = ({
  *
  * @returns it as the dialog shows it: the counts and how many files in the summary, the files listed
  */
-const shownOf = (preview: ActionPreview): Shown => ({
+const shownOf = (preview: ActionPreview): Omit<Shown, 'revision'> => ({
 	summary: actionPlanText(preview),
 	files: [...preview.written, ...preview.removed],
 	warnings: preview.warnings,
@@ -481,15 +385,11 @@ const shownOf = (preview: ActionPreview): Shown => ({
 })
 
 /**
- * the ids of the dialog's fields, which their labels point to
+ * the id of the sync dialog's option, which its label points to
  */
-const fieldIds = {
-	removeUnused: 'remove-unused',
-	format: 'table-format',
-	path: 'table-path'
-}
+const removeUnusedId = 'remove-unused'
 
 /**
- * the id of what the action would do — the status the path field and the button are described by
+ * the id of what the action would do — the status the button is described by
  */
 const previewId = 'action-preview'

@@ -1,4 +1,10 @@
-import type { bridgeCallKinds, bridgeChangedType, bridgeMessageType } from '@linguify/constants'
+import type {
+	bridgeCallKinds,
+	bridgeChangedType,
+	bridgeCommandType,
+	bridgeMessageType,
+	fileMenuActions
+} from '@linguify/constants'
 import type { Values } from './values'
 
 /**
@@ -44,4 +50,12 @@ export type BridgeReply = {
  */
 export type BridgeChanged = {
 	type: typeof bridgeChangedType
+}
+
+/**
+ * what a panel asks the host to run for its project: one of its Files menu's actions
+ */
+export type BridgeCommand = {
+	type: typeof bridgeCommandType
+	command: (typeof fileMenuActions)[number]
 }

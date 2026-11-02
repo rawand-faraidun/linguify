@@ -16,13 +16,14 @@ Open a folder that has a `linguify.config.json` — or create one with `npx ling
 
 ## The panel
 
-- **Flat, tree and compact views**, sections by namespace, groups opened and closed.
+- **Flat and tree views**, sections by namespace, groups opened and closed.
 - **Edit in place**: click a text or press Enter, Enter saves, Escape cancels. Descriptions too, when the
   project keeps them.
 - **Search, filter and sort**: a search over keys and texts, a filter for what a locale is missing, one for
   namespaces, and any column sorted — on screen only, never in the files.
-- **Add, select and delete** keys; **add and rename** namespaces. What would be refused is said before
+- **Add, rename, select and delete** keys; **add and rename** namespaces. What would be refused is said before
   anything is sent.
+- **Sync and Format** from the panel's Files menu, as from the palette.
 - **The keyboard throughout**: the table is one Tab stop, the arrow keys move inside it, Home and End to a
   row's ends.
 - **The editor's own look**: light, dark and high contrast themes, followed as you switch.

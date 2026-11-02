@@ -14,12 +14,7 @@ export const viewModes = {
 	/**
 	 * nested keys collapse by path segment
 	 */
-	tree: 'tree',
-
-	/**
-	 * key and default locale only, each row expanding to the rest
-	 */
-	compact: 'compact'
+	tree: 'tree'
 } as const
 
 /**
@@ -97,8 +92,7 @@ export const themeLabels = {
  */
 export const viewModeLabels = {
 	[viewModes.flat]: 'Flat',
-	[viewModes.tree]: 'Tree',
-	[viewModes.compact]: 'Compact'
+	[viewModes.tree]: 'Tree'
 } as const
 
 /**
@@ -219,7 +213,17 @@ export const newKeyNotes = {
 	/**
 	 * the default locale's text is still empty
 	 */
-	defaultRequired: 'default-required'
+	defaultRequired: 'default-required',
+
+	/**
+	 * a rename to the path the key has already — nothing wrong, but nothing to do
+	 */
+	same: 'same',
+
+	/**
+	 * a rename into the key's own group — a key cannot move into itself
+	 */
+	inside: 'inside'
 } as const
 
 /**
@@ -271,6 +275,12 @@ export const projectActions = {
 	 */
 	export: 'export'
 } as const
+
+/**
+ * the whole-project actions the studio's and the panel's Files menu offer — those that work on the
+ * project's own files; a table is exported and imported from the command line or the editor's palette
+ */
+export const fileMenuActions = [projectActions.sync, projectActions.format] as const
 
 /**
  * what the studio and the extension say of each whole-project action

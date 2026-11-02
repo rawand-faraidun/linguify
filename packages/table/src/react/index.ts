@@ -1,5 +1,6 @@
 export * from './editable'
 export * from './flows'
+export * from './key-rename'
 export * from './keyboard'
 export * from './namespace'
 export * from './new-key'

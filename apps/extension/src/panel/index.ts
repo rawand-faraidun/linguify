@@ -11,8 +11,17 @@ import {
 	window
 } from 'vscode'
 import { answerBridge } from '@linguify/api'
-import { bridgeChangedType, extensionDisplayName, panelViewType, webviewFiles } from '@linguify/constants'
-import type { BridgeChanged } from '@linguify/types'
+import {
+	bridgeChangedType,
+	bridgeCommandType,
+	extensionDisplayName,
+	fileMenuActions,
+	panelViewType,
+	projectActions,
+	webviewFiles
+} from '@linguify/constants'
+import type { BridgeChanged, BridgeCommand } from '@linguify/types'
+import { formatCommand, runCommand, syncCommand } from '../commands'
 import { editorLayer } from '../settings'
 import { panelHtml } from './html'
 
@@ -126,6 +135,12 @@ const showProject = (context: ExtensionContext, panel: WebviewPanel, folder: Uri
 	const shown = { panel, folder, editor: editorLayer(folder), listeners: [] as Disposable[] }
 	shown.listeners.push(
 		webview.onDidReceiveMessage(async (message: unknown) => {
+			// one of the Files menu's actions, run as the palette runs it — asked first in the editor's modal
+			const command = fileCommandOf(message)
+			if (command !== undefined) {
+				if (await runCommand(folder, undefined, log, fileCommands[command])) projectChanged(folder)
+				return
+			}
 			try {
 				const reply = await answerBridge(message, { cwd: folder.fsPath, editor: shown.editor })
 				if (reply !== undefined && !disposed) await webview.postMessage(reply)
@@ -185,4 +200,21 @@ const pageOf = (context: ExtensionContext, panel: WebviewPanel, folder: Uri) => 
 		title: titleOf(folder),
 		folder: folder.toString()
 	})
+}
+
+/**
+ * what each of the Files menu's actions runs
+ */
+const fileCommands = { [projectActions.sync]: syncCommand, [projectActions.format]: formatCommand }
+
+/**
+ * @param message - what a panel's page posted
+ *
+ * @returns the Files menu's action it asks for, or nothing when it is not such a message — any other
+ * command is not the page's to ask for
+ */
+const fileCommandOf = (message: unknown): BridgeCommand['command'] | undefined => {
+	if (typeof message !== 'object' || message === null) return undefined
+	const { type, command } = message as Partial<Record<keyof BridgeCommand, unknown>>
+	return type === bridgeCommandType ? fileMenuActions.find(action => action === command) : undefined
 }
