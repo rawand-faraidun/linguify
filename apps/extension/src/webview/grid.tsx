@@ -113,7 +113,7 @@ export const Grid = ({
 				ref={tableRef}
 				id={tableId}
 				aria-label={studioText.translations}
-				className="w-full table-fixed border-separate border-spacing-0 rounded-md border border-row-border bg-surface text-start"
+				className="w-full table-fixed border-separate border-spacing-0 rounded-[6px] border border-row-border text-start"
 				onFocus={event => rove(event.currentTarget, event.target)}
 				onKeyDown={event => {
 					const to = controlAfter(event.currentTarget, event)
@@ -131,7 +131,7 @@ export const Grid = ({
 						<col key={locale} />
 					))}
 				</colgroup>
-				<thead className="sticky top-0 z-10 bg-surface">
+				<thead className="sticky top-0 z-10 bg-background">
 					<tr>
 						<th scope="col" data-select className={`w-0 ${selectCellClass}`}>
 							<Tick
@@ -155,7 +155,7 @@ export const Grid = ({
 								{locale === source.default && (
 									<>
 										{' '}
-										<span className="ms-1 rounded-full bg-badge px-1.5 py-px text-[0.625rem] text-badge-foreground">
+										<span className="ms-1 rounded-full bg-badge-prominent px-2 py-0.5 text-[0.6875rem] text-badge-prominent-foreground tracking-[0.5px]">
 											{studioText.defaultLocale}
 										</span>
 									</>
@@ -350,7 +350,7 @@ const KeyLine = memo(
 			<th
 				scope="row"
 				title={row.key}
-				className={`${cellClass} font-mono font-normal text-[0.8125rem]`}
+				className={`${cellClass} font-medium font-mono text-[0.8125rem]`}
 				style={{ paddingInlineStart: rowIndent(depth) }}
 			>
 				<span className="flex items-start gap-1.5">
@@ -580,7 +580,7 @@ const Mark = ({ mark }: { mark: TableMark }) =>
 	)
 
 const headClass =
-	'border-row-border border-b px-4 py-2 text-start font-semibold text-[0.6875rem] text-muted-foreground uppercase tracking-wider'
-const cellClass = 'border-row-border border-b px-4 py-2 text-start break-words'
-const selectCellClass = 'border-row-border border-b pt-2.5 pb-2 ps-4 pe-1 align-top leading-none'
+	'whitespace-nowrap border-row-border border-b px-3.5 py-2.5 text-start font-semibold text-muted-foreground text-xs uppercase tracking-[0.5px]'
+const cellClass = 'border-row-border border-b px-3.5 py-2 text-start break-words'
+const selectCellClass = 'border-row-border border-b pt-2.5 pb-2 ps-3.5 pe-1 align-top leading-none'
 const lineClass = 'group/row hover:bg-hover data-[state=selected]:bg-chosen/40'
