@@ -12,10 +12,12 @@
 		"typecheck": "turbo run typecheck",
 		"check": "biome check .",
 		"format": "biome format --write .",
-		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm --filter linguify-vs manifest --check"
+		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm --filter linguify-vs manifest --check",
+		"changeset": "changeset"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.14",
+		"@changesets/cli": "^3.0.3",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"tsx": "^4.23.15",
