@@ -47,7 +47,8 @@ export const relativePath = (from: string, file: string): string => {
 	// a Windows drive is a root of its own: no path leads from one to another
 	if (folder[0]?.endsWith(':') && folder[0].toLowerCase() !== target[0]?.toLowerCase()) return file
 	let shared = 0
-	const same = (a: string | undefined, b: string | undefined) => (windows ? a?.toLowerCase() === b?.toLowerCase() : a === b)
+	const same = (a: string | undefined, b: string | undefined) =>
+		windows ? a?.toLowerCase() === b?.toLowerCase() : a === b
 	while (shared < folder.length && shared < target.length && same(folder[shared], target[shared])) shared++
 	const up = folder.slice(shared).map(() => '..')
 	return [...up, ...target.slice(shared)].join(separator) || file
