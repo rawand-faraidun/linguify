@@ -2,7 +2,7 @@
 	"name": "linguify-vs",
 	"displayName": "Linguify",
 	"description": "Developer-first translation file manager, in the editor.",
-	"version": "0.0.0",
+	"version": "1.0.0",
 	"publisher": "rawand-faraidun",
 	"private": true,
 	"icon": "icon.png",
