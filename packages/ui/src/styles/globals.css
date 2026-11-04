@@ -13,6 +13,8 @@
 	--font-sans: "IBM Plex Sans Arabic", sans-serif;
 	--color-missing: var(--missing);
 	--color-missing-foreground: var(--missing-foreground);
+	--color-empty: var(--empty);
+	--color-empty-foreground: var(--empty-foreground);
 	--color-extra: var(--extra);
 	--color-extra-foreground: var(--extra-foreground);
 	--color-sidebar-ring: var(--sidebar-ring);
@@ -80,8 +82,10 @@
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
 	--radius: 0rem;
-	--missing: oklch(0.555 0.163 48.998);
+	--missing: oklch(0.577 0.245 27.325);
 	--missing-foreground: oklch(0.985 0 0);
+	--empty: oklch(0.555 0.163 48.998);
+	--empty-foreground: oklch(0.985 0 0);
 	--extra: oklch(0.546 0.245 262.881);
 	--extra-foreground: oklch(0.985 0 0);
 	--sidebar: oklch(0.985 0 0);
@@ -118,8 +122,10 @@
 	--chart-3: oklch(0.439 0 0);
 	--chart-4: oklch(0.371 0 0);
 	--chart-5: oklch(0.269 0 0);
-	--missing: oklch(0.828 0.189 84.429);
+	--missing: oklch(0.704 0.191 22.216);
 	--missing-foreground: oklch(0.205 0 0);
+	--empty: oklch(0.828 0.189 84.429);
+	--empty-foreground: oklch(0.205 0 0);
 	--extra: oklch(0.707 0.165 254.624);
 	--extra-foreground: oklch(0.205 0 0);
 	--sidebar: oklch(0.205 0 0);

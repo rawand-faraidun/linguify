@@ -24,9 +24,12 @@
 	--color-chosen: var(--vscode-inputOption-activeBackground);
 	--color-chosen-foreground: var(--vscode-inputOption-activeForeground);
 	--color-chosen-border: var(--vscode-inputOption-activeBorder);
-	--color-missing: var(--vscode-inputValidation-warningBackground);
+	--color-missing: var(--vscode-inputValidation-errorBackground);
 	--color-missing-foreground: var(--vscode-editor-foreground);
-	--color-missing-border: var(--vscode-inputValidation-warningBorder);
+	--color-missing-border: var(--vscode-inputValidation-errorBorder);
+	--color-empty: var(--vscode-inputValidation-warningBackground);
+	--color-empty-foreground: var(--vscode-editor-foreground);
+	--color-empty-border: var(--vscode-inputValidation-warningBorder);
 	--color-extra: var(--vscode-inputValidation-infoBackground);
 	--color-extra-foreground: var(--vscode-editor-foreground);
 	--color-extra-border: var(--vscode-inputValidation-infoBorder);
@@ -42,7 +45,8 @@
 	--color-badge-foreground: var(--vscode-badge-foreground);
 	--color-badge-prominent: var(--vscode-statusBarItem-prominentBackground, var(--vscode-badge-background));
 	--color-badge-prominent-foreground: var(--vscode-statusBarItem-prominentForeground, var(--vscode-badge-foreground));
-	--color-gap-missing: var(--vscode-editorWarning-background, rgb(245 158 11 / 10%));
+	--color-gap-missing: var(--vscode-editorError-background, rgb(241 76 76 / 12%));
+	--color-gap-empty: var(--vscode-editorWarning-background, rgb(245 158 11 / 10%));
 	--color-gap-extra: var(--vscode-editorInfo-background, rgb(55 148 255 / 10%));
 	--font-sans: var(--vscode-font-family);
 	--font-mono: var(--vscode-editor-font-family);
@@ -58,9 +62,12 @@ body {
 }
 
 /* a mark is outlined in its own border colour in high contrast, whose themes draw borders, not fills */
-.vscode-high-contrast [data-mark="missing"],
-.vscode-high-contrast [data-mark="empty"] {
+.vscode-high-contrast [data-mark="missing"] {
 	outline: 1px solid var(--color-missing-border);
+}
+
+.vscode-high-contrast [data-mark="empty"] {
+	outline: 1px solid var(--color-empty-border);
 }
 
 .vscode-high-contrast [data-mark="extra"] {
@@ -77,10 +84,14 @@ body {
 	background: color-mix(in srgb, var(--color-foreground) 3%, transparent);
 }
 
-/* a text still to translate, or one the default lacks: its whole cell tinted, as a spreadsheet shows it */
-td[data-gap="missing"],
-td[data-gap="empty"] {
+/* a text still to translate — red where the locale lacks the key, amber where it has it blank — or one the
+   default lacks: its whole cell tinted, as a spreadsheet shows it */
+td[data-gap="missing"] {
 	background: var(--color-gap-missing);
+}
+
+td[data-gap="empty"] {
+	background: var(--color-gap-empty);
 }
 
 td[data-gap="extra"] {

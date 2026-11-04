@@ -138,14 +138,14 @@ export const tableMarkLabels = {
 } as const
 
 /**
- * the classes each mark is drawn with: still to translate in the `missing` token, extra in the `extra`
- * token, the rest muted
+ * the classes each mark is drawn with: a key a locale lacks in the `missing` token, red; one it has blank
+ * in the `empty` token, amber; extra in the `extra` token, the rest muted
  *
  * @note in constants so the studio and the extension draw them alike
  */
 export const tableMarkClasses = {
 	[tableMarks.missing]: 'bg-missing text-missing-foreground',
-	[tableMarks.empty]: 'bg-missing text-missing-foreground',
+	[tableMarks.empty]: 'bg-empty text-empty-foreground',
 	[tableMarks.extra]: 'bg-extra text-extra-foreground',
 	[tableMarks.absent]: 'text-muted-foreground',
 	[tableMarks.blank]: 'text-muted-foreground'
