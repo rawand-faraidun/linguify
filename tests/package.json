@@ -15,8 +15,16 @@
 		"@linguify/table": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
+		"@testing-library/dom": "^10.4.2",
+		"@testing-library/react": "^16.3.3",
+		"@testing-library/user-event": "^14.6.8",
 		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"jsdom": "^30.1.3",
 		"linguify": "workspace:*",
+		"react": "catalog:",
+		"react-dom": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "5.0.5"
 	}
