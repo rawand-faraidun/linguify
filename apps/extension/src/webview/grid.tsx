@@ -6,6 +6,7 @@ import {
 	sortColumns,
 	sortDirections,
 	studioText,
+	tableColumnClasses,
 	tableHintIds,
 	tableId,
 	tableMarkClasses,
@@ -122,18 +123,17 @@ export const Grid = ({
 					to.focus()
 				}}
 			>
-				{/* the select column narrow, the key and description a fixed share, the locales the rest alike */}
 				<colgroup>
-					<col className="w-10" />
-					<col className={descriptions ? 'w-[22%]' : 'w-[28%]'} />
-					{descriptions && <col className="w-[20%]" />}
+					<col className={tableColumnClasses.select} />
+					<col className={tableColumnClasses.key} />
+					{descriptions && <col className={tableColumnClasses.description} />}
 					{shown.map(locale => (
-						<col key={locale} />
+						<col key={locale} className={tableColumnClasses.locale} />
 					))}
 				</colgroup>
 				<thead className="sticky top-0 z-10 bg-background">
 					<tr>
-						<th scope="col" data-select className={`w-0 ${selectCellClass}`}>
+						<th scope="col" data-select className={selectCellClass}>
 							<Tick
 								label={studioText.selectShown}
 								state={shownState(selection, rows)}

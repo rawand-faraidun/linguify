@@ -412,6 +412,20 @@ export const tableTextClasses = {
 } as const
 
 /**
+ * the width of each of a table's columns, the same however many locales there are: more locales scroll the
+ * table sideways instead of narrowing every text
+ *
+ * @note in constants so the studio and the extension draw them alike; a table wider than these together
+ * shares what is left among them
+ */
+export const tableColumnClasses = {
+	select: 'w-10',
+	key: 'w-64',
+	description: 'w-56',
+	locale: 'w-64'
+} as const
+
+/**
  * how many keys a delete's confirmation lists before saying how many more there are — its title says how
  * many in all
  */

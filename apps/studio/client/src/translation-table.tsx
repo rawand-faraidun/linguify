@@ -6,6 +6,7 @@ import {
 	sortColumns,
 	sortDirections,
 	studioText,
+	tableColumnClasses,
 	tableHintIds,
 	tableId,
 	tableMarkClasses,
@@ -128,11 +129,19 @@ export const TranslationTable = memo(function TranslationTable({
 				}}
 				id={tableId}
 				aria-label={studioText.translations}
-				className="w-full caption-bottom text-xs"
+				className="w-full table-fixed caption-bottom text-xs"
 			>
+				<colgroup>
+					<col className={tableColumnClasses.select} />
+					<col className={tableColumnClasses.key} />
+					{descriptions && <col className={tableColumnClasses.description} />}
+					{shown.map(locale => (
+						<col key={locale} className={tableColumnClasses.locale} />
+					))}
+				</colgroup>
 				<TableHeader className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
 					<TableRow>
-						<TableHead className="w-0" data-select>
+						<TableHead data-select>
 							<Checkbox
 								aria-label={studioText.selectShown}
 								className={checkboxClass}
