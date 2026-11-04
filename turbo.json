@@ -15,6 +15,9 @@
 		},
 		"transit": {
 			"dependsOn": ["^transit"]
+		},
+		"test": {
+			"dependsOn": ["^build"]
 		}
 	}
 }

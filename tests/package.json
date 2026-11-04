@@ -1,0 +1,17 @@
+{
+	"name": "@linguify/tests",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"typecheck": "tsc",
+		"test": "vitest run"
+	},
+	"devDependencies": {
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"typescript": "catalog:",
+		"vitest": "5.0.5"
+	}
+}
