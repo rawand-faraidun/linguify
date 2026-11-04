@@ -13,7 +13,7 @@
 		"check": "biome check .",
 		"format": "biome format --write .",
 		"test": "turbo run test",
-		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm --filter linguify-vs manifest --check",
+		"verify": "pnpm lint && pnpm typecheck && pnpm build && pnpm test && pnpm --filter linguify-vs manifest --check",
 		"changeset": "changeset",
 		"changeset:release": "turbo run build --filter linguify && changeset publish"
 	},
