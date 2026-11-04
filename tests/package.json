@@ -9,7 +9,10 @@
 	},
 	"devDependencies": {
 		"@linguify/biome-config": "workspace:*",
+		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
+		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vitest": "5.0.5"

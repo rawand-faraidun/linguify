@@ -619,9 +619,18 @@ importers:
       '@linguify/biome-config':
         specifier: workspace:*
         version: link:../tooling/biome
+      '@linguify/core':
+        specifier: workspace:*
+        version: link:../packages/core
+      '@linguify/keys':
+        specifier: workspace:*
+        version: link:../packages/keys
       '@linguify/tsconfig':
         specifier: workspace:*
         version: link:../tooling/typescript
+      '@linguify/types':
+        specifier: workspace:*
+        version: link:../packages/types
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
