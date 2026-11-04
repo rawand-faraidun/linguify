@@ -1,6 +1,7 @@
 import {
 	keyConflictText,
 	keyPathProblemText,
+	keyPathStates,
 	keySeparator,
 	type namespaceActions,
 	newKeyNotes,
@@ -16,6 +17,7 @@ import {
 	hasNamespace,
 	namespaceHolders,
 	namespacesIn,
+	readNode,
 	splitNamespace
 } from '@linguify/keys'
 import type { Catalogue, KeyConflict, KeyPath, KeyPathProblem, KeyRules, Locale, NamespaceName } from '@linguify/types'
@@ -221,8 +223,11 @@ export const noteText = (note: NewKeyNote): string => {
 
 /**
  * checks a key's new path before it is renamed, the way core will: the path as a new key's — usable here,
- * not taken in any locale, not through a text, its namespace there or allowed to be made — and neither the
- * path it has nor one inside it
+ * not taken in any locale, its namespace there or allowed to be made — and neither the path it has nor one
+ * inside it
+ *
+ * @note a text in the way stops it only in a locale holding the key: core moves the key in those alone, so
+ * a locale without it never blocks the move
  *
  * @param catalogue - every locale's tree
  * @param from - the key, or group, being renamed
@@ -240,10 +245,13 @@ export const checkKeyRename = (
 	if (to === from) return { notes: [{ kind: newKeyNotes.same }], ready: false }
 	if (to.startsWith(`${from}${keySeparator}`)) return { notes: [{ kind: newKeyNotes.inside }], ready: false }
 	const check = checkNewKey(catalogue, to, rules)
+	const holds = (locale: Locale) => readNode(catalogue.locales[locale] ?? {}, from) !== undefined
 	const notes: NewKeyNote[] = [
 		...(check.problem === undefined ? [] : [{ kind: newKeyNotes.problem, problem: check.problem }]),
 		...(check.duplicate.length === 0 ? [] : [{ kind: newKeyNotes.duplicate, locales: check.duplicate }]),
-		...check.conflicts.map(conflict => ({ kind: newKeyNotes.conflict, conflict })),
+		...check.conflicts
+			.filter(conflict => conflict.state !== keyPathStates.blocked || holds(conflict.locale))
+			.map(conflict => ({ kind: newKeyNotes.conflict, conflict })),
 		...(check.namespace === undefined
 			? []
 			: [{ kind: newKeyNotes.newNamespace, namespace: check.namespace, allowed: rules.createNamespace }])
