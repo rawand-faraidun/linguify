@@ -637,6 +637,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.19.0
+      linguify:
+        specifier: workspace:*
+        version: link:../apps/cli
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

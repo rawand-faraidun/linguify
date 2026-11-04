@@ -15,6 +15,7 @@
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",
+		"linguify": "workspace:*",
 		"typescript": "catalog:",
 		"vitest": "5.0.5"
 	}
