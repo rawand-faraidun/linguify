@@ -35,6 +35,9 @@ export const formatOfFile = (path: string): IoFormat | undefined => {
  *
  * @returns the path from the folder, with the folder's own separator; the file's own path when it is the
  * folder itself or on another drive
+ *
+ * @note a Windows path's folders are matched in any case, as Windows matches them — `c:\work` is inside
+ * `C:\work`
  */
 export const relativePath = (from: string, file: string): string => {
 	const windows = from.includes(shownSeparators.windows) && !from.includes(shownSeparators.other)
@@ -44,7 +47,8 @@ export const relativePath = (from: string, file: string): string => {
 	// a Windows drive is a root of its own: no path leads from one to another
 	if (folder[0]?.endsWith(':') && folder[0].toLowerCase() !== target[0]?.toLowerCase()) return file
 	let shared = 0
-	while (shared < folder.length && shared < target.length && folder[shared] === target[shared]) shared++
+	const same = (a: string | undefined, b: string | undefined) => (windows ? a?.toLowerCase() === b?.toLowerCase() : a === b)
+	while (shared < folder.length && shared < target.length && same(folder[shared], target[shared])) shared++
 	const up = folder.slice(shared).map(() => '..')
 	return [...up, ...target.slice(shared)].join(separator) || file
 }
