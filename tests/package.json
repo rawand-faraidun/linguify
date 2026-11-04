@@ -12,6 +12,7 @@
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/core": "workspace:*",
 		"@linguify/keys": "workspace:*",
+		"@linguify/table": "workspace:*",
 		"@linguify/tsconfig": "workspace:*",
 		"@linguify/types": "workspace:*",
 		"@types/node": "catalog:",

@@ -628,6 +628,9 @@ importers:
       '@linguify/keys':
         specifier: workspace:*
         version: link:../packages/keys
+      '@linguify/table':
+        specifier: workspace:*
+        version: link:../packages/table
       '@linguify/tsconfig':
         specifier: workspace:*
         version: link:../tooling/typescript
