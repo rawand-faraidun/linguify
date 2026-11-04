@@ -1,0 +1,587 @@
+import { memo, type ReactNode, useMemo, useRef } from 'react'
+import {
+	rowKinds,
+	selectedRowState,
+	selectionStates,
+	sortColumns,
+	sortDirections,
+	studioText,
+	tableColumnClasses,
+	tableHintIds,
+	tableId,
+	tableMarkClasses,
+	tableMarkLabels,
+	tableMarks,
+	tableTextClasses
+} from '@linguify/constants'
+import { localeOrder, type RowSource } from '@linguify/keys'
+import {
+	canExpand,
+	cellMark,
+	cellText,
+	countKeys,
+	type Expansion,
+	fill,
+	isExpanded,
+	type KeyEdit,
+	type KeySort,
+	type KeyTableRow,
+	type TableRow as Row,
+	rowFeatures,
+	rowIndent,
+	rowOptionsFor,
+	type Selection,
+	type SelectionState,
+	sameColumn,
+	selectionState,
+	shownState,
+	toExpandedState
+} from '@linguify/table'
+import { controlAfter, rove, useEditable, useTableStop } from '@linguify/table/react'
+import type { KeyPath, Locale, NamespaceName, TableMark, ViewMode } from '@linguify/types'
+import { Checkbox } from '@linguify/ui/components/checkbox'
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from '@linguify/ui/components/table'
+import { Textarea } from '@linguify/ui/components/textarea'
+import { cn } from '@linguify/ui/lib/utils'
+import { tableFeatures, useTable } from '@tanstack/react-table'
+import { ArrowDownIcon, ArrowUpDownIcon, ArrowUpIcon, ChevronRightIcon, PencilIcon } from 'lucide-react'
+import { checkboxClass, plainButtonClass, plainFocusClass, textWidthClass } from './classes'
+
+/**
+ * the translation table: a section per namespace, groups in the tree view, a row per key, its texts and
+ * description changed in place, a checkbox on every row to select keys for a bulk delete
+ *
+ * @note a plain `<table>`, not the UI package's `Table`, which wraps it in a box that scrolls sideways —
+ * that box would hold the sticky column heads instead of the page's scrolling middle. Each text is
+ * bounded on a block inside its cell, as `max-width` on a `<td>` is only a hint, and reads in its own
+ * direction, so Kurdish Sorani runs right to left inside the left-to-right table
+ *
+ * @param props - `rows`, built for `mode`; `source`, the project's locales and whether descriptions are
+ * on; `expansion`, which rows are open; `onToggle`, to open or close one by id, which should not change
+ * between renders — every row that did not change is then left as it is; `sort`, how the rows are ordered,
+ * and `onSort`, a column's header pressed; `onEdit`, a text changed in a cell, settled once it is written;
+ * `selection`, the keys selected, `onSelect`, a row's checkbox pressed, and `onSelectAll`, the head's
+ * checkbox pressed — both should not change between renders, as `onToggle`
+ *
+ * @returns the table
+ */
+export const TranslationTable = memo(function TranslationTable({
+	rows,
+	mode,
+	source,
+	expansion,
+	onToggle,
+	sort,
+	onSort,
+	onEdit,
+	selection,
+	onSelect,
+	onSelectAll,
+	onRename,
+	onRenameKey
+}: {
+	rows: Row[]
+	mode: ViewMode
+	source: RowSource
+	expansion: Expansion
+	onToggle: (id: string) => void
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
+	onEdit: (edit: KeyEdit) => Promise<unknown>
+	selection: Selection
+	onSelect: (row: Row) => void
+	onSelectAll: () => void
+	onRename: (namespace: NamespaceName) => void
+	onRenameKey: (key: KeyPath) => void
+}) {
+	const expanded = useMemo(() => toExpandedState(expansion, rows, mode), [expansion, rows, mode])
+	const tableRef = useRef<HTMLTableElement>(null)
+	useTableStop(tableRef)
+	const table = useTable({
+		features: tableFeatures(rowFeatures),
+		columns: [],
+		data: rows,
+		...rowOptionsFor(mode),
+		state: { expanded }
+	})
+	const descriptions = source.descriptions
+	const shown = useMemo(() => localeOrder(source), [source])
+	const columns = 1 + (descriptions ? 1 : 0) + shown.length
+	return (
+		<>
+			<span id={tableHintIds.sort} hidden>
+				{studioText.sortHint}
+			</span>
+			<span id={tableHintIds.open} hidden>
+				{studioText.editHint}
+			</span>
+			<span id={tableHintIds.keys} hidden>
+				{studioText.editKeys}
+			</span>
+			<table
+				ref={tableRef}
+				onFocus={event => rove(event.currentTarget, event.target)}
+				onKeyDown={event => {
+					const to = controlAfter(event.currentTarget, event)
+					if (to === undefined) return
+					event.preventDefault()
+					to.focus()
+				}}
+				id={tableId}
+				aria-label={studioText.translations}
+				className="w-full table-fixed caption-bottom text-xs"
+			>
+				<colgroup>
+					<col className={tableColumnClasses.select} />
+					<col className={tableColumnClasses.key} />
+					{descriptions && <col className={tableColumnClasses.description} />}
+					{shown.map(locale => (
+						<col key={locale} className={tableColumnClasses.locale} />
+					))}
+				</colgroup>
+				<TableHeader className="sticky top-0 z-10 bg-background [&_th]:shadow-[inset_0_-1px_0_var(--color-border)]">
+					<TableRow>
+						<TableHead data-select>
+							<Checkbox
+								aria-label={studioText.selectShown}
+								className={checkboxClass}
+								checked={checkboxState(shownState(selection, rows))}
+								onCheckedChange={onSelectAll}
+							/>
+						</TableHead>
+						<SortableHead column={{ by: sortColumns.key }} sort={sort} onSort={onSort}>
+							{studioText.key}
+						</SortableHead>
+						{descriptions && <TableHead>{studioText.description}</TableHead>}
+						{shown.map(locale => (
+							<SortableHead key={locale} column={{ by: sortColumns.locale, locale }} sort={sort} onSort={onSort}>
+								{locale}
+								{locale === source.default && (
+									<>
+										{' '}
+										<span className="font-normal text-muted-foreground">{studioText.defaultLocale}</span>
+									</>
+								)}
+							</SortableHead>
+						))}
+					</TableRow>
+				</TableHeader>
+				<TableBody>
+					{table
+						.getRowModel()
+						.rows.map(({ id, depth, original }) =>
+							original.kind === rowKinds.key ? (
+								<KeyLine
+									key={id}
+									row={original}
+									depth={depth}
+									shown={shown}
+									defaultLocale={source.default}
+									descriptions={descriptions}
+									onEdit={onEdit}
+									onRenameKey={onRenameKey}
+									selected={selection.has(original.key)}
+									onSelect={onSelect}
+								/>
+							) : (
+								<GroupLine
+									key={id}
+									row={original}
+									depth={depth}
+									columns={columns}
+									open={canExpand(original) && isExpanded(expansion, id)}
+									onToggle={onToggle}
+									state={selectionState(selection, original)}
+									onSelect={onSelect}
+									onRename={onRename}
+								/>
+							)
+						)}
+				</TableBody>
+			</table>
+		</>
+	)
+})
+
+/**
+ * a column's header that orders the table by it when pressed — on screen only
+ *
+ * @note the button is named by the header's own words, and described by what sorting does; `aria-sort`
+ * is on the sorted header only
+ */
+const SortableHead = ({
+	column,
+	sort,
+	onSort,
+	children
+}: {
+	column: KeySort['column']
+	sort: KeySort | undefined
+	onSort: (column: KeySort['column']) => void
+	children: ReactNode
+}) => {
+	const direction = sort !== undefined && sameColumn(sort.column, column) ? sort.direction : undefined
+	const Icon = direction === undefined ? ArrowUpDownIcon : sortIcons[direction]
+	return (
+		<TableHead aria-sort={direction}>
+			<button
+				type="button"
+				aria-describedby={tableHintIds.sort}
+				onClick={() => onSort(column)}
+				className={cn('items-center', plainButtonClass)}
+			>
+				<span>{children}</span>
+				<Icon className={cn('size-3.5 shrink-0', direction === undefined && 'text-muted-foreground')} />
+			</button>
+		</TableHead>
+	)
+}
+
+/**
+ * the arrow a sorted column's header shows
+ */
+const sortIcons = {
+	[sortDirections.ascending]: ArrowUpIcon,
+	[sortDirections.descending]: ArrowDownIcon
+}
+
+/**
+ * @param state - how much of a row is selected
+ *
+ * @returns what its checkbox shows: ticked, a dash, or empty
+ */
+const checkboxState = (state: SelectionState): boolean | 'indeterminate' =>
+	state === selectionStates.all ? true : state === selectionStates.some ? 'indeterminate' : false
+
+/**
+ * a button that opens and closes a row, its chevron turning with it
+ */
+const Disclosure = ({ open, onToggle, children }: { open: boolean; onToggle: () => void; children: ReactNode }) => (
+	<button
+		type="button"
+		tabIndex={-1}
+		data-cell
+		data-disclosure
+		aria-expanded={open}
+		onClick={onToggle}
+		className={cn('items-start', plainButtonClass)}
+	>
+		<ChevronRightIcon className="mt-px size-3.5 shrink-0 in-aria-expanded:rotate-90 transition-transform" />
+		{children}
+	</button>
+)
+
+/**
+ * a namespace's section, or a group of the tree view: one header cell across the row, which opens and
+ * closes it
+ */
+const GroupLine = memo(
+	({
+		row,
+		depth,
+		columns,
+		open,
+		onToggle,
+		state,
+		onSelect,
+		onRename
+	}: {
+		row: Exclude<Row, KeyTableRow>
+		depth: number
+		columns: number
+		open: boolean
+		onToggle: (id: string) => void
+		state: SelectionState
+		onSelect: (row: Row) => void
+		onRename: (namespace: NamespaceName) => void
+	}) => {
+		const heading = (
+			<>
+				<span className={cn(row.kind === rowKinds.section && 'font-semibold')}>
+					{row.kind === rowKinds.section ? row.namespace : row.label}
+				</span>
+				<span className="text-muted-foreground">{countKeys(row.keys)}</span>
+			</>
+		)
+		return (
+			<TableRow data-row={row.id} data-state={state === selectionStates.all ? selectedRowState : undefined}>
+				<TableCell data-select>
+					{row.keys > 0 && (
+						<Checkbox
+							tabIndex={-1}
+							data-cell
+							aria-label={fill(studioText.selectGroup, {
+								name: row.kind === rowKinds.section ? row.namespace : row.path
+							})}
+							className={checkboxClass}
+							checked={checkboxState(state)}
+							onCheckedChange={() => onSelect(row)}
+						/>
+					)}
+				</TableCell>
+				<TableHead
+					scope="rowgroup"
+					colSpan={columns}
+					className="h-auto py-2 font-normal"
+					style={{ paddingInlineStart: rowIndent(depth) }}
+				>
+					{row.keys > 0 ? (
+						<Disclosure open={open} onToggle={() => onToggle(row.id)}>
+							{heading}
+						</Disclosure>
+					) : (
+						// a namespace holding no key has nothing to open or select: its name, said as it is
+						<span className="inline-flex gap-1 ps-4.5">{heading}</span>
+					)}
+					{row.kind === rowKinds.section && (
+						<button
+							type="button"
+							tabIndex={-1}
+							data-cell
+							data-rename
+							aria-label={fill(studioText.renameNamespace, { name: row.namespace })}
+							title={fill(studioText.renameNamespace, { name: row.namespace })}
+							onClick={() => onRename(row.namespace)}
+							className={cn('ms-2 inline-flex align-middle text-muted-foreground', plainButtonClass)}
+						>
+							<PencilIcon className="size-3.5" />
+						</button>
+					)}
+				</TableHead>
+			</TableRow>
+		)
+	}
+)
+
+/**
+ * one key: its path as the row's header, with a way to rename it, its description, and its text in each
+ * locale
+ */
+const KeyLine = memo(
+	({
+		row,
+		depth,
+		shown,
+		defaultLocale,
+		descriptions,
+		onEdit,
+		onRenameKey,
+		selected,
+		onSelect
+	}: {
+		row: KeyTableRow
+		depth: number
+		shown: readonly Locale[]
+		defaultLocale: Locale
+		descriptions: boolean
+		onEdit: (edit: KeyEdit) => Promise<unknown>
+		onRenameKey: (key: KeyPath) => void
+		selected: boolean
+		onSelect: (row: Row) => void
+	}) => (
+		<TableRow data-row={row.id} data-state={selected ? selectedRowState : undefined} className="group/row">
+			<TableCell className="align-top" data-select>
+				<Checkbox
+					tabIndex={-1}
+					data-cell
+					aria-label={fill(studioText.select, { key: row.key })}
+					className={checkboxClass}
+					checked={selected}
+					onCheckedChange={() => onSelect(row)}
+				/>
+			</TableCell>
+			<TableHead
+				scope="row"
+				title={row.key}
+				className="h-auto py-2 align-top font-mono font-normal"
+				style={{ paddingInlineStart: rowIndent(depth) }}
+			>
+				<span className="flex items-start gap-2">
+					<KeyLabel row={row} />
+					<button
+						type="button"
+						tabIndex={-1}
+						data-cell
+						data-rename
+						aria-label={fill(studioText.renameKey, { key: row.key })}
+						title={fill(studioText.renameKey, { key: row.key })}
+						onClick={() => onRenameKey(row.key)}
+						className={cn(
+							'inline-flex shrink-0 text-muted-foreground opacity-0 focus-visible:opacity-100 group-hover/row:opacity-100',
+							plainButtonClass
+						)}
+					>
+						<PencilIcon className="size-3.5" />
+					</button>
+				</span>
+			</TableHead>
+			{descriptions && (
+				<TableCell className="align-top text-muted-foreground" data-description>
+					<Editable
+						text={row.description ?? ''}
+						label={fill(studioText.editLabel, { column: studioText.description, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, description: text })}
+					>
+						{row.description === undefined || row.description === '' ? (
+							<span className="sr-only">{studioText.noDescription}</span>
+						) : (
+							<Text text={row.description} />
+						)}
+					</Editable>
+				</TableCell>
+			)}
+			{shown.map(locale => (
+				<TableCell key={locale} className="align-top" data-locale={locale}>
+					<Editable
+						text={row.values[locale] ?? ''}
+						lang={locale}
+						label={fill(studioText.editLabel, { column: locale, key: row.key })}
+						onCommit={text => onEdit({ key: row.key, locale, text })}
+					>
+						<Value row={row} locale={locale} defaultLocale={defaultLocale} />
+					</Editable>
+				</TableCell>
+			))}
+		</TableRow>
+	)
+)
+
+/**
+ * a text the table lets a person change in place: shown as a button, a click or Enter opens it, Enter
+ * saves, Shift+Enter starts a new line, Escape cancels, and leaving it saves a change
+ *
+ * @note the editor takes the text's own box — no padding, no border, a ring that takes no room — so opening
+ * it moves nothing, and a click meant for the next text lands there. Only Enter and Escape give the
+ * keyboard back to the text; leaving by Tab or a click goes where the person meant
+ *
+ * @note it remembers the text it opened on. Should the files bring another while it is open — a refresh
+ * after a stale write — that text is shown under the editor, and only Enter saves over it: leaving does not
+ *
+ * @note what was typed stays while the write is under way and when it fails, and one write is never sent
+ * twice — not by a second Enter, nor by leaving after a failure with nothing changed since
+ */
+const Editable = ({
+	text,
+	lang,
+	label,
+	onCommit,
+	children
+}: {
+	text: string
+	lang?: Locale
+	label: string
+	onCommit: (text: string) => Promise<unknown>
+	children: ReactNode
+}) => {
+	const edit = useEditable(text, onCommit)
+	if (edit.draft === undefined)
+		return (
+			<button
+				ref={edit.control}
+				type="button"
+				tabIndex={edit.roving ? 0 : -1}
+				data-edit
+				data-cell
+				aria-describedby={tableHintIds.open}
+				onClick={event => edit.open(event.currentTarget.tabIndex === 0)}
+				className={cn('block min-h-5 w-full text-start', plainFocusClass)}
+			>
+				{children}
+				<span className="sr-only">{`, ${label}`}</span>
+			</button>
+		)
+	return (
+		<>
+			<Textarea
+				autoFocus
+				data-editor
+				value={edit.draft}
+				dir="auto"
+				lang={lang}
+				aria-label={label}
+				aria-describedby={edit.changed ? `${tableHintIds.keys} ${tableHintIds.onDisk}` : tableHintIds.keys}
+				aria-invalid={edit.changed}
+				aria-busy={edit.saving}
+				readOnly={edit.saving}
+				className={cn(
+					'field-sizing-content min-h-0 resize-none rounded-none border-0 p-0 shadow-none ring-2 ring-ring focus-visible:ring-2 focus-visible:ring-ring',
+					textWidthClass
+				)}
+				onFocus={event => event.currentTarget.select()}
+				onChange={event => edit.type(event.target.value)}
+				onKeyDown={edit.keyDown}
+				onBlur={edit.leave}
+			/>
+			{edit.changed && (
+				<span id={tableHintIds.onDisk} role="status" className="mt-1 block text-muted-foreground" dir="auto">
+					{fill(studioText.onDisk, { text })}
+				</span>
+			)}
+		</>
+	)
+}
+
+/**
+ * a key's label, bounded and wrapping anywhere — a dotted path has no spaces to break at. Where it shows
+ * less than the whole path, a screen reader is given the whole path instead
+ */
+const KeyLabel = ({ row }: { row: KeyTableRow }) =>
+	row.label === row.key ? (
+		<span data-label className={keyLabelClass}>
+			{row.label}
+		</span>
+	) : (
+		<>
+			<span className="sr-only">{row.key}</span>
+			<span data-label aria-hidden="true" className={keyLabelClass}>
+				{row.label}
+			</span>
+		</>
+	)
+
+/**
+ * the key label's block: as wide as a text's, and wrapping anywhere
+ */
+const keyLabelClass = tableTextClasses.key
+
+/**
+ * a key's text in one locale, and its mark when the text alone does not say enough
+ */
+const Value = ({ row, locale, defaultLocale }: { row: KeyTableRow; locale: Locale; defaultLocale: Locale }) => {
+	const mark = cellMark(row, locale, defaultLocale)
+	const text = cellText(row, locale, mark)
+	return (
+		<>
+			{text !== undefined && <Text text={text} lang={locale} />}
+			{mark !== undefined && <Mark mark={mark} />}
+		</>
+	)
+}
+
+/**
+ * text from the files: bounded inside its cell, wrapping, and in its own direction
+ */
+const Text = ({ text, lang }: { text: string | undefined; lang?: Locale }) =>
+	text === undefined ? null : (
+		<span data-text dir="auto" lang={lang} className={tableTextClasses.text}>
+			{text}
+		</span>
+	)
+
+/**
+ * a mark, drawn as constants say — an absent key's dash spoken as words
+ */
+const Mark = ({ mark }: { mark: TableMark }) =>
+	mark === tableMarks.absent ? (
+		<span className={tableMarkClasses[mark]} title={studioText.absent}>
+			<span aria-hidden="true">{tableMarkLabels[mark]}</span>
+			<span className="sr-only">{studioText.absent}</span>
+		</span>
+	) : (
+		<span
+			data-mark={mark}
+			className={cn('inline-block px-1 text-[0.625rem] uppercase tracking-wide', tableMarkClasses[mark])}
+		>
+			{tableMarkLabels[mark]}
+		</span>
+	)

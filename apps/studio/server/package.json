@@ -1,0 +1,24 @@
+{
+	"name": "@linguify/studio-server",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": "./src/index.ts",
+	"scripts": {
+		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"@hono/node-server": "catalog:",
+		"@linguify/api": "workspace:*",
+		"@linguify/constants": "workspace:*",
+		"@linguify/core": "workspace:*",
+		"@trpc/server": "catalog:",
+		"hono": "catalog:"
+	},
+	"devDependencies": {
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"typescript": "catalog:"
+	}
+}

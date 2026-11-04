@@ -1,0 +1,5 @@
+{
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"root": false,
+	"extends": ["@linguify/biome-config/base", "@linguify/biome-config/node"]
+}

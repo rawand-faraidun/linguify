@@ -1,0 +1,5 @@
+{
+	"extends": "@linguify/tsconfig/extension",
+	"include": ["src", "scripts"],
+	"exclude": ["src/webview"]
+}

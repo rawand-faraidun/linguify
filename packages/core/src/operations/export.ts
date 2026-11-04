@@ -1,0 +1,97 @@
+import { emptyTranslation, ioColumns } from '@linguify/constants'
+import { localeOrder } from '@linguify/keys'
+import type { Catalogue, IoFormat } from '@linguify/types'
+import { encodeTable, type IoTarget, requireEncodable, resolveIoTarget, type Table } from '../io'
+import type { OperationContext } from './context'
+import { buildKeyRows } from './rows'
+
+/**
+ * `export`'s input; both fields fall back — the format to `io.format`, the path to
+ * `./translations.<format>`
+ */
+export type ExportInput = {
+	format?: IoFormat | undefined
+	path?: string | undefined
+}
+
+/**
+ * an export, ready to be written
+ */
+export type ExportFile = IoTarget & {
+	/**
+	 * how many keys it holds — one row each
+	 */
+	rows: number
+
+	/**
+	 * the file's complete content: text for csv, tsv and json, bytes for xlsx
+	 */
+	content: string | Uint8Array
+}
+
+/**
+ * where an export would go and how many rows it would hold — a dry run's answer, without building the file,
+ * which for xlsx is most of the work; what building it would refuse is still refused
+ *
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ * @param input - `export`'s input
+ *
+ * @returns the format, the path relative to the working directory, and the row count
+ *
+ * @throws {@link ValidationError} `INVALID_INPUT` when the format and the path's extension disagree, or a
+ * cell is longer than an xlsx file holds
+ */
+export const planExport = (
+	context: OperationContext,
+	catalogue: Catalogue,
+	input: ExportInput = {}
+): IoTarget & { rows: number } => {
+	const target = resolveIoTarget(context.config, input)
+	const table = buildTable(context, catalogue)
+	requireEncodable(target.format, table)
+	return { ...target, rows: table.rows.length }
+}
+
+/**
+ * turns the catalogue into an export file, without writing it
+ *
+ * @note one row per key in any locale, in the default's order; a locale without the key has an empty
+ * cell, which `import` reads as "no change", so an export imports back as nothing to do
+ *
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ * @param input - `export`'s input
+ *
+ * @returns the format, the path relative to the working directory, the row count and the content
+ *
+ * @throws {@link ValidationError} `INVALID_INPUT` when the format and the path's extension disagree
+ */
+export const exportCatalogue = async (
+	context: OperationContext,
+	catalogue: Catalogue,
+	input: ExportInput = {}
+): Promise<ExportFile> => {
+	const target = resolveIoTarget(context.config, input)
+	const table = buildTable(context, catalogue)
+	return { ...target, rows: table.rows.length, content: await encodeTable(target.format, table) }
+}
+
+/**
+ * @param context - the operation context
+ * @param catalogue - the catalogue
+ *
+ * @returns the catalogue as a table: `key`, `description` when on, the default locale, the rest
+ */
+const buildTable = (context: OperationContext, catalogue: Catalogue): Table => {
+	const described = context.config.description.enabled
+	const locales = localeOrder(context.config)
+	return {
+		header: [ioColumns.key, ...(described ? [ioColumns.description] : []), ...locales],
+		rows: buildKeyRows(context, catalogue).map(row => [
+			row.key,
+			...(described ? [row.description ?? emptyTranslation] : []),
+			...locales.map(locale => row.values[locale] ?? emptyTranslation)
+		])
+	}
+}

@@ -1,0 +1,25 @@
+{
+	"$schema": "https://ui.shadcn.com/schema.json",
+	"style": "radix-lyra",
+	"rsc": false,
+	"tsx": true,
+	"tailwind": {
+		"config": "",
+		"css": "src/styles/globals.css",
+		"baseColor": "neutral",
+		"cssVariables": true,
+		"prefix": ""
+	},
+	"iconLibrary": "lucide",
+	"rtl": true,
+	"menuColor": "default",
+	"menuAccent": "subtle",
+	"aliases": {
+		"components": "@linguify/ui/components",
+		"utils": "@linguify/ui/lib/utils",
+		"ui": "@linguify/ui/components",
+		"lib": "@linguify/ui/lib",
+		"hooks": "@linguify/ui/hooks"
+	},
+	"registries": {}
+}

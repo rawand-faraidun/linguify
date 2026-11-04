@@ -1,3 +1,19 @@
 {
-  "tailwindCSS.experimental.configFile": "src/client/src/index.css"
+	"js/ts.tsdk.path": "node_modules/typescript/lib",
+	"js/ts.tsdk.promptToUseWorkspaceVersion": false,
+	"editor.defaultFormatter": "biomejs.biome",
+	"[yaml]": {
+		"editor.defaultFormatter": null,
+		"editor.insertSpaces": true
+	},
+	"[markdown]": {
+		"editor.defaultFormatter": null,
+		"files.trimTrailingWhitespace": false
+	},
+	"json.schemaDownload.trustedDomains": {
+		"https://turborepo.com": true,
+		"https://ui.shadcn.com": true,
+		"https://unpkg.com": true,
+		"https://json.schemastore.org": true
+	}
 }

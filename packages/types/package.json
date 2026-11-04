@@ -1,0 +1,16 @@
+{
+	"name": "@linguify/types",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": "./src/index.ts",
+	"scripts": {
+		"typecheck": "tsc"
+	},
+	"devDependencies": {
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/constants": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"typescript": "catalog:"
+	}
+}

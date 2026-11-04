@@ -1,0 +1,326 @@
+import { rowIdSeparator, rowKinds, viewModes } from '@linguify/constants'
+import { joinKeyPath, splitKeyPath, splitNamespace } from '@linguify/keys'
+import type { EngineCapabilities, KeyPath, KeyRow, Locale, NamespaceName, ViewMode } from '@linguify/types'
+
+/**
+ * a namespace in the table: a collapsible section holding its keys
+ */
+export type SectionRow = {
+	kind: typeof rowKinds.section
+	id: string
+	namespace: NamespaceName
+
+	/**
+	 * how many keys the section holds
+	 */
+	keys: number
+	subRows: TableRow[]
+}
+
+/**
+ * one key in the table
+ */
+export type KeyTableRow = {
+	kind: typeof rowKinds.key
+	id: string
+	key: KeyPath
+
+	/**
+	 * what the key column shows: the path below its section — `save` under `common` — or the whole path
+	 * when there is no section
+	 */
+	label: string
+	description?: string
+
+	/**
+	 * the key's text per locale; a locale without the key is left out
+	 */
+	values: Record<Locale, string>
+}
+
+/**
+ * a key path segment holding nested keys, in the tree view
+ */
+export type GroupRow = {
+	kind: typeof rowKinds.group
+	id: string
+
+	/**
+	 * the group's full path — `common.menu`
+	 */
+	path: KeyPath
+
+	/**
+	 * what the key column shows: the group's own segment — `menu`
+	 */
+	label: string
+
+	/**
+	 * how many keys the group holds, at any depth
+	 */
+	keys: number
+	subRows: TableRow[]
+}
+
+/**
+ * any row of the translation table
+ */
+export type TableRow = SectionRow | GroupRow | KeyTableRow
+
+/**
+ * how rows are built
+ */
+export type RowOptions = {
+	/**
+	 * the project groups its keys in namespaces — each the first segment of a key path
+	 */
+	namespaced: boolean
+
+	/**
+	 * namespaces to show a section for though no key in the rows is in them — one just added, one emptied
+	 */
+	emptyNamespaces?: readonly NamespaceName[]
+}
+
+/**
+ * a row's id
+ *
+ * @param kind - what the row is
+ * @param path - its namespace, group path or key path
+ *
+ * @returns its id — `key:common.save`
+ */
+export const rowId = (kind: TableRow['kind'], path: string): string => `${kind}${rowIdSeparator}${path}`
+
+/**
+ * builds the flat view: one row per key, in a section per namespace
+ *
+ * @note keys keep the order they come in — the default locale's, then those only other locales have —
+ * and each section appears where its first key does; sorting is a view choice made later
+ *
+ * @param rows - every key, as `list keys` gives them
+ * @param options - whether the project has namespaces
+ *
+ * @returns the sections, each holding its keys — or, without namespaces, the keys themselves
+ */
+export const buildFlatRows = (
+	rows: readonly KeyRow[],
+	{ namespaced, emptyNamespaces = [] }: RowOptions
+): TableRow[] => {
+	if (!namespaced) return rows.map(row => keyRow(row, row.key))
+	const sections = new Map<NamespaceName, KeyTableRow[]>()
+	for (const row of rows) {
+		const { namespace, key } = splitNamespace(row.key)
+		const keys = sections.get(namespace) ?? []
+		keys.push(keyRow(row, key))
+		sections.set(namespace, keys)
+	}
+	return withEmptySections(
+		[...sections].map(([namespace, keys]) => sectionRow(namespace, keys.length, keys)),
+		emptyNamespaces
+	)
+}
+
+/**
+ * @param sections - the sections the keys gave
+ * @param namespaces - namespaces to show though no key is in them
+ *
+ * @returns the sections, then an empty one for each of those namespaces not among them, in their order
+ */
+const withEmptySections = (sections: TableRow[], namespaces: readonly NamespaceName[]): TableRow[] => {
+	const shown = new Set(sections.flatMap(section => (section.kind === rowKinds.section ? [section.namespace] : [])))
+	return [
+		...sections,
+		...namespaces.filter(namespace => !shown.has(namespace)).map(namespace => sectionRow(namespace, 0, []))
+	]
+}
+
+/**
+ * @param namespace - a namespace
+ * @param keys - how many keys it holds, at any depth
+ * @param subRows - its rows
+ *
+ * @returns its section
+ */
+const sectionRow = (namespace: NamespaceName, keys: number, subRows: TableRow[]): SectionRow => ({
+	kind: rowKinds.section,
+	id: rowId(rowKinds.section, namespace),
+	namespace,
+	keys,
+	subRows
+})
+
+/**
+ * @param row - one key, as `list keys` gives it
+ * @param label - what the key column shows
+ *
+ * @returns its table row
+ */
+const keyRow = (row: KeyRow, label: string): KeyTableRow => {
+	const labels = keyRows.get(row) ?? new Map<string, KeyTableRow>()
+	const known = labels.get(label)
+	if (known !== undefined) return known
+	const { key, description, values } = row
+	const built: KeyTableRow = {
+		kind: rowKinds.key,
+		id: rowId(rowKinds.key, key),
+		key,
+		label,
+		...(description === undefined ? {} : { description }),
+		values
+	}
+	keyRows.set(row, labels.set(label, built))
+	return built
+}
+
+/**
+ * each key's table rows by label, kept for as long as the key is — a search, filter or sort that keeps a
+ * key hands the table the same row, so a surface can leave it as it is
+ */
+const keyRows = new WeakMap<KeyRow, Map<string, KeyTableRow>>()
+
+/**
+ * builds the tree view: nested keys collapse by path segment, inside a section per namespace
+ *
+ * @note a key row shows its last segment, a group its own; groups and keys keep the order they first
+ * come in. A path that is a key in one locale and holds nested keys in another — a conflict `sync`
+ * reports — has both rows, the group and the key, which never share an id
+ *
+ * @param rows - every key, as `list keys` gives them
+ * @param options - whether the project has namespaces
+ *
+ * @returns the sections, each holding its groups and keys — or, without namespaces, the top level
+ */
+export const buildTreeRows = (
+	rows: readonly KeyRow[],
+	{ namespaced, emptyNamespaces = [] }: RowOptions
+): TableRow[] => {
+	const root: Branch = new Map()
+	for (const row of rows) {
+		const segments = splitKeyPath(row.key)
+		let level = root
+		for (const [index, segment] of segments.slice(0, -1).entries()) {
+			const path = joinKeyPath(segments.slice(0, index + 1))
+			const id = rowId(rowKinds.group, path)
+			const entry = level.get(id)
+			const branch: Branch = entry !== undefined && 'branch' in entry ? entry.branch : new Map()
+			if (entry === undefined) level.set(id, { path, label: segment, branch })
+			level = branch
+		}
+		level.set(rowId(rowKinds.key, row.key), { row, label: segments.at(-1) ?? row.key })
+	}
+	const top = toRows(root)
+	if (!namespaced) return top
+	return withEmptySections(
+		top.map(row => (row.kind === rowKinds.group ? sectionRow(row.path, row.keys, row.subRows) : row)),
+		emptyNamespaces
+	)
+}
+
+/**
+ * one level of the tree as it is built: by row id, a group's own level or a key
+ */
+type Branch = Map<string, { path: KeyPath; label: string; branch: Branch } | { row: KeyRow; label: string }>
+
+/**
+ * @param branch - one level of the tree
+ *
+ * @returns its rows, groups holding theirs
+ */
+const toRows = (branch: Branch): TableRow[] =>
+	[...branch.values()].map(entry => {
+		if ('row' in entry) return keyRow(entry.row, entry.label)
+		const subRows = toRows(entry.branch)
+		return {
+			kind: rowKinds.group,
+			id: rowId(rowKinds.group, entry.path),
+			path: entry.path,
+			label: entry.label,
+			keys: subRows.reduce((sum, row) => sum + (row.kind === rowKinds.key ? 1 : row.keys), 0),
+			subRows
+		}
+	})
+
+/**
+ * builds the rows of a view mode
+ *
+ * @param mode - the view mode
+ * @param rows - every key, as `list keys` gives them
+ * @param options - whether the project has namespaces
+ *
+ * @returns the rows to hand to the table
+ */
+export const buildRows = (mode: ViewMode, rows: readonly KeyRow[], options: RowOptions): TableRow[] =>
+	mode === viewModes.tree ? buildTreeRows(rows, options) : buildFlatRows(rows, options)
+
+/**
+ * @param value - a view mode's name, as stored or as a control reports it
+ *
+ * @returns whether it is one of the table's view modes
+ */
+export const isViewMode = (value: string | null | undefined): value is ViewMode =>
+	Object.values(viewModes).some(mode => mode === value)
+
+/**
+ * the view modes a project can use
+ *
+ * @param capabilities - what the project's format can express
+ *
+ * @returns the view modes the project can use — the tree needs keys that nest
+ */
+export const availableViewModes = ({ nesting }: Pick<EngineCapabilities, 'nesting'>): ViewMode[] =>
+	Object.values(viewModes).filter(mode => mode !== viewModes.tree || nesting)
+
+/**
+ * the view mode to show
+ *
+ * @param mode - the view mode asked for — `studio.defaultView`, or a remembered choice
+ * @param capabilities - what the project's format can express
+ *
+ * @returns that mode when the project can use it, else the flat view
+ */
+export const usableViewMode = (mode: ViewMode, capabilities: Pick<EngineCapabilities, 'nesting'>): ViewMode =>
+	availableViewModes(capabilities).includes(mode) ? mode : viewModes.flat
+
+/**
+ * the rows read again after a write, each the earlier row itself where nothing in it changed
+ *
+ * @note a table remembers what it built for each row by the row itself, so a row read afresh, though the
+ * same, is built and drawn again; kept, only the rows a write touched are — one edit no longer redraws
+ * every key
+ *
+ * @param previous - the rows as they were
+ * @param next - the rows as read now
+ *
+ * @returns `next`, with every row that equals its earlier self replaced by it
+ */
+export const keepUnchangedRows = (previous: readonly KeyRow[], next: readonly KeyRow[]): KeyRow[] => {
+	const before = new Map(previous.map(row => [row.key, row]))
+	return next.map(row => {
+		const earlier = before.get(row.key)
+		return earlier !== undefined && sameRow(earlier, row) ? earlier : row
+	})
+}
+
+/**
+ * @param a - a key's row
+ * @param b - another row for the same key
+ *
+ * @returns whether they hold the same description and the same text in the same locales
+ */
+const sameRow = (a: KeyRow, b: KeyRow): boolean => {
+	if (a.description !== b.description) return false
+	const locales = Object.keys(a.values)
+	return (
+		locales.length === Object.keys(b.values).length &&
+		locales.every(locale => Object.hasOwn(b.values, locale) && a.values[locale] === b.values[locale])
+	)
+}
+
+/**
+ * @param depth - how deep a row sits
+ *
+ * @returns how far its first cell is indented, in the table's spacing unit — a level deeper a clear step
+ * in, so a key reads as under its section
+ */
+export const rowIndent = (depth: number): string => `calc(var(--spacing) * ${4 + depth * 10})`

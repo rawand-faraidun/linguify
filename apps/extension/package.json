@@ -1,0 +1,306 @@
+{
+	"name": "linguify-vs",
+	"displayName": "Linguify",
+	"description": "Developer-first translation file manager, in the editor.",
+	"version": "0.0.0",
+	"publisher": "rawand-faraidun",
+	"private": true,
+	"icon": "icon.png",
+	"galleryBanner": {
+		"color": "#1e1e1e",
+		"theme": "dark"
+	},
+	"categories": [
+		"Other"
+	],
+	"main": "./dist/index.js",
+	"extensionKind": [
+		"workspace"
+	],
+	"scripts": {
+		"build": "tsdown && vite build --configLoader runner",
+		"manifest": "tsx scripts/write-manifest.mts",
+		"package": "tsx scripts/package.mts",
+		"typecheck": "tsc && tsc -p tsconfig.webview.json"
+	},
+	"devDependencies": {
+		"@linguify/api": "workspace:*",
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/constants": "workspace:*",
+		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
+		"@linguify/table": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@linguify/types": "workspace:*",
+		"@tailwindcss/vite": "catalog:",
+		"@tanstack/react-query": "catalog:",
+		"@tanstack/react-table": "catalog:",
+		"@trpc/client": "catalog:",
+		"@trpc/server": "catalog:",
+		"@trpc/tanstack-react-query": "catalog:",
+		"@types/node": "catalog:",
+		"@types/react": "catalog:",
+		"@types/react-dom": "catalog:",
+		"@types/vscode": "1.90.0",
+		"@vitejs/plugin-react": "catalog:",
+		"@vscode/vsce": "^4.1.0",
+		"ovsx": "^1.3.0",
+		"react": "catalog:",
+		"react-dom": "catalog:",
+		"tailwindcss": "catalog:",
+		"tsdown": "catalog:",
+		"typescript": "catalog:",
+		"vite": "catalog:"
+	},
+	"engines": {
+		"vscode": "^1.90.0"
+	},
+	"keywords": [
+		"i18n",
+		"localization",
+		"translation",
+		"json",
+		"locales"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rawand Faraidun",
+		"email": "201.rawand@gmail.com",
+		"url": "https://github.com/rawand-faraidun"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rawand-faraidun/linguify.git",
+		"directory": "apps/extension"
+	},
+	"homepage": "https://github.com/rawand-faraidun/linguify/tree/main/apps/extension#readme",
+	"bugs": {
+		"url": "https://github.com/rawand-faraidun/linguify/issues"
+	},
+	"activationEvents": [
+		"workspaceContains:**/linguify.config.json",
+		"onWebviewPanel:linguify.panel"
+	],
+	"capabilities": {
+		"untrustedWorkspaces": {
+			"supported": false,
+			"description": "Linguify reads and writes the project's translation files."
+		},
+		"virtualWorkspaces": false
+	},
+	"contributes": {
+		"configuration": {
+			"title": "Linguify",
+			"properties": {
+				"linguify.path": {
+					"type": "string",
+					"minLength": 1,
+					"default": "./locales",
+					"markdownDescription": "Where the locale files live, relative to the config file",
+					"scope": "resource",
+					"order": 0
+				},
+				"linguify.locales": {
+					"minItems": 1,
+					"type": "array",
+					"items": {
+						"type": "string",
+						"pattern": "^[A-Za-z0-9_-]+$"
+					},
+					"default": [
+						"en"
+					],
+					"markdownDescription": "Which locales exist",
+					"scope": "resource",
+					"order": 1
+				},
+				"linguify.default": {
+					"type": "string",
+					"pattern": "^[A-Za-z0-9_-]+$",
+					"default": "en",
+					"markdownDescription": "The source of truth: `sync` copies from it, `diff` compares against it, the studio shows it first. Must be one of `locales`",
+					"scope": "resource",
+					"order": 2
+				},
+				"linguify.engine": {
+					"type": "string",
+					"minLength": 1,
+					"enum": [
+						"json"
+					],
+					"default": "json",
+					"markdownDescription": "Which format reader and writer to use. Decides what `options` is validated against",
+					"scope": "resource",
+					"order": 3
+				},
+				"linguify.description.enabled": {
+					"type": "boolean",
+					"markdownDescription": "Whether descriptions are read and written. Off, any command passing one is rejected",
+					"scope": "resource",
+					"order": 4
+				},
+				"linguify.description.name": {
+					"type": "string",
+					"pattern": "^(?!\\.{1,2}$)[^/\\\\]+$",
+					"markdownDescription": "Filename inside `path`. Always JSON whatever the engine — descriptions are not translations",
+					"scope": "resource",
+					"order": 5
+				},
+				"linguify.sync.removeUnused": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "On `sync`, also delete keys other locales have that the default no longer does. Off, sync only adds",
+					"scope": "resource",
+					"order": 6
+				},
+				"linguify.keys.fillWithDefault": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "New keys give untyped locales the default locale's text instead of an empty string",
+					"scope": "resource",
+					"order": 7
+				},
+				"linguify.keys.createNamespace": {
+					"type": "boolean",
+					"default": false,
+					"markdownDescription": "A new key may name a namespace that does not exist; it is created as part of the write",
+					"scope": "resource",
+					"order": 8
+				},
+				"linguify.studio.port": {
+					"type": "integer",
+					"minimum": 1,
+					"maximum": 65535,
+					"default": 5678,
+					"markdownDescription": "Port the studio binds",
+					"scope": "resource",
+					"order": 9
+				},
+				"linguify.studio.open": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Open a browser once the studio is listening",
+					"scope": "resource",
+					"order": 10
+				},
+				"linguify.studio.defaultView": {
+					"type": "string",
+					"enum": [
+						"flat",
+						"tree"
+					],
+					"default": "flat",
+					"markdownDescription": "Table mode the studio starts in",
+					"scope": "resource",
+					"order": 11
+				},
+				"linguify.extension.defaultView": {
+					"type": "string",
+					"enum": [
+						"flat",
+						"tree"
+					],
+					"default": "flat",
+					"markdownDescription": "Table mode the editor extension starts in",
+					"scope": "resource",
+					"order": 12
+				},
+				"linguify.io.format": {
+					"type": "string",
+					"enum": [
+						"csv",
+						"tsv",
+						"json",
+						"xlsx"
+					],
+					"default": "csv",
+					"markdownDescription": "Default `export` / `import` format. The file path is always a per-command flag, never config",
+					"scope": "resource",
+					"order": 13
+				},
+				"linguify.options.fileStructure": {
+					"type": "string",
+					"enum": [
+						"single-file",
+						"multi-file"
+					],
+					"default": "single-file",
+					"markdownDescription": "How each locale is laid out: `single-file` writes one file per locale (`en.json`), `multi-file` one folder per locale with a file per namespace (`en/common.json`)",
+					"scope": "resource",
+					"order": 14
+				},
+				"linguify.options.namespaces": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "Whether the first segment of every key is a namespace. Ignored in multi-file, which is always namespaced",
+					"scope": "resource",
+					"order": 15
+				},
+				"linguify.options.indentation": {
+					"type": "integer",
+					"minimum": 0,
+					"maximum": 10,
+					"default": 2,
+					"markdownDescription": "Spaces per indentation level in written files; `0` writes each file on one line. With tabs, each level is one tab",
+					"scope": "resource",
+					"order": 16
+				},
+				"linguify.options.indentationStyle": {
+					"type": "string",
+					"enum": [
+						"space",
+						"tab"
+					],
+					"default": "tab",
+					"markdownDescription": "Indent written files with spaces or tabs",
+					"scope": "resource",
+					"order": 17
+				},
+				"linguify.options.finalNewline": {
+					"type": "boolean",
+					"default": true,
+					"markdownDescription": "End every written file with a newline",
+					"scope": "resource",
+					"order": 18
+				}
+			}
+		},
+		"commands": [
+			{
+				"command": "linguify.open",
+				"title": "Open",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.sync",
+				"title": "Sync",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.format",
+				"title": "Format",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.diff",
+				"title": "Diff",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.export",
+				"title": "Export",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.import",
+				"title": "Import",
+				"category": "Linguify"
+			},
+			{
+				"command": "linguify.chooseProject",
+				"title": "Choose Project",
+				"category": "Linguify"
+			}
+		]
+	}
+}

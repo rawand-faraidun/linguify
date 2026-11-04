@@ -1,0 +1,23 @@
+{
+	"$schema": "../../node_modules/@biomejs/biome/configuration_schema.json",
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"groups": [
+							[":NODE:", ":BUN:"],
+							["vscode", "vscode/**"],
+							["@linguify/*", "@linguify/**"],
+							[":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
+							":ALIAS:",
+							":PATH:"
+						],
+						"identifierOrder": "natural"
+					}
+				}
+			}
+		}
+	}
+}

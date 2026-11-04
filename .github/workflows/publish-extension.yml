@@ -1,0 +1,117 @@
+name: publish-extension
+
+on:
+  workflow_call:
+    inputs:
+      dry-run:
+        description: Package the .vsix and check both tokens; publish and release nothing
+        type: boolean
+        default: false
+    secrets:
+      AZURE_TOKEN:
+        required: true
+      OPENVSX_TOKEN:
+        required: true
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Package the .vsix and check both tokens; publish and release nothing
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-extension
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # a real release only from main, its changesets applied — never dev code, never version 0.0.0
+      - name: Refuse to publish from anywhere but main, or before the version pull request is merged
+        if: ${{ !inputs.dry-run }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::Publishing runs from main only, not $GITHUB_REF. Dispatch a dry run instead."
+            exit 1
+          fi
+          if ls .changeset/*.md 2> /dev/null | grep -qv README; then
+            echo "::error::Changesets are waiting: merge the version pull request first."
+            exit 1
+          fi
+
+      - id: release
+        name: Find the version, and whether it is released already
+        run: |
+          version=$(node -p "require('./apps/extension/package.json').version")
+          tag="linguify-vs@$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if gh release view "$tag" > /dev/null 2>&1; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "$tag is released already: nothing to do"
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - if: steps.release.outputs.released == 'false'
+        uses: pnpm/action-setup@v6
+      - if: steps.release.outputs.released == 'false'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.release.outputs.released == 'false'
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and package the .vsix
+        if: steps.release.outputs.released == 'false'
+        run: |
+          pnpm turbo run build --filter linguify-vs
+          pnpm --filter linguify-vs package --out linguify-vs.vsix
+
+      - name: Check both tokens can publish as rawand-faraidun
+        if: steps.release.outputs.released == 'false'
+        working-directory: apps/extension
+        run: |
+          pnpm exec vsce verify-pat rawand-faraidun
+          pnpm exec ovsx verify-pat rawand-faraidun
+        env:
+          VSCE_PAT: ${{ secrets.AZURE_TOKEN }}
+          OVSX_PAT: ${{ secrets.OPENVSX_TOKEN }}
+
+      # two steps, so one registry failing is never reported as both succeeding; a re-run skips what is out
+      - name: Publish to the Visual Studio Marketplace
+        if: steps.release.outputs.released == 'false' && !inputs.dry-run
+        working-directory: apps/extension
+        run: pnpm exec vsce publish --packagePath linguify-vs.vsix --skip-duplicate
+        env:
+          VSCE_PAT: ${{ secrets.AZURE_TOKEN }}
+
+      - name: Publish to Open VSX
+        if: steps.release.outputs.released == 'false' && !inputs.dry-run
+        working-directory: apps/extension
+        run: pnpm exec ovsx publish linguify-vs.vsix --skip-duplicate
+        env:
+          OVSX_PAT: ${{ secrets.OPENVSX_TOKEN }}
+
+      # the release makes its tag with it, on this commit — no tag without its release to block a re-run
+      - name: Release it on GitHub, tagged
+        if: steps.release.outputs.released == 'false' && !inputs.dry-run
+        run: |
+          awk -v heading="## $VERSION" '$0 == heading { found = 1; next } /^## / { if (found) exit } found' apps/extension/CHANGELOG.md > notes.md
+          gh release create "$TAG" apps/extension/linguify-vs.vsix --target "$GITHUB_SHA" --title "$TAG" --notes-file notes.md
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}

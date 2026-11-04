@@ -1,0 +1,166 @@
+/**
+ * separates the segments of a key path — `common.buttons.save`
+ *
+ * @note a segment can therefore never contain this character; the JSON files may, but linguify
+ * cannot address such a key
+ */
+export const keySeparator = '.'
+
+/**
+ * the characters a terminal acts on instead of showing: control characters, and the bidi controls that
+ * reorder what follows them — U+202E shows `abc` as `cba`
+ *
+ * @note the zero-width joiner and non-joiner are not among them: Kurdish and other scripts need them
+ */
+export const unprintableCharacter = /[\p{Cc}\u202A-\u202E\u2066-\u2069]/u
+
+/**
+ * the key examples, hints and messages show: its namespace, its name and its default text
+ */
+export const exampleKey = { namespace: 'common', name: 'save', text: 'Save' } as const
+
+/**
+ * {@link exampleKey}'s full path, namespace first — `common.save`
+ */
+export const exampleKeyPath = `${exampleKey.namespace}${keySeparator}${exampleKey.name}`
+
+/**
+ * the value a locale gets for a key it has no translation for
+ *
+ * @note empty rather than absent, so the key exists in every locale and `diff` reports it as empty
+ * instead of missing
+ */
+export const emptyTranslation = ''
+
+/**
+ * segments a key path may never contain
+ *
+ * @note these name JavaScript's prototype machinery; writing them as keys can rewrite the prototype of
+ * every object in the process, and key paths arrive from the browser
+ */
+export const reservedKeySegments: readonly string[] = ['__proto__', 'prototype', 'constructor']
+
+/**
+ * why a key path or namespace name cannot be used — namespace-only and too-deep only in some projects,
+ * the rest only for a namespace, file-name and case-clash only where each namespace is a file
+ */
+export const keyPathProblems = {
+	/**
+	 * the path is empty
+	 */
+	empty: 'empty',
+
+	/**
+	 * two separators in a row, or one at either end — `common..save`, `.save`
+	 */
+	emptySegment: 'empty-segment',
+
+	/**
+	 * a segment is one of {@link reservedKeySegments}
+	 */
+	reservedSegment: 'reserved-segment',
+
+	/**
+	 * with namespaces on, a path that names only a namespace — a key is its namespace, then its name
+	 */
+	namespaceOnly: 'namespace-only',
+
+	/**
+	 * deeper than a format that cannot nest allows: a namespace and a name at most
+	 */
+	tooDeep: 'too-deep',
+
+	/**
+	 * a namespace with a separator in it — the first one separates the namespace from the key
+	 */
+	separator: 'separator',
+
+	/**
+	 * a namespace that would be a file, with a path separator in it, or `.` or `..`
+	 */
+	fileName: 'file-name',
+
+	/**
+	 * a namespace that would be a file differing from another only in case — one file on a
+	 * case-insensitive disk
+	 */
+	caseClash: 'case-clash',
+
+	/**
+	 * a new key path or namespace holding an {@link unprintableCharacter} — an existing one stays reachable
+	 */
+	unprintable: 'unprintable'
+} as const
+
+/**
+ * why a key path or namespace name cannot be used, as every surface says it — the CLI and the API after
+ * the name, the studio and the extension under the field
+ */
+export const keyPathProblemText = {
+	[keyPathProblems.empty]: 'It is empty.',
+	[keyPathProblems.emptySegment]: 'A segment is empty: two dots together, or one at either end.',
+	[keyPathProblems.reservedSegment]: `${reservedKeySegments.join(', ')} cannot be segments.`,
+	[keyPathProblems.namespaceOnly]: `That names only a namespace; a key is its namespace, then its name: ${exampleKeyPath}.`,
+	[keyPathProblems.tooDeep]: "This project's format cannot nest keys.",
+	[keyPathProblems.separator]: 'A namespace has no dots: the first one separates it from the key.',
+	[keyPathProblems.fileName]:
+		'Each namespace is a file here: no slashes, not . or .., no dot or space at the end, and not a name Windows keeps, such as CON or NUL.',
+	[keyPathProblems.caseClash]: 'Each namespace is a file here, and another differs from it only in case.',
+	[keyPathProblems.unprintable]: 'It holds a control character, which a terminal would act on.'
+} as const
+
+/**
+ * how a locale's text for a key falls short of the default's — `diff`'s three lists, and the table's marks
+ */
+export const translationGaps = {
+	/**
+	 * the default has the key and the locale does not
+	 */
+	missing: 'missing',
+
+	/**
+	 * the default has the key and the locale has it blank
+	 */
+	empty: 'empty',
+
+	/**
+	 * the locale has the key and the default does not
+	 */
+	extra: 'extra'
+} as const
+
+/**
+ * how `format` orders keys
+ *
+ * @note a fixed locale, never the machine's: with the machine's locale, `format --check` could pass on
+ * one computer and fail on another for the same files. `numeric` puts `item2` before `item10`
+ */
+export const keyCollation = {
+	locale: 'en',
+	options: { numeric: true }
+} as const
+
+/**
+ * what a key path points at in one locale's tree
+ */
+export const keyPathStates = {
+	/**
+	 * nothing — a translation can be written there
+	 */
+	free: 'free',
+
+	/**
+	 * a translation already
+	 */
+	translation: 'translation',
+
+	/**
+	 * nested keys; writing a translation there would replace them
+	 */
+	group: 'group',
+
+	/**
+	 * the path runs through a translation, which cannot hold nested keys
+	 */
+	blocked: 'blocked'
+} as const

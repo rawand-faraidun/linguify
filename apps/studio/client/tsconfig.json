@@ -1,0 +1,8 @@
+{
+	"extends": "@linguify/tsconfig/web",
+	"compilerOptions": {
+		"types": ["vite/client", "node"],
+		"lib": ["DOM", "DOM.Iterable", "ES2023"]
+	},
+	"include": ["src", "vite.config.ts"]
+}

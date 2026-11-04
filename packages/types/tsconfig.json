@@ -1,0 +1,7 @@
+{
+	"extends": "@linguify/tsconfig/node",
+	"compilerOptions": {
+		"types": []
+	},
+	"include": ["src"]
+}

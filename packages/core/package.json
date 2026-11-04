@@ -1,0 +1,29 @@
+{
+	"name": "@linguify/core",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": "./src/index.ts",
+	"scripts": {
+		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"@linguify/constants": "workspace:*",
+		"@linguify/keys": "workspace:*",
+		"@linguify/types": "workspace:*",
+		"cosmiconfig": "catalog:",
+		"papaparse": "catalog:",
+		"read-excel-file": "catalog:",
+		"write-excel-file": "catalog:",
+		"write-file-atomic": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@types/node": "catalog:",
+		"@types/papaparse": "^5.5.2",
+		"@types/write-file-atomic": "^4.0.3",
+		"typescript": "catalog:"
+	}
+}

@@ -1,0 +1,78 @@
+{
+	"name": "linguify",
+	"description": "Developer-first translation file manager.",
+	"version": "1.4.1",
+	"type": "module",
+	"bin": {
+		"linguify": "./dist/index.js"
+	},
+	"files": [
+		"dist",
+		"schema.json",
+		"README.md",
+		"LICENSE",
+		"CHANGELOG.md"
+	],
+	"scripts": {
+		"build": "pnpm schema && tsdown && pnpm client",
+		"client": "tsx scripts/copy-client.ts",
+		"dev": "tsx watch src/index.ts studio --no-open --cwd ../..",
+		"schema": "tsx scripts/generate-schema.ts",
+		"typecheck": "tsc"
+	},
+	"dependencies": {
+		"@clack/prompts": "^1.8.1",
+		"@hono/node-server": "catalog:",
+		"commander": "^15.0.0",
+		"cosmiconfig": "catalog:",
+		"flat": "catalog:",
+		"hono": "catalog:",
+		"open": "^11.0.4",
+		"papaparse": "catalog:",
+		"read-excel-file": "catalog:",
+		"string-width": "^8.3.0",
+		"write-excel-file": "catalog:",
+		"write-file-atomic": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@linguify/api": "workspace:*",
+		"@linguify/biome-config": "workspace:*",
+		"@linguify/constants": "workspace:*",
+		"@linguify/core": "workspace:*",
+		"@linguify/keys": "workspace:*",
+		"@linguify/studio-client": "workspace:*",
+		"@linguify/studio-server": "workspace:*",
+		"@linguify/tsconfig": "workspace:*",
+		"@linguify/types": "workspace:*",
+		"@types/node": "catalog:",
+		"tsdown": "catalog:",
+		"typescript": "catalog:"
+	},
+	"engines": {
+		"node": ">=24"
+	},
+	"keywords": [
+		"i18n",
+		"localize",
+		"translation"
+	],
+	"license": "MIT",
+	"author": {
+		"name": "Rawand Faraidun",
+		"email": "201.rawand@gmail.com",
+		"url": "https://github.com/rawand-faraidun"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/rawand-faraidun/linguify.git"
+	},
+	"homepage": "https://github.com/rawand-faraidun/linguify#readme",
+	"bugs": {
+		"url": "https://github.com/rawand-faraidun/linguify/issues"
+	},
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	}
+}
