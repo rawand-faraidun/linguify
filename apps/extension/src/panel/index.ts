@@ -17,6 +17,7 @@ import {
 	extensionDisplayName,
 	fileMenuActions,
 	panelViewType,
+	panelWebviewOptions,
 	projectActions,
 	webviewFiles
 } from '@linguify/constants'
@@ -167,11 +168,10 @@ const filesOf = (context: ExtensionContext) => Uri.joinPath(context.extensionUri
 /**
  * @param context - the extension's context
  *
- * @returns the panel's options: scripts on, forms off, only the webview's own files loadable
+ * @returns the panel's options: scripts and forms on, only the webview's own files loadable
  */
 const optionsOf = (context: ExtensionContext): WebviewOptions => ({
-	enableScripts: true,
-	enableForms: false,
+	...panelWebviewOptions,
 	localResourceRoots: [filesOf(context)]
 })
 

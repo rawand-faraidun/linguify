@@ -7,7 +7,7 @@
 			"request": "launch",
 			"args": [
 				"--extensionDevelopmentPath=${workspaceFolder}/apps/extension",
-				"${workspaceFolder}/apps/extension/fixtures/project"
+				"${workspaceFolder}/media/playground"
 			],
 			"outFiles": ["${workspaceFolder}/apps/extension/dist/**/*.js"],
 			"preLaunchTask": "Build the extension"

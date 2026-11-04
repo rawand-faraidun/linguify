@@ -39,6 +39,17 @@ export const fileScheme = 'file'
 export const panelViewType = `${appName}.panel`
 
 /**
+ * what the panel's page may do: run its script, and submit its forms — the editor sandboxes a page without
+ * forms against any submit, so no dialog's Enter or button would reach its own handler
+ *
+ * @note a form still goes nowhere: the page's policy has `form-action 'none'`
+ */
+export const panelWebviewOptions = {
+	enableScripts: true,
+	enableForms: true
+} as const
+
+/**
  * the words the extension's commands are shown with in the palette, after its name — `Linguify: Open`
  */
 export const extensionCommandTitles = {
