@@ -8,6 +8,7 @@
 		"test": "vitest run"
 	},
 	"devDependencies": {
+		"@linguify/api": "workspace:*",
 		"@linguify/biome-config": "workspace:*",
 		"@linguify/core": "workspace:*",
 		"@linguify/keys": "workspace:*",

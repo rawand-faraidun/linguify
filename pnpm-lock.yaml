@@ -616,6 +616,9 @@ importers:
 
   tests:
     devDependencies:
+      '@linguify/api':
+        specifier: workspace:*
+        version: link:../packages/api
       '@linguify/biome-config':
         specifier: workspace:*
         version: link:../tooling/biome
