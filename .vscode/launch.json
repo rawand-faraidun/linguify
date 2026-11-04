@@ -5,10 +5,7 @@
 			"name": "Run the extension",
 			"type": "extensionHost",
 			"request": "launch",
-			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}/apps/extension",
-				"${workspaceFolder}/media/playground"
-			],
+			"args": ["--extensionDevelopmentPath=${workspaceFolder}/apps/extension", "${workspaceFolder}/media/playground"],
 			"outFiles": ["${workspaceFolder}/apps/extension/dist/**/*.js"],
 			"preLaunchTask": "Build the extension"
 		}
