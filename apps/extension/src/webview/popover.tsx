@@ -6,14 +6,27 @@ import { buttonClass } from './classes'
  * own styles, which the panel's policy refuses
  *
  * @note it closes on a click anywhere else, on Escape — the keyboard back on its button — and once the
- * keyboard leaves it, so it never covers what Tab reaches next. Opened near the panel's edge, it moves back
- * by what would be cut off, never past the other edge
+ * keyboard moves to something outside it, so it never covers what Tab reaches next. A click on its own
+ * words takes the keyboard nowhere, so that blur leaves it open: closed under the press, the click lands in a
+ * hidden label, which crashes the editor's page. Opened near the panel's edge, it moves back by what would be
+ * cut off, never past the other edge; one at the panel's end opens toward the start
  *
- * @param props - `id`; `label`, its button's words; `children`, what it holds
+ * @param props - `id`; `label`, its button's words; `align`, the edge of its button it opens from — `end`
+ * for one at the panel's end; `children`, what it holds
  *
  * @returns the popover
  */
-export const Popover = ({ id, label, children }: { id: string; label: string; children: ReactNode }) => {
+export const Popover = ({
+	id,
+	label,
+	align = 'start',
+	children
+}: {
+	id: string
+	label: string
+	align?: 'start' | 'end'
+	children: ReactNode
+}) => {
 	const details = useRef<HTMLDetailsElement>(null)
 	useEffect(() => {
 		const away = (event: PointerEvent) => {
@@ -30,7 +43,7 @@ export const Popover = ({ id, label, children }: { id: string; label: string; ch
 			className="relative"
 			onToggle={event => {
 				const panel = event.currentTarget.querySelector<HTMLElement>('[data-popover]')
-				if (!event.currentTarget.open || panel === null) return
+				if (!event.currentTarget.open || panel === null || align === 'end') return
 				panel.style.left = ''
 				const { left, right } = panel.getBoundingClientRect()
 				const over = right - document.documentElement.clientWidth
@@ -38,7 +51,7 @@ export const Popover = ({ id, label, children }: { id: string; label: string; ch
 			}}
 			onBlur={event => {
 				const next = event.relatedTarget
-				if (event.currentTarget.open && !(next instanceof Node && event.currentTarget.contains(next)))
+				if (event.currentTarget.open && next instanceof Node && !event.currentTarget.contains(next))
 					event.currentTarget.open = false
 			}}
 			onKeyDown={event => {
@@ -56,7 +69,7 @@ export const Popover = ({ id, label, children }: { id: string; label: string; ch
 			</summary>
 			<div
 				data-popover
-				className="absolute z-20 mt-1 w-max max-w-[calc(100vw-1rem)] rounded-md border border-widget-border bg-background p-2 shadow-[0_2px_8px_var(--color-widget-shadow)]"
+				className={`absolute z-20 mt-1 w-max ${align === 'end' ? 'end-0' : ''} max-w-[calc(100vw-1rem)] rounded-md border border-widget-border bg-background p-2 shadow-[0_2px_8px_var(--color-widget-shadow)]`}
 			>
 				{children}
 			</div>

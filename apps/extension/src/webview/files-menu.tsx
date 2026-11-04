@@ -10,7 +10,7 @@ import { closePopover, Popover } from './popover'
  * @returns the menu
  */
 export const FilesMenu = () => (
-	<Popover id="files-menu" label={studioText.files}>
+	<Popover id="files-menu" label={studioText.files} align="end">
 		<ul className="flex flex-col">
 			{fileMenuActions.map(action => (
 				<li key={action}>
